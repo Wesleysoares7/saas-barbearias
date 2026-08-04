@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,6 @@ function validatePassword(password: string, confirmPassword: string): PasswordFo
 
 export default function AtualizarSenhaPage() {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -57,6 +56,7 @@ export default function AtualizarSenhaPage() {
     setIsSubmitting(true);
 
     try {
+      const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
