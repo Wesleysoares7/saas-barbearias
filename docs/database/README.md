@@ -1,0 +1,13 @@
+# Database
+
+Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas RLS nas proximas etapas.
+
+## Arquivos atuais
+- `001_etapa3_schema_rls.sql`: modelagem inicial do banco com RLS multi-tenant.
+- `etapa3_como_executar.md`: guia de execucao do script no Supabase SQL Editor.
+- `002_etapa6_conflito_agendamentos.sql`: reforco de agendamentos com `data_hora_fim` e bloqueio de sobreposicao por funcionario.
+- `etapa6_testes_basicos.md`: roteiro de validacao dos cenarios de conflito.
+- `003_etapa11_convites_auditoria.sql`: tabelas e policies para convites e trilha de auditoria.
+- `004_etapa12_notificacoes.sql`: tabela e policies para notificacoes de eventos sensiveis.
+- `005_etapa13_clientes.sql`: tabela e policies para cadastro de clientes.
+- `006_etapa13_agendamentos_clientes.sql`: vinculo opcional de agendamento com cliente cadastrado.
