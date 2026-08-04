@@ -15,7 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-type SidebarNavItem = {
+export type SidebarNavItem = {
   href: string;
   label: string;
   section: string;
