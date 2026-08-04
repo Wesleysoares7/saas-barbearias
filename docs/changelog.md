@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-08-04 - Teste de protecao de branch
+### Observacoes
+- Branch temporaria criada para validar Pull Request, GitHub Actions e protecao da `main`.
+
 ## 2026-08-04 - Rotina de seguranca no GitHub
 ### Adicionado
 - Workflow de qualidade em `.github/workflows/ci.yml` para lint e build em Pull Request para `main`.
