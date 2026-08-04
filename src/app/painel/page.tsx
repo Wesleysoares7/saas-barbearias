@@ -337,6 +337,14 @@ export default async function PainelPage() {
               Gerenciar equipe
             </Link>
           ) : null}
+          {role === "admin" ? (
+            <Link
+              href="/painel/publico"
+              className="rounded-lg border border-zinc-700 bg-zinc-950/70 px-4 py-3 text-sm font-medium text-zinc-100 transition hover:border-fuchsia-400 hover:text-fuchsia-300"
+            >
+              Canal publico de agendamento
+            </Link>
+          ) : null}
           <Link
             href="/painel/relatorios"
             className="rounded-lg border border-zinc-700 bg-zinc-950/70 px-4 py-3 text-sm font-medium text-zinc-100 transition hover:border-sky-400 hover:text-sky-300"

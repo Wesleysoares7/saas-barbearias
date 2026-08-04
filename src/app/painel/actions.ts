@@ -15,6 +15,27 @@ export type UpdateCompanyLogoActionState = {
   message: string;
 };
 
+export type UpdatePublicBookingSettingsActionState = {
+  success: boolean;
+  message: string;
+};
+
+function normalizePublicSlug(value: FormDataEntryValue | null): string {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 function normalizeLogoUrl(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") {
     return null;
@@ -139,6 +160,82 @@ export async function updateCompanyLogoAction(
   return {
     success: true,
     message: "Logo da empresa atualizada com sucesso.",
+  };
+}
+
+export async function updatePublicBookingSettingsAction(
+  _previousState: UpdatePublicBookingSettingsActionState,
+  formData: FormData,
+): Promise<UpdatePublicBookingSettingsActionState> {
+  const { supabase, companyId, role, errorMessage } = await getAccessContext();
+
+  if (!companyId || !role) {
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel validar sua sessao.",
+    };
+  }
+
+  if (!isAdmin(role)) {
+    return {
+      success: false,
+      message: "Somente administradores podem alterar as configuracoes publicas.",
+    };
+  }
+
+  const publicSlug = normalizePublicSlug(formData.get("publicSlug"));
+  const publicBookingEnabled = formData.get("publicBookingEnabled") === "on";
+
+  if (!publicSlug) {
+    return {
+      success: false,
+      message: "Informe um identificador publico valido para a empresa.",
+    };
+  }
+
+  if (publicSlug.length < 3 || publicSlug.length > 50) {
+    return {
+      success: false,
+      message: "O identificador publico deve ter entre 3 e 50 caracteres.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("companies")
+    .update({
+      public_slug: publicSlug,
+      public_booking_enabled: publicBookingEnabled,
+    })
+    .eq("id", companyId);
+
+  if (error) {
+    if (error.message.includes("companies_public_slug_unique")) {
+      return {
+        success: false,
+        message: "Esse identificador publico ja esta em uso por outra empresa.",
+      };
+    }
+
+    if (error.message.includes("public_slug")) {
+      return {
+        success: false,
+        message:
+          "Seu banco ainda nao possui as colunas publicas. Execute o script docs/database/008_etapa15_agendamento_publico.sql e tente novamente.",
+      };
+    }
+
+    return {
+      success: false,
+      message: `Nao foi possivel salvar as configuracoes publicas: ${error.message}`,
+    };
+  }
+
+  revalidatePath("/painel");
+  revalidatePath("/painel/publico");
+
+  return {
+    success: true,
+    message: "Configuracoes publicas atualizadas com sucesso.",
   };
 }
 

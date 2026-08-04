@@ -12,3 +12,4 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `005_etapa13_clientes.sql`: tabela e policies para cadastro de clientes.
 - `006_etapa13_agendamentos_clientes.sql`: vinculo opcional de agendamento com cliente cadastrado.
 - `007_etapa14_logo_empresa_storage.sql`: bucket e policies para upload seguro da logo da empresa por tenant.
+- `008_etapa15_agendamento_publico.sql`: slug publico da empresa e policies para canal de agendamento de clientes sem login.

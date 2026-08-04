@@ -1,5 +1,23 @@
 # Changelog
 
+## 2026-08-04 - MVP de agendamento publico para clientes
+### Adicionado
+- Rota publica web para clientes em `src/app/agendar/[slug]/page.tsx`.
+- Formulario cliente em `src/components/public-booking/public-booking-form.tsx` para escolha de servico, profissional e horario.
+- Endpoint `GET /api/public/companies/[slug]/availability` em `src/app/api/public/companies/[slug]/availability/route.ts`.
+- Endpoint `POST /api/public/companies/[slug]/bookings` em `src/app/api/public/companies/[slug]/bookings/route.ts` com rate limit basico e honeypot anti-spam.
+- Cliente Supabase publico server-side em `src/lib/supabase/public.ts`.
+- Tela admin de configuracao do canal publico em `src/app/painel/publico/page.tsx`.
+- Formulario admin de configuracao em `src/components/painel/public-booking/public-booking-settings-form.tsx`.
+- Script SQL `docs/database/008_etapa15_agendamento_publico.sql` para colunas e policies RLS do canal publico.
+
+### Alterado
+- `src/app/painel/actions.ts` ganhou action para salvar `public_slug` e ativar/desativar agendamento publico por admin.
+- Painel principal em `src/app/painel/page.tsx` ganhou atalho para `Canal publico de agendamento`.
+
+### Validacao esperada
+- Executar o script `docs/database/008_etapa15_agendamento_publico.sql` no Supabase antes de usar o canal publico em producao.
+
 ## 2026-08-04 - Logo da empresa no painel
 ### Adicionado
 - Action em `src/app/painel/actions.ts` para atualizar a logo da empresa via upload de imagem ou URL (somente admin).
