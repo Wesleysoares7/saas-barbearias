@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-04 - Rotina de seguranca no GitHub
+### Adicionado
+- Workflow de qualidade em `.github/workflows/ci.yml` para lint e build em Pull Request para `main`.
+- Workflow de seguranca em `.github/workflows/security.yml` com `npm audit` para vulnerabilidades altas e criticas.
+- Workflow de analise estatica em `.github/workflows/codeql.yml` para verificacoes de seguranca no codigo.
+- Configuracao do Dependabot em `.github/dependabot.yml` para atualizar dependencias de `npm` e GitHub Actions.
+- Arquivo `.github/CODEOWNERS` com dono do codigo para exigencia de revisao.
+
+### Objetivo
+- Impedir merge direto em `main` sem aprovacao e sem passar nas verificacoes automatizadas de qualidade e seguranca.
+
 ## 2026-08-04 - Visao financeira por funcionario
 ### Adicionado
 - Resumo de faturamento total e comissao total na tela financeira.
