@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-04 - Atualizacao visual moderna e vibrante
+### Alterado
+- Tema global atualizado em `src/app/globals.css` com nova paleta vibrante, contrastes mais fortes e fundo atmosférico com gradientes.
+- Botao base atualizado em `src/components/ui/button.tsx` com visual mais moderno, bordas mais suaves, sombras e destaque de hover.
+
+### Validado
+- `npm run lint` sem erros.
+- `npm run build` concluido com sucesso.
+
 ## 2026-08-04 - Correcao dos checks de CI
 ### Alterado
 - Pagina de atualizacao de senha ajustada para nao ler variaveis do Supabase durante o prerender do build.
