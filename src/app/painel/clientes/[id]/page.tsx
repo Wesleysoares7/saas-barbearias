@@ -2,17 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-
-type CustomerRow = {
-  id: string;
-  nome: string;
-  telefone: string | null;
-  email: string | null;
-  observacoes: string | null;
-  ativo: boolean;
-};
-
-type AppointmentStatus = "agendado" | "concluido" | "cancelado";
+import type { AppointmentStatus, CustomerRow } from "@/types";
 
 type AppointmentRow = {
   id: string;

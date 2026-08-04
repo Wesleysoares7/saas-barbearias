@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/access";
-
-type AppointmentStatus = "agendado" | "concluido" | "cancelado";
+import type { AppointmentStatus } from "@/types";
 
 type AppointmentRow = {
   id: string;

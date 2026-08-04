@@ -3,15 +3,7 @@ import { redirect } from "next/navigation";
 import { CreateCustomerForm } from "@/components/painel/clientes/create-customer-form";
 import { CustomerItemForm } from "@/components/painel/clientes/customer-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-
-type CustomerRow = {
-  id: string;
-  nome: string;
-  telefone: string | null;
-  email: string | null;
-  observacoes: string | null;
-  ativo: boolean;
-};
+import type { CustomerRow } from "@/types";
 
 export default async function ClientesPage() {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();

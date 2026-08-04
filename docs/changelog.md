@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-08-04 - Manual de uso da aplicacao
+### Adicionado
+- Documento `docs/manual-de-uso.md` com guia completo de configuracao, primeiro acesso, operacao por modulo, permissoes e resolucao de erros comuns.
+
+### Alterado
+- `README.md` atualizado com link para o manual de uso.
+
+## 2026-08-04 - Organizacao de tipos compartilhados
+### Adicionado
+- Pasta `src/types` com arquivos `appointments.ts`, `customers.ts` e `index.ts` para centralizar tipos reutilizados.
+
+### Alterado
+- Tipos duplicados movidos das paginas `painel`, `agendamentos`, `clientes` e `clientes/[id]` para imports compartilhados.
+
 ## 2026-08-04 - Estrutura com menu lateral vertical no painel
 ### Adicionado
 - Layout compartilhado do painel em `src/app/painel/layout.tsx` com menu lateral vertical para desktop e menu horizontal para mobile.

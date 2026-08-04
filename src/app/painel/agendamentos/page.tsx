@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
 import { canAccessModule, canPerformAction, getAccessContext } from "@/lib/auth/access";
+import type { AppointmentStatus } from "@/types";
 
 type OptionItem = {
   id: string;
@@ -10,8 +11,6 @@ type OptionItem = {
   duracao?: number;
   telefone?: string | null;
 };
-
-type AppointmentStatus = "agendado" | "concluido" | "cancelado";
 
 type AppointmentRow = {
   id: string;
