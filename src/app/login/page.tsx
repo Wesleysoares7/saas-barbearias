@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
 
@@ -17,6 +18,13 @@ export default function LoginPage() {
         <Suspense fallback={null}>
           <LoginForm />
         </Suspense>
+
+        <div className="mt-5 border-t border-zinc-700/70 pt-4 text-center">
+          <p className="text-xs text-zinc-400">Cliente da barbearia?</p>
+          <Link href="/agendar" className="mt-1 inline-block text-sm font-medium text-fuchsia-300 transition hover:text-fuchsia-200">
+            Agendar como cliente
+          </Link>
+        </div>
       </section>
     </main>
   );

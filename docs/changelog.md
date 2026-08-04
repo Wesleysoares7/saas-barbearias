@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-04 - Entrada de agendamento publico pelo login
+### Adicionado
+- Link secundario na tela de login para clientes em `src/app/login/page.tsx` com CTA `Agendar como cliente`.
+- Pagina intermediaria publica em `src/app/agendar/page.tsx` para informar o codigo da barbearia.
+- Formulario de entrada do codigo em `src/components/public-booking/booking-entry-form.tsx` com normalizacao de slug e redirecionamento para `/agendar/[slug]`.
+
 ## 2026-08-04 - MVP de agendamento publico para clientes
 ### Adicionado
 - Rota publica web para clientes em `src/app/agendar/[slug]/page.tsx`.
