@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-08-04 - Logo da empresa no painel
+### Adicionado
+- Action em `src/app/painel/actions.ts` para atualizar a logo da empresa via upload de imagem ou URL (somente admin).
+- Novo formulario `src/components/painel/company/company-logo-form.tsx` para envio da logo no dashboard.
+- Script `docs/database/007_etapa14_logo_empresa_storage.sql` com bucket `company-logos` e policies de Storage por empresa.
+
+### Alterado
+- Dashboard em `src/app/painel/page.tsx` agora busca `logo` da tabela `companies` e exibe preview da logo da empresa.
+
 ## 2026-08-04 - Atualizacao visual moderna e vibrante
 ### Alterado
 - Tema global atualizado em `src/app/globals.css` com nova paleta vibrante, contrastes mais fortes e fundo atmosférico com gradientes.

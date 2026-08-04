@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { CompanyLogoForm } from "@/components/painel/company/company-logo-form";
 import { signOutAction } from "@/app/painel/actions";
 
 type AppointmentStatus = "agendado" | "concluido" | "cancelado";
@@ -84,7 +85,7 @@ export default async function PainelPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("nome")
+    .select("nome, logo")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -264,6 +265,22 @@ export default async function PainelPage() {
 
             <p className="mt-4 text-xs text-zinc-400">Empresa</p>
             <p className="mt-1 text-sm text-zinc-100">{company?.nome ?? "Empresa nao encontrada"}</p>
+
+            <p className="mt-4 text-xs text-zinc-400">Logo da empresa</p>
+            {company?.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={company.logo}
+                alt={`Logo da empresa ${company?.nome ?? ""}`}
+                className="mt-2 h-14 w-14 rounded-xl border border-zinc-700/70 bg-zinc-900/60 object-contain p-1"
+              />
+            ) : (
+              <div className="mt-2 flex h-14 w-14 items-center justify-center rounded-xl border border-dashed border-zinc-700/70 bg-zinc-900/60 text-[10px] font-medium text-zinc-400">
+                Sem logo
+              </div>
+            )}
+
+            {role === "admin" ? <CompanyLogoForm /> : null}
 
             <p className="mt-4 text-xs text-zinc-400">Usuario logado</p>
             <p className="mt-1 text-sm text-zinc-100">{user?.email ?? "Usuario sem e-mail"}</p>
