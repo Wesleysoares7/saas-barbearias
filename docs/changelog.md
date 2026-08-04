@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-08-04 - Estrutura com menu lateral vertical no painel
+### Adicionado
+- Layout compartilhado do painel em `src/app/painel/layout.tsx` com menu lateral vertical para desktop e menu horizontal para mobile.
+- Componente de navegacao com destaque de rota ativa em `src/components/painel/sidebar-nav.tsx`.
+- Menu mobile retratil (abrir/fechar) no topo do painel com acesso aos modulos e acao de sair da conta.
+
+### Alterado
+- Home do painel em `src/app/painel/page.tsx` ajustada para exibir o dashboard dentro da nova area de conteudo do layout.
+- Modulos `agendamentos`, `funcionarios`, `servicos`, `clientes`, `clientes/[id]`, `financeiro`, `equipe`, `auditoria`, `notificacoes` e `relatorios` ajustados para usar apenas conteudo interno no novo shell lateral.
+- Remocao dos botoes `Voltar ao painel` nas telas de modulos, reduzindo redundancia de navegacao.
+- Sidebar refinada com icones e agrupamento por secoes para leitura mais rapida da navegacao.
+- No mobile, o menu retratil agora fecha automaticamente ao selecionar um item.
+- Menu mobile ganhou animacao suave de abrir/fechar e indicador visual da tela ativa no titulo do retratil.
+
+### Observacoes
+- A navegacao por modulos agora fica centralizada no layout do painel, exibindo cada tela no conteudo ao lado do menu.
+
 ## 2026-08-04 - Atualizacao visual moderna e vibrante
 ### Alterado
 - Tema global atualizado em `src/app/globals.css` com nova paleta vibrante, contrastes mais fortes e fundo atmosférico com gradientes.

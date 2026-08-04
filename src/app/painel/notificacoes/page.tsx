@@ -112,10 +112,7 @@ export default async function NotificacoesPage({
   const unreadCount = notifications.filter((item) => !item.read_at).length;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-zinc-950 px-4 py-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.16),transparent_45%),radial-gradient(circle_at_bottom,rgba(255,255,255,0.06),transparent_40%)]" />
-
-      <section className="relative z-10 mx-auto w-full max-w-5xl rounded-2xl border border-amber-400/20 bg-zinc-900/85 p-6 shadow-2xl backdrop-blur sm:p-8">
+    <div className="space-y-5">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-zinc-100">Notificacoes sensiveis</h1>
@@ -138,13 +135,6 @@ export default async function NotificacoesPage({
                 Marcar todas como lidas
               </button>
             </form>
-
-            <Link
-              href="/painel"
-              className="rounded-lg border border-zinc-700 px-3 py-2 text-sm text-zinc-100 transition hover:border-zinc-500"
-            >
-              Voltar ao painel
-            </Link>
           </div>
         </header>
 
@@ -220,7 +210,6 @@ export default async function NotificacoesPage({
             );
           })}
         </div>
-      </section>
-    </main>
+    </div>
   );
 }
