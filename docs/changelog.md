@@ -7,6 +7,8 @@
 
 ### Alterado
 - Home do painel em `src/app/painel/page.tsx` ajustada para exibir o dashboard dentro da nova area de conteudo do layout.
+- Modulos `agendamentos`, `funcionarios`, `servicos`, `clientes`, `clientes/[id]`, `financeiro`, `equipe`, `auditoria`, `notificacoes` e `relatorios` ajustados para usar apenas conteudo interno no novo shell lateral.
+- Remocao dos botoes `Voltar ao painel` nas telas de modulos, reduzindo redundancia de navegacao.
 
 ### Observacoes
 - A navegacao por modulos agora fica centralizada no layout do painel, exibindo cada tela no conteudo ao lado do menu.

@@ -168,22 +168,12 @@ export default async function AuditoriaPage({
   const exportAuditPdfHref = `/api/reports/auditoria/pdf?${exportQuery.toString()}`;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-zinc-950 px-4 py-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.22),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(255,255,255,0.08),_transparent_40%)]" />
-
-      <section className="relative z-10 mx-auto w-full max-w-6xl space-y-5 rounded-2xl border border-sky-400/20 bg-zinc-900/85 p-6 shadow-2xl backdrop-blur sm:p-8">
+    <div className="space-y-5">
         <header className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold text-zinc-100">Auditoria</h1>
             <p className="text-sm text-zinc-300">Acompanhe alteracoes sensiveis da sua empresa.</p>
           </div>
-
-          <Link
-            href="/painel"
-            className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition hover:border-sky-400 hover:text-sky-300"
-          >
-            Voltar ao painel
-          </Link>
         </header>
 
         <form className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-5">
@@ -337,7 +327,6 @@ export default async function AuditoriaPage({
             })}
           </div>
         )}
-      </section>
-    </main>
+    </div>
   );
 }
