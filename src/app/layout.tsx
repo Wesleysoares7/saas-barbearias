@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS Barbearias",
-  description: "Sistema SaaS de agendamento para barbearias e saloes",
+  title: "SaaS Agenda de Servicos",
+  description: "Sistema SaaS de agendamento para barbearias, saloes e negocios de beleza",
 };
 
 export default function RootLayout({

@@ -62,7 +62,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
         <div className="grid gap-4 lg:grid-cols-[280px_1fr] lg:gap-6">
           <aside className="hidden rounded-2xl border border-zinc-700/70 bg-zinc-900/85 p-4 shadow-2xl backdrop-blur lg:block lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-y-auto">
             <div className="mb-4 border-b border-zinc-700/70 pb-4">
-              <p className="text-[11px] font-semibold tracking-[0.22em] text-fuchsia-300 uppercase">SaaS Barbearias</p>
+              <p className="text-[11px] font-semibold tracking-[0.22em] text-fuchsia-300 uppercase">SaaS Agenda de Servicos</p>
               <h2 className="mt-2 text-lg font-semibold text-zinc-100">{companyResponse.data?.nome ?? "Minha empresa"}</h2>
               <p className="mt-1 text-xs text-zinc-400">{role === "admin" ? "Administrador" : "Equipe"}</p>
             </div>
