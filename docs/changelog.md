@@ -11,6 +11,7 @@
 - Modulos `agendamentos`, `funcionarios`, `servicos`, `clientes`, `clientes/[id]`, `financeiro`, `equipe`, `auditoria`, `notificacoes` e `relatorios` ajustados para usar apenas conteudo interno no novo shell lateral.
 - Remocao dos botoes `Voltar ao painel` nas telas de modulos, reduzindo redundancia de navegacao.
 - Sidebar refinada com icones e agrupamento por secoes para leitura mais rapida da navegacao.
+- No mobile, o menu retratil agora fecha automaticamente ao selecionar um item.
 
 ### Observacoes
 - A navegacao por modulos agora fica centralizada no layout do painel, exibindo cada tela no conteudo ao lado do menu.

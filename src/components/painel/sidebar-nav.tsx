@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { type MouseEvent } from "react";
 import {
   BellRing,
   CalendarClock,
@@ -34,6 +35,7 @@ type SidebarNavItem = {
 type SidebarNavProps = {
   items: SidebarNavItem[];
   orientation?: "vertical" | "horizontal";
+  closeOnNavigate?: boolean;
 };
 
 function isActivePath(pathname: string, href: string): boolean {
@@ -84,10 +86,22 @@ function getIcon(icon: SidebarNavItem["icon"]) {
   return BellRing;
 }
 
-export function SidebarNav({ items, orientation = "vertical" }: SidebarNavProps) {
+export function SidebarNav({ items, orientation = "vertical", closeOnNavigate = false }: SidebarNavProps) {
   const pathname = usePathname();
   const isVertical = orientation === "vertical";
   const sections = [...new Set(items.map((item) => item.section))];
+
+  function handleNavigate(event: MouseEvent<HTMLAnchorElement>) {
+    if (!closeOnNavigate) {
+      return;
+    }
+
+    const detailsElement = event.currentTarget.closest("details");
+
+    if (detailsElement instanceof HTMLDetailsElement) {
+      detailsElement.open = false;
+    }
+  }
 
   if (!isVertical) {
     return (
@@ -100,6 +114,7 @@ export function SidebarNav({ items, orientation = "vertical" }: SidebarNavProps)
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleNavigate}
               className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium transition ${
                 active
                   ? "border-fuchsia-400/70 bg-fuchsia-500/20 text-fuchsia-100"
@@ -134,6 +149,7 @@ export function SidebarNav({ items, orientation = "vertical" }: SidebarNavProps)
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={handleNavigate}
                   className={`group block rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
                     active
                       ? "border-fuchsia-400/70 bg-fuchsia-500/20 text-fuchsia-100 shadow-[0_10px_30px_-22px_rgba(217,70,239,0.9)]"

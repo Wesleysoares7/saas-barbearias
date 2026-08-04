@@ -64,7 +64,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
           </summary>
 
           <div className="mt-3 space-y-3 border-t border-zinc-700/70 pt-3">
-            <SidebarNav items={navItems} orientation="vertical" />
+            <SidebarNav items={navItems} orientation="vertical" closeOnNavigate />
 
             <div className="space-y-2 rounded-xl border border-zinc-700/70 bg-zinc-950/60 p-3">
               <p className="text-xs text-zinc-400">{userResponse.data.user?.email ?? "Usuario sem e-mail"}</p>
