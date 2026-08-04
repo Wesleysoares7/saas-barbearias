@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-04 - Correcao dos checks de CI
+### Alterado
+- Pagina de atualizacao de senha ajustada para nao ler variaveis do Supabase durante o prerender do build.
+- `next` e `eslint-config-next` atualizados para `16.3.0` para corrigir vulnerabilidades reportadas pelo `npm audit`.
+- Workflows do GitHub Actions atualizados para Node.js 22 em `.github/workflows/ci.yml` e `.github/workflows/security.yml`.
+
+### Validado
+- `npm audit --audit-level=high` sem vulnerabilidades.
+- `npm run lint` sem erros.
+- `npm run build` validado sem `.env.local`, reproduzindo o ambiente do GitHub Actions.
+
 ## 2026-08-04 - Teste de protecao de branch
 ### Observacoes
 - Branch temporaria criada para validar Pull Request, GitHub Actions e protecao da `main`.
