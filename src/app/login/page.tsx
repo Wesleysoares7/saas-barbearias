@@ -9,9 +9,9 @@ export default function LoginPage() {
 
       <section className="relative z-10 w-full max-w-md rounded-2xl border border-amber-400/20 bg-zinc-900/85 p-6 shadow-2xl backdrop-blur sm:p-8">
         <div className="mb-6 space-y-2 text-center">
-          <p className="text-xs font-semibold tracking-[0.22em] text-amber-300 uppercase">SaaS Barbearias</p>
+          <p className="text-xs font-semibold tracking-[0.22em] text-amber-300 uppercase">SaaS Agenda de Servicos</p>
           <h1 className="text-2xl font-semibold text-zinc-100">Acesse sua conta</h1>
-          <p className="text-sm text-zinc-300">Entre para continuar a gestao da sua barbearia.</p>
+          <p className="text-sm text-zinc-300">Entre para continuar a gestao do seu negocio.</p>
         </div>
 
         <Suspense fallback={null}>

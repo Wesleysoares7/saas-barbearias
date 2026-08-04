@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-04 - Nome generico para multiplos negocios
+### Alterado
+- Titulo principal da aplicacao atualizado para `SaaS Agenda de Servicos`.
+- Textos de apoio do login ajustados para contexto generico de negocio.
+- Cabecalho do painel atualizado para refletir o novo nome.
+- Manual de uso atualizado para posicionar a plataforma para negocios de servicos em geral.
+
 ## 2026-08-04 - Manual de uso da aplicacao
 ### Adicionado
 - Documento `docs/manual-de-uso.md` com guia completo de configuracao, primeiro acesso, operacao por modulo, permissoes e resolucao de erros comuns.
@@ -89,7 +96,7 @@
 
 ### Alterado
 - Rota raiz `/` agora redireciona para `/login`.
-- Metadados da aplicacao atualizados para o contexto SaaS Barbearias.
+- Metadados da aplicacao atualizados para o contexto SaaS de agendamentos de servicos.
 - Rota `/api/test-supabase` ajustada para evitar falso negativo quando o endpoint raiz do PostgREST retorna 404.
 
 ### Observacoes

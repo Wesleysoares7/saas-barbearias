@@ -1,7 +1,7 @@
-# Manual de Uso - SaaS Barbearias
+# Manual de Uso - SaaS Agenda de Servicos
 
 ## 1. Visao geral
-Este sistema permite gerenciar uma barbearia em modelo SaaS com isolamento por empresa (multi-tenant).
+Este sistema permite gerenciar negocios de servicos em modelo SaaS com isolamento por empresa (multi-tenant).
 
 Principais recursos:
 - Autenticacao (login, cadastro, recuperacao de senha)
