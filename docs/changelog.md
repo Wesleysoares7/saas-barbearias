@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-04 - Estrutura com menu lateral vertical no painel
+### Adicionado
+- Layout compartilhado do painel em `src/app/painel/layout.tsx` com menu lateral vertical para desktop e menu horizontal para mobile.
+- Componente de navegacao com destaque de rota ativa em `src/components/painel/sidebar-nav.tsx`.
+
+### Alterado
+- Home do painel em `src/app/painel/page.tsx` ajustada para exibir o dashboard dentro da nova area de conteudo do layout.
+
+### Observacoes
+- A navegacao por modulos agora fica centralizada no layout do painel, exibindo cada tela no conteudo ao lado do menu.
+
 ## 2026-08-04 - Atualizacao visual moderna e vibrante
 ### Alterado
 - Tema global atualizado em `src/app/globals.css` com nova paleta vibrante, contrastes mais fortes e fundo atmosférico com gradientes.
