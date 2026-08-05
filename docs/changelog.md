@@ -3,7 +3,9 @@
 ## 2026-08-05 - Ajuste de redirect de autenticacao em producao
 ### Alterado
 - Cadastro passou a enviar `emailRedirectTo` com base em `NEXT_PUBLIC_APP_URL`, evitando links para localhost em ambiente publicado.
+- Fluxo de confirmacao de cadastro direcionado para `/auth/confirm`, que processa o `code` e redireciona para `/login` com status de confirmacao.
 - Recuperacao de senha passou a usar URL publica configuravel para `redirectTo`.
+- Fallback de URL publica definido para `https://saas-barbearias.vercel.app` quando `NEXT_PUBLIC_APP_URL` nao estiver configurada.
 - Manual atualizado com passos de configuracao da Vercel e URL Configuration no Supabase Auth.
 
 ## 2026-08-04 - Nome generico para multiplos negocios
