@@ -25,6 +25,7 @@ const INITIAL_STATE: LoginFormState = {
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_PUBLIC_APP_URL = "https://saas-barbearias.vercel.app";
 
 function getPublicAppUrl() {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -33,7 +34,7 @@ function getPublicAppUrl() {
     return configuredUrl.replace(/\/$/, "");
   }
 
-  return window.location.origin;
+  return DEFAULT_PUBLIC_APP_URL;
 }
 
 function validateLoginForm(values: LoginFormState): LoginFormErrors {
@@ -57,6 +58,8 @@ function validateLoginForm(values: LoginFormState): LoginFormErrors {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isConfirmed = searchParams.get("confirmed") === "1";
+  const authFlowError = searchParams.get("error");
   const [mode, setMode] = useState<AuthMode>("login");
   const [form, setForm] = useState<LoginFormState>(INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
@@ -116,7 +119,7 @@ export function LoginForm() {
       }
 
       if (mode === "signup") {
-        const emailRedirectTo = `${getPublicAppUrl()}/login`;
+        const emailRedirectTo = `${getPublicAppUrl()}/auth/confirm?next=/login`;
         const { data, error } = await supabase.auth.signUp({
           email: form.email.trim(),
           password: form.password,
@@ -282,6 +285,12 @@ export function LoginForm() {
 
       {errors.form ? <p className="text-sm text-amber-300">{errors.form}</p> : null}
       {successMessage ? <p className="text-sm text-emerald-300">{successMessage}</p> : null}
+      {!successMessage && isConfirmed ? (
+        <p className="text-sm text-emerald-300">Conta confirmada com sucesso. Agora voce pode entrar.</p>
+      ) : null}
+      {!errors.form && authFlowError === "confirmacao_falhou" ? (
+        <p className="text-sm text-amber-300">Nao foi possivel confirmar sua conta. Solicite um novo e-mail de confirmacao.</p>
+      ) : null}
 
       <p className="text-center text-xs text-zinc-400">
         {mode === "login"

@@ -32,7 +32,7 @@ Campos obrigatorios:
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 Campo obrigatorio em producao:
-- NEXT_PUBLIC_APP_URL (ex.: https://seu-dominio.vercel.app)
+- NEXT_PUBLIC_APP_URL (https://saas-barbearias.vercel.app)
 
 Campo opcional (futuras integracoes administrativas):
 - SUPABASE_SERVICE_ROLE_KEY
@@ -65,8 +65,8 @@ Para evitar que e-mails de cadastro/recuperacao apontem para localhost:
 2. No Supabase, abra Authentication > URL Configuration.
 3. Em Site URL, informe a mesma URL publica da Vercel.
 4. Em Redirect URLs, adicione:
-- https://seu-dominio.vercel.app/login
-- https://seu-dominio.vercel.app/auth/atualizar-senha
+- https://saas-barbearias.vercel.app/auth/confirm?next=/login
+- https://saas-barbearias.vercel.app/auth/atualizar-senha
 5. Salve e teste novo cadastro em ambiente de producao.
 
 ## 6. Primeiro acesso (fluxo admin)
