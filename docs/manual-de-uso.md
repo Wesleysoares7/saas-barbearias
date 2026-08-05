@@ -31,6 +31,9 @@ Campos obrigatorios:
 - NEXT_PUBLIC_SUPABASE_URL
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
 
+Campo obrigatorio em producao:
+- NEXT_PUBLIC_APP_URL (ex.: https://seu-dominio.vercel.app)
+
 Campo opcional (futuras integracoes administrativas):
 - SUPABASE_SERVICE_ROLE_KEY
 
@@ -55,6 +58,16 @@ No Supabase SQL Editor, execute os scripts:
 6. docs/database/006_etapa13_agendamentos_clientes.sql
 
 Se algum modulo acusar erro de tabela/campo ausente, revalide se todos os scripts acima foram executados.
+
+## 5.1 Deploy na Vercel e links de e-mail
+Para evitar que e-mails de cadastro/recuperacao apontem para localhost:
+1. Na Vercel, configure a variavel `NEXT_PUBLIC_APP_URL` com a URL publica do projeto.
+2. No Supabase, abra Authentication > URL Configuration.
+3. Em Site URL, informe a mesma URL publica da Vercel.
+4. Em Redirect URLs, adicione:
+- https://seu-dominio.vercel.app/login
+- https://seu-dominio.vercel.app/auth/atualizar-senha
+5. Salve e teste novo cadastro em ambiente de producao.
 
 ## 6. Primeiro acesso (fluxo admin)
 1. Acesse /login

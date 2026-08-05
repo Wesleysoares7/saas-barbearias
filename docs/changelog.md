@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-05 - Ajuste de redirect de autenticacao em producao
+### Alterado
+- Cadastro passou a enviar `emailRedirectTo` com base em `NEXT_PUBLIC_APP_URL`, evitando links para localhost em ambiente publicado.
+- Recuperacao de senha passou a usar URL publica configuravel para `redirectTo`.
+- Manual atualizado com passos de configuracao da Vercel e URL Configuration no Supabase Auth.
+
 ## 2026-08-04 - Nome generico para multiplos negocios
 ### Alterado
 - Titulo principal da aplicacao atualizado para `SaaS Agenda de Servicos`.
