@@ -26,6 +26,16 @@ const INITIAL_STATE: LoginFormState = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function getPublicAppUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (configuredUrl) {
+    return configuredUrl.replace(/\/$/, "");
+  }
+
+  return window.location.origin;
+}
+
 function validateLoginForm(values: LoginFormState): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
@@ -106,9 +116,13 @@ export function LoginForm() {
       }
 
       if (mode === "signup") {
+        const emailRedirectTo = `${getPublicAppUrl()}/login`;
         const { data, error } = await supabase.auth.signUp({
           email: form.email.trim(),
           password: form.password,
+          options: {
+            emailRedirectTo,
+          },
         });
 
         if (error) {
@@ -126,7 +140,7 @@ export function LoginForm() {
         return;
       }
 
-      const redirectTo = `${window.location.origin}/auth/atualizar-senha`;
+      const redirectTo = `${getPublicAppUrl()}/auth/atualizar-senha`;
       const { error } = await supabase.auth.resetPasswordForEmail(form.email.trim(), {
         redirectTo,
       });
