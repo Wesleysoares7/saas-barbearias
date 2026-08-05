@@ -47,6 +47,7 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname === "/login" || request.nextUrl.pathname.startsWith("/auth/");
   const isProtectedPath =
     request.nextUrl.pathname.startsWith("/painel") ||
+    request.nextUrl.pathname.startsWith("/master") ||
     request.nextUrl.pathname.startsWith("/onboarding") ||
     request.nextUrl.pathname.startsWith("/convites");
 
@@ -59,7 +60,9 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/painel";
+    const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
+
+    redirectUrl.pathname = !platformAdminError && isPlatformAdmin ? "/master/empresas" : "/painel";
     return NextResponse.redirect(redirectUrl);
   }
 

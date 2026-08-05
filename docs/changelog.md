@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-08-05 - Etapa 16: Acesso master de plataforma
+### Adicionado
+- Script `docs/database/009_etapa16_master_plataforma.sql` com tabela `platform_admins`, funcao `is_platform_admin()` e policy para leitura global de `companies` por usuario master.
+- Nova area master em `/master/empresas` para listar todas as empresas cadastradas na plataforma.
+
+### Alterado
+- Regras de acesso atualizadas para redirecionar usuario master para a area global quando nao houver `company_id`.
+- Middleware atualizado para proteger rotas `/master/*` e redirecionar login para a area master quando aplicavel.
+- Onboarding ajustado para nao bloquear usuario master em fluxo de empresa.
+- Documentacao de banco e manual de uso atualizados com o novo perfil master.
+
 ## 2026-08-05 - Ajuste de redirect de autenticacao em producao
 ### Alterado
 - Cadastro passou a enviar `emailRedirectTo` com base em `NEXT_PUBLIC_APP_URL`, evitando links para localhost em ambiente publicado.

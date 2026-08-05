@@ -14,7 +14,8 @@ Principais recursos:
 - Relatorios com exportacao CSV/PDF
 
 ## 2. Perfis de acesso
-Existem dois papeis:
+Existem tres papeis:
+- master: acesso global da plataforma para visao de todas as empresas
 - admin: acesso completo aos modulos
 - employee: acesso limitado (agendamentos e relatorios)
 
@@ -56,6 +57,9 @@ No Supabase SQL Editor, execute os scripts:
 4. docs/database/004_etapa12_notificacoes.sql
 5. docs/database/005_etapa13_clientes.sql
 6. docs/database/006_etapa13_agendamentos_clientes.sql
+7. docs/database/007_etapa14_logo_empresa_storage.sql
+8. docs/database/008_etapa15_agendamento_publico.sql
+9. docs/database/009_etapa16_master_plataforma.sql
 
 Se algum modulo acusar erro de tabela/campo ausente, revalide se todos os scripts acima foram executados.
 
@@ -85,6 +89,9 @@ Para evitar que e-mails de cadastro/recuperacao apontem para localhost:
 ## 7. Navegacao principal
 Tela principal:
 - /painel
+
+Area master:
+- /master/empresas
 
 Modulos:
 - /painel/funcionarios
@@ -170,6 +177,9 @@ Modulos:
 - Filtro por intervalo de datas
 
 ## 10. Permissoes (resumo)
+Master:
+- Acesso global para listar empresas cadastradas da plataforma
+
 Admin:
 - Acesso total a todos os modulos e operacoes
 

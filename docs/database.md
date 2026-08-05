@@ -20,6 +20,9 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - `docs/database/004_etapa12_notificacoes.sql`
 - `docs/database/005_etapa13_clientes.sql`
 - `docs/database/006_etapa13_agendamentos_clientes.sql`
+- `docs/database/007_etapa14_logo_empresa_storage.sql`
+- `docs/database/008_etapa15_agendamento_publico.sql`
+- `docs/database/009_etapa16_master_plataforma.sql`
 
 ## Estrategia multi-tenant
 - Todas as tabelas de dominio terao company_id.
@@ -44,6 +47,7 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - Etapa 11: Convites por e-mail e trilha de auditoria implementados no app com aceite por token.
 - Etapa 12: Automacoes de notificacao para eventos sensiveis implementadas com caixa de notificacoes no painel.
 - Etapa 13: Cadastro inicial de clientes implementado no app com CRUD em `/painel/clientes`.
+- Etapa 16: Estrutura de acesso master implementada para visao global de empresas em `/master/empresas`.
 
 ## Reforco de conflito de horarios (Etapa 6)
 - Campo `data_hora_fim` adicionado em `appointments`.
@@ -69,3 +73,4 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - Para habilitar notificacoes sensiveis, execute `004_etapa12_notificacoes.sql` no Supabase SQL Editor.
 - Para habilitar cadastro de clientes, execute `005_etapa13_clientes.sql` no Supabase SQL Editor.
 - Para integrar clientes aos agendamentos, execute `006_etapa13_agendamentos_clientes.sql` no Supabase SQL Editor.
+- Para habilitar acesso master global, execute `009_etapa16_master_plataforma.sql` no Supabase SQL Editor e inclua o `user_id` desejado em `public.platform_admins`.

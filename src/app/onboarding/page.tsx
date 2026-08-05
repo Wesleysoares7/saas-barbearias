@@ -15,9 +15,14 @@ export default async function OnboardingPage() {
   }
 
   const { data: companyId } = await supabase.rpc("current_company_id");
+  const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
 
   if (companyId) {
     redirect("/painel");
+  }
+
+  if (!platformAdminError && isPlatformAdmin) {
+    redirect("/master/empresas");
   }
 
   return (
