@@ -187,6 +187,7 @@ Master:
 - Pode acessar relatorios financeiros consolidados de todas as empresas
 - Pode filtrar os relatorios financeiros por empresa especifica
 - Pode pesquisar empresa digitando parte do nome no filtro dos relatorios master
+- Pode filtrar os relatorios financeiros por periodo (data inicial e data final)
 
 Admin:
 - Acesso total a todos os modulos e operacoes
