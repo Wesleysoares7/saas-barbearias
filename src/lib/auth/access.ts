@@ -19,8 +19,17 @@ type AccessContext = {
   userId: string | null;
   companyId: string | null;
   role: UserRole | null;
+  isPlatformAdmin: boolean;
   errorMessage: string | null;
-  redirectTo: "/login" | "/onboarding" | "/painel" | null;
+  redirectTo: "/login" | "/onboarding" | "/painel" | "/master/empresas" | null;
+};
+
+type PlatformAccessContext = {
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+  userId: string | null;
+  isPlatformAdmin: boolean;
+  errorMessage: string | null;
+  redirectTo: "/login" | "/painel" | null;
 };
 
 export function canAccessModule(role: UserRole, moduleKey: ModuleKey): boolean {
@@ -51,6 +60,44 @@ export function isAdmin(role: UserRole | null): boolean {
   return role === "admin";
 }
 
+export async function getPlatformAccessContext(): Promise<PlatformAccessContext> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      supabase,
+      userId: null,
+      isPlatformAdmin: false,
+      errorMessage: "Sua sessao expirou. Faca login novamente.",
+      redirectTo: "/login",
+    };
+  }
+
+  const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
+
+  if (platformAdminError || !isPlatformAdmin) {
+    return {
+      supabase,
+      userId: user.id,
+      isPlatformAdmin: false,
+      errorMessage: "Este usuario nao possui acesso master da plataforma.",
+      redirectTo: "/painel",
+    };
+  }
+
+  return {
+    supabase,
+    userId: user.id,
+    isPlatformAdmin: true,
+    errorMessage: null,
+    redirectTo: null,
+  };
+}
+
 export async function getAccessContext(): Promise<AccessContext> {
   const supabase = await createSupabaseServerClient();
   const {
@@ -64,10 +111,14 @@ export async function getAccessContext(): Promise<AccessContext> {
       userId: null,
       companyId: null,
       role: null,
+      isPlatformAdmin: false,
       errorMessage: "Sua sessao expirou. Faca login novamente.",
       redirectTo: "/login",
     };
   }
+
+  const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
+  const hasPlatformAdminAccess = !platformAdminError && Boolean(isPlatformAdmin);
 
   const { data: companyId, error: companyError } = await supabase.rpc("current_company_id");
 
@@ -77,8 +128,9 @@ export async function getAccessContext(): Promise<AccessContext> {
       userId: user.id,
       companyId: null,
       role: null,
-      errorMessage: "Empresa nao encontrada para este usuario. Finalize o onboarding.",
-      redirectTo: "/onboarding",
+      isPlatformAdmin: hasPlatformAdminAccess,
+      errorMessage: hasPlatformAdminAccess ? null : "Empresa nao encontrada para este usuario. Finalize o onboarding.",
+      redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/onboarding",
     };
   }
 
@@ -95,8 +147,9 @@ export async function getAccessContext(): Promise<AccessContext> {
       userId: user.id,
       companyId,
       role: null,
-      errorMessage: "Perfil de acesso nao encontrado para este usuario.",
-      redirectTo: "/painel",
+      isPlatformAdmin: hasPlatformAdminAccess,
+      errorMessage: hasPlatformAdminAccess ? null : "Perfil de acesso nao encontrado para este usuario.",
+      redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/painel",
     };
   }
 
@@ -105,6 +158,7 @@ export async function getAccessContext(): Promise<AccessContext> {
     userId: user.id,
     companyId,
     role: profile.role as UserRole,
+    isPlatformAdmin: hasPlatformAdminAccess,
     errorMessage: null,
     redirectTo: null,
   };
