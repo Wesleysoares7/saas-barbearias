@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ai:context": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-ai-context.ps1 -Mode lite",
+    "ai:context:full": "powershell -ExecutionPolicy Bypass -File ./scripts/generate-ai-context.ps1 -Mode full"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

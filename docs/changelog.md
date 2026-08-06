@@ -7,6 +7,7 @@
 - Pagina `src/app/master/relatorios/page.tsx` com consolidado de faturamento, comissao e agendamentos por empresa.
 - Filtro por empresa na tela `src/app/master/relatorios/page.tsx` para analisar uma empresa especifica sem perder o consolidado global quando desejar limpar o filtro.
 - Filtro evoluido para busca digitavel por nome da empresa com sugestoes e correspondencia parcial.
+- Filtro por periodo (data inicial e data final) adicionado no relatorio financeiro da area master.
 
 ### Alterado
 - Tela `src/app/master/empresas/page.tsx` evoluida para administracao completa de empresas (CRUD).

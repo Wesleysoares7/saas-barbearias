@@ -14,11 +14,13 @@ type PaymentRow = {
   company_id: string;
   valor: number | string;
   valor_comissao: number | string;
+  created_at: string;
 };
 
 type AppointmentRow = {
   company_id: string;
   status: "agendado" | "concluido" | "cancelado";
+  data_hora: string;
 };
 
 function asNumber(value: number | string | null | undefined) {
@@ -45,8 +47,46 @@ function normalizeText(value: string) {
 type MasterReportsPageProps = {
   searchParams?: Promise<{
     empresa?: string;
+    dataInicio?: string;
+    dataFim?: string;
   }>;
 };
+
+function parseStartDate(dateValue: string | undefined) {
+  if (!dateValue) {
+    return null;
+  }
+
+  const parsed = new Date(`${dateValue}T00:00:00.000Z`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseEndDate(dateValue: string | undefined) {
+  if (!dateValue) {
+    return null;
+  }
+
+  const parsed = new Date(`${dateValue}T23:59:59.999Z`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isInsideDateRange(valueIso: string, startDate: Date | null, endDate: Date | null) {
+  const valueDate = new Date(valueIso);
+
+  if (Number.isNaN(valueDate.getTime())) {
+    return false;
+  }
+
+  if (startDate && valueDate < startDate) {
+    return false;
+  }
+
+  if (endDate && valueDate > endDate) {
+    return false;
+  }
+
+  return true;
+}
 
 export default async function MasterReportsPage({ searchParams }: MasterReportsPageProps) {
   const { redirectTo } = await getPlatformAccessContext();
@@ -61,8 +101,8 @@ export default async function MasterReportsPage({ searchParams }: MasterReportsP
 
   const [{ data: companies }, { data: payments }, { data: appointments }, userResponse] = await Promise.all([
     adminClient.from("companies").select("id, nome").order("nome", { ascending: true }),
-    adminClient.from("payments").select("company_id, valor, valor_comissao"),
-    adminClient.from("appointments").select("company_id, status"),
+    adminClient.from("payments").select("company_id, valor, valor_comissao, created_at"),
+    adminClient.from("appointments").select("company_id, status, data_hora"),
     adminClient.auth.getUser(),
   ]);
 
@@ -71,10 +111,17 @@ export default async function MasterReportsPage({ searchParams }: MasterReportsP
   const appointmentsList = (appointments ?? []) as AppointmentRow[];
   const companySearchTerm = resolvedSearchParams?.empresa?.trim() ?? "";
   const normalizedCompanySearchTerm = normalizeText(companySearchTerm);
+  const startDateInput = resolvedSearchParams?.dataInicio?.trim() ?? "";
+  const endDateInput = resolvedSearchParams?.dataFim?.trim() ?? "";
+  const startDate = parseStartDate(startDateInput || undefined);
+  const endDate = parseEndDate(endDateInput || undefined);
+
+  const filteredPayments = paymentsList.filter((item) => isInsideDateRange(item.created_at, startDate, endDate));
+  const filteredAppointments = appointmentsList.filter((item) => isInsideDateRange(item.data_hora, startDate, endDate));
 
   const perCompany = companiesList.map((company) => {
-    const companyPayments = paymentsList.filter((item) => item.company_id === company.id);
-    const companyAppointments = appointmentsList.filter((item) => item.company_id === company.id);
+    const companyPayments = filteredPayments.filter((item) => item.company_id === company.id);
+    const companyAppointments = filteredAppointments.filter((item) => item.company_id === company.id);
 
     const totalRevenue = companyPayments.reduce((sum, item) => sum + asNumber(item.valor), 0);
     const totalCommission = companyPayments.reduce((sum, item) => sum + asNumber(item.valor_comissao), 0);
@@ -152,8 +199,8 @@ export default async function MasterReportsPage({ searchParams }: MasterReportsP
         </section>
 
         <section className="rounded-2xl border border-zinc-700/60 bg-zinc-900/70 p-4 shadow-2xl backdrop-blur sm:p-6">
-          <form className="mb-4 flex flex-col gap-3 rounded-xl border border-zinc-700/70 bg-zinc-950/50 p-3 sm:flex-row sm:items-end">
-            <div className="min-w-0 flex-1">
+          <form className="mb-4 grid gap-3 rounded-xl border border-zinc-700/70 bg-zinc-950/50 p-3 sm:grid-cols-4">
+            <div className="min-w-0 sm:col-span-2">
               <label htmlFor="empresa" className="mb-1 block text-sm font-medium text-zinc-200">
                 Filtrar por empresa
               </label>
@@ -172,6 +219,31 @@ export default async function MasterReportsPage({ searchParams }: MasterReportsP
                 ))}
               </datalist>
             </div>
+            <div>
+              <label htmlFor="dataInicio" className="mb-1 block text-sm font-medium text-zinc-200">
+                Data inicial
+              </label>
+              <input
+                id="dataInicio"
+                name="dataInicio"
+                type="date"
+                defaultValue={startDateInput}
+                className="h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-emerald-400"
+              />
+            </div>
+            <div>
+              <label htmlFor="dataFim" className="mb-1 block text-sm font-medium text-zinc-200">
+                Data final
+              </label>
+              <input
+                id="dataFim"
+                name="dataFim"
+                type="date"
+                defaultValue={endDateInput}
+                className="h-10 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-emerald-400"
+              />
+            </div>
+            <div className="sm:col-span-4 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
             <button
               type="submit"
               className="h-10 rounded-lg border border-emerald-500/60 bg-emerald-500/15 px-4 text-sm font-medium text-emerald-100 transition hover:bg-emerald-500/25"
@@ -184,11 +256,17 @@ export default async function MasterReportsPage({ searchParams }: MasterReportsP
             >
               Limpar
             </Link>
+            </div>
           </form>
 
           <h2 className="mb-4 text-lg font-semibold text-zinc-100">Resumo por empresa</h2>
 
-          {companySearchTerm ? <p className="mb-4 text-sm text-zinc-400">Filtro ativo: empresas com nome contendo &quot;{companySearchTerm}&quot;.</p> : null}
+          {companySearchTerm ? <p className="mb-2 text-sm text-zinc-400">Filtro ativo: empresas com nome contendo &quot;{companySearchTerm}&quot;.</p> : null}
+          {startDateInput || endDateInput ? (
+            <p className="mb-4 text-sm text-zinc-400">
+              Periodo ativo: {startDateInput || "inicio livre"} ate {endDateInput || "fim livre"}.
+            </p>
+          ) : null}
 
           {visibleCompanies.length === 0 ? (
             <p className="rounded-xl border border-zinc-700/70 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-300">Nenhuma empresa encontrada para o filtro informado.</p>
