@@ -3,6 +3,11 @@ type SupabaseEnv = {
   supabaseAnonKey: string;
 };
 
+type SupabaseServiceRoleEnv = {
+  supabaseUrl: string;
+  supabaseServiceRoleKey: string;
+};
+
 export function getSupabaseEnv(): SupabaseEnv {
   const rawSupabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
@@ -26,5 +31,19 @@ export function getSupabaseEnv(): SupabaseEnv {
   return {
     supabaseUrl: normalizedSupabaseUrl,
     supabaseAnonKey,
+  };
+}
+
+export function getSupabaseServiceRoleEnv(): SupabaseServiceRoleEnv {
+  const { supabaseUrl } = getSupabaseEnv();
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+  if (!supabaseServiceRoleKey) {
+    throw new Error("Variavel de ambiente obrigatoria ausente para area master: SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  return {
+    supabaseUrl,
+    supabaseServiceRoleKey,
   };
 }

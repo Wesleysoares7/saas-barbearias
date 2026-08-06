@@ -101,7 +101,7 @@ export function LoginForm() {
 
       if (mode === "login") {
         const nextPath = searchParams.get("next");
-        const safeNextPath = nextPath?.startsWith("/") ? nextPath : "/painel";
+        const safeNextPath = nextPath?.startsWith("/") ? nextPath : null;
 
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email.trim(),
@@ -113,7 +113,17 @@ export function LoginForm() {
           return;
         }
 
-        router.replace(safeNextPath);
+        let destinationPath = safeNextPath ?? "/painel";
+
+        if (!safeNextPath) {
+          const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
+
+          if (isPlatformAdmin) {
+            destinationPath = "/master/empresas";
+          }
+        }
+
+        router.replace(destinationPath);
         router.refresh();
         return;
       }

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-08-06 - Etapa 17: Permissoes totais na area master
+### Adicionado
+- Client administrativo `src/lib/supabase/admin.ts` usando `SUPABASE_SERVICE_ROLE_KEY` para operacoes globais controladas da plataforma.
+- Server actions em `src/app/master/actions.ts` para incluir, alterar e excluir empresas na area master.
+- Pagina `src/app/master/relatorios/page.tsx` com consolidado de faturamento, comissao e agendamentos por empresa.
+- Filtro por empresa na tela `src/app/master/relatorios/page.tsx` para analisar uma empresa especifica sem perder o consolidado global quando desejar limpar o filtro.
+- Filtro evoluido para busca digitavel por nome da empresa com sugestoes e correspondencia parcial.
+
+### Alterado
+- Tela `src/app/master/empresas/page.tsx` evoluida para administracao completa de empresas (CRUD).
+- Redirecionamento de login refinado para enviar usuario master para `/master/empresas` quando aplicavel.
+- Manual atualizado para incluir menus e permissoes da area master.
+
 ## 2026-08-05 - Etapa 16: Acesso master de plataforma
 ### Adicionado
 - Script `docs/database/009_etapa16_master_plataforma.sql` com tabela `platform_admins`, funcao `is_platform_admin()` e policy para leitura global de `companies` por usuario master.
@@ -9,6 +22,7 @@
 - Regras de acesso atualizadas para redirecionar usuario master para a area global quando nao houver `company_id`.
 - Middleware atualizado para proteger rotas `/master/*` e redirecionar login para a area master quando aplicavel.
 - Onboarding ajustado para nao bloquear usuario master em fluxo de empresa.
+- Redirecionamento do formulario de login ajustado para enviar usuario master a `/master/empresas` quando nao houver parametro `next`.
 - Documentacao de banco e manual de uso atualizados com o novo perfil master.
 
 ## 2026-08-05 - Ajuste de redirect de autenticacao em producao

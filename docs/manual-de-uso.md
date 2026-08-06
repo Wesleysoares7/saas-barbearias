@@ -38,6 +38,9 @@ Campo obrigatorio em producao:
 Campo opcional (futuras integracoes administrativas):
 - SUPABASE_SERVICE_ROLE_KEY
 
+Observacao para area master:
+- `SUPABASE_SERVICE_ROLE_KEY` passa a ser obrigatoria para incluir, alterar, excluir empresas e gerar relatorios globais.
+
 ### 4.2 Instalar dependencias
 Execute:
 - npm install
@@ -92,6 +95,7 @@ Tela principal:
 
 Area master:
 - /master/empresas
+- /master/relatorios
 
 Modulos:
 - /painel/funcionarios
@@ -179,6 +183,10 @@ Modulos:
 ## 10. Permissoes (resumo)
 Master:
 - Acesso global para listar empresas cadastradas da plataforma
+- Pode incluir, alterar e excluir empresas na area master
+- Pode acessar relatorios financeiros consolidados de todas as empresas
+- Pode filtrar os relatorios financeiros por empresa especifica
+- Pode pesquisar empresa digitando parte do nome no filtro dos relatorios master
 
 Admin:
 - Acesso total a todos os modulos e operacoes
