@@ -42,6 +42,9 @@ export async function createEmployeeAction(_prevState: ActionState, formData: Fo
     return { success: false, message: "Informe o nome do funcionario com pelo menos 2 caracteres." };
   }
 
+  if (percentualComissao && (!Number.isFinite(percentualComissao) || percentualComissao < 0 || percentualComissao > 100)) {
+    return { success: false, message: "Informe um percentual de comissao entre 0 e 100." };
+  }
   if (!Number.isFinite(percentualComissao) || percentualComissao < 0 || percentualComissao > 100) {
     return { success: false, message: "Informe um percentual de comissao entre 0 e 100." };
   }
@@ -57,6 +60,7 @@ export async function createEmployeeAction(_prevState: ActionState, formData: Fo
   }
 
   const { error } = await supabase.from("employees").insert({
+    percentual_comissao: percentualComissao || null,
     company_id: companyId,
     nome,
     telefone: telefone || null,

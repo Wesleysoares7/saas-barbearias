@@ -76,7 +76,7 @@ export function CreateEmployeeForm() {
 
         <div className="space-y-1">
           <label htmlFor="novo-funcionario-percentual" className="text-sm text-zinc-200">
-            Comissao (%)
+            Comissao (%) (opcional)
           </label>
           <input
             id="novo-funcionario-percentual"
@@ -87,7 +87,6 @@ export function CreateEmployeeForm() {
             step="0.01"
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="40"
-            required
           />
         </div>
 
@@ -97,6 +96,15 @@ export function CreateEmployeeForm() {
         </label>
 
         <div className="md:col-span-2 flex items-center justify-start gap-3">
+          <Button
+            type="button"
+            className="h-11 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+            onClick={() => {
+              // TODO: Preencher com dados do administrador
+            }}
+          >
+            Preencher com meus dados
+          </Button>
           <SubmitButton />
         </div>
       </form>

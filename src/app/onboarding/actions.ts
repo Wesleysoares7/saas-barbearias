@@ -31,6 +31,7 @@ export async function completeOnboardingAction(
   const nomeEmpresa = sanitizeText(formData.get("nomeEmpresa"));
   const telefone = sanitizeText(formData.get("telefone"));
   const endereco = sanitizeText(formData.get("endereco"));
+  const unicoAtendente = formData.get("unico_atendente") === "on";
 
   const fieldErrors: OnboardingActionState["fieldErrors"] = {};
 
@@ -98,6 +99,23 @@ export async function completeOnboardingAction(
       success: false,
       message: `Empresa criada, mas houve erro ao criar o perfil admin: ${profileError.message}`,
     };
+  }
+
+  if (unicoAtendente) {
+    const { error: employeeError } = await supabase.from("employees").insert({
+      company_id: companyId,
+      nome: nomeResponsavel,
+      telefone: telefone || null,
+      percentual_comissao: null,
+      ativo: true,
+    });
+
+    if (employeeError) {
+      return {
+        success: false,
+        message: `Empresa criada, mas houve erro ao cadastrar o atendente: ${employeeError.message}`,
+      };
+    }
   }
 
   revalidatePath("/painel");
