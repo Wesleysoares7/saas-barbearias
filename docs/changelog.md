@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-01 - Corrigir verificacao de vinculo do administrador na lista de funcionarios
+
+### Corrigido
+
+- A tela de Funcionarios agora reconhece o administrador logado como ja cadastrado usando multiplos criterios (nao apenas `user_id`): e-mail do perfil, telefone da empresa (numeros) e nome identico ao do perfil. Antes, um registro criado manualmente antes desta funcionalidade continuava exibindo o banner "Voce ainda nao esta cadastrado como funcionario" mesmo quando o administrador ja constava na lista.
+- Quando a correspondencia e encontrada sem `user_id` preenchido, o sistema vincula automaticamente o registro ao usuario logado (update silencioso), sem exigir nova acao manual.
+
+### Alterado
+
+- `createEmployeeAction` passou a aceitar um sinal `is_self` (marcado ao usar "Preencher com meus dados" e limpo se o nome/telefone forem editados manualmente) para gravar `user_id`/`email` diretamente no cadastro, evitando depender apenas da correspondencia posterior por nome/telefone.
+
 ## 2026-09-01 - Concluir atendimento e cobrar em uma unica tela
 
 ### Adicionado

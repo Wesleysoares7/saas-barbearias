@@ -49,6 +49,7 @@ export async function createEmployeeAction(
     formData.get("percentual_comissao"),
   );
   const ativo = formData.get("ativo") === "on";
+  const isSelf = sanitizeText(formData.get("is_self")) === "1";
 
   if (nome.length < 2) {
     return {
@@ -64,7 +65,8 @@ export async function createEmployeeAction(
     };
   }
 
-  const { supabase, companyId, role, errorMessage } = await getCompanyScope();
+  const { supabase, userId, companyId, role, errorMessage } =
+    await getCompanyScope();
 
   if (!companyId) {
     return {
@@ -80,12 +82,40 @@ export async function createEmployeeAction(
     };
   }
 
+  let selfEmail: string | null = null;
+
+  if (isSelf && userId) {
+    const { data: existingSelfEmployee } = await supabase
+      .from("employees")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (existingSelfEmployee) {
+      return {
+        success: false,
+        message: "Voce ja possui um registro de funcionario nesta empresa.",
+      };
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    selfEmail = profile?.email ?? null;
+  }
+
   const { error } = await supabase.from("employees").insert({
     company_id: companyId,
     nome,
     telefone: telefone || null,
     percentual_comissao: percentualComissao,
     ativo,
+    ...(isSelf && userId ? { user_id: userId, email: selfEmail } : {}),
   });
 
   if (error) {
@@ -255,9 +285,10 @@ export async function getMyProfileForEmployeeFormAction(): Promise<MyProfileForE
 // Usado pelo botao "Cadastrar-me como funcionario" na lista de funcionarios, para o
 // administrador que nao marcou "atendente unico" no onboarding e ainda nao tem um
 // registro de funcionario proprio. Nao ha suporte a avatar no projeto ainda.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function registerMyselfAsEmployeeAction(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _prevState: ActionState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _formData: FormData,
 ): Promise<ActionState> {
   const { supabase, userId, companyId, role } = await getCompanyScope();
