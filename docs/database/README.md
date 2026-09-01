@@ -3,6 +3,7 @@
 Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas RLS nas proximas etapas.
 
 ## Arquivos atuais
+
 - `001_etapa3_schema_rls.sql`: modelagem inicial do banco com RLS multi-tenant.
 - `etapa3_como_executar.md`: guia de execucao do script no Supabase SQL Editor.
 - `002_etapa6_conflito_agendamentos.sql`: reforco de agendamentos com `data_hora_fim` e bloqueio de sobreposicao por funcionario.
