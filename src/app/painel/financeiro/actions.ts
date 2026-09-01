@@ -24,7 +24,7 @@ type ServiceRow = {
 
 type EmployeeRow = {
   id: string;
-  percentual_comissao: number;
+  percentual_comissao: number | null;
 };
 
 function sanitizeText(value: FormDataEntryValue | null): string {
@@ -111,14 +111,21 @@ function validateFinancialInput(params: {
     return "Informe um valor valido para o pagamento.";
   }
 
-  if (!Number.isFinite(params.percentualComissao) || params.percentualComissao < 0 || params.percentualComissao > 100) {
+  if (
+    !Number.isFinite(params.percentualComissao) ||
+    params.percentualComissao < 0 ||
+    params.percentualComissao > 100
+  ) {
     return "Informe percentual de comissao entre 0 e 100.";
   }
 
   return null;
 }
 
-export async function createPaymentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function createPaymentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const appointmentId = sanitizeText(formData.get("appointment_id"));
   const formaPagamento = sanitizeText(formData.get("forma_pagamento"));
   const valorInput = sanitizeMoney(formData.get("valor"));
@@ -131,33 +138,58 @@ export async function createPaymentAction(_prevState: ActionState, formData: For
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar financeiro." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar financeiro.",
+    };
   }
 
-  const context = await getAppointmentFinancialContext({ appointmentId, companyId }, supabase);
+  const context = await getAppointmentFinancialContext(
+    { appointmentId, companyId },
+    supabase,
+  );
 
   if (!context.appointment) {
-    return { success: false, message: "Agendamento invalido para sua empresa." };
+    return {
+      success: false,
+      message: "Agendamento invalido para sua empresa.",
+    };
   }
 
   if (context.appointment.status !== "concluido") {
-    return { success: false, message: "Somente agendamentos concluidos podem gerar pagamento." };
+    return {
+      success: false,
+      message: "Somente agendamentos concluidos podem gerar pagamento.",
+    };
   }
 
   if (!context.service || !context.employee) {
-    return { success: false, message: "Nao foi possivel obter dados de servico/funcionario deste agendamento." };
+    return {
+      success: false,
+      message:
+        "Nao foi possivel obter dados de servico/funcionario deste agendamento.",
+    };
   }
 
-  const valor = Number.isFinite(valorInput) ? valorInput : Number(context.service.valor);
+  const valor = Number.isFinite(valorInput)
+    ? valorInput
+    : Number(context.service.valor);
   const percentualComissao = Number.isFinite(percentualInput)
     ? percentualInput
-    : Number(context.employee.percentual_comissao);
+    : Number(context.employee.percentual_comissao ?? 0);
 
-  const inputError = validateFinancialInput({ formaPagamento, valor, percentualComissao });
+  const inputError = validateFinancialInput({
+    formaPagamento,
+    valor,
+    percentualComissao,
+  });
 
   if (inputError) {
     return { success: false, message: inputError };
@@ -173,7 +205,10 @@ export async function createPaymentAction(_prevState: ActionState, formData: For
     .maybeSingle();
 
   if (existingPayment) {
-    return { success: false, message: "Este agendamento ja possui pagamento registrado." };
+    return {
+      success: false,
+      message: "Este agendamento ja possui pagamento registrado.",
+    };
   }
 
   const { error } = await supabase.from("payments").insert({
@@ -186,14 +221,20 @@ export async function createPaymentAction(_prevState: ActionState, formData: For
   });
 
   if (error) {
-    return { success: false, message: `Nao foi possivel registrar pagamento: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel registrar pagamento: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/financeiro");
   return { success: true, message: "Pagamento registrado com sucesso." };
 }
 
-export async function updatePaymentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function updatePaymentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
   const formaPagamento = sanitizeText(formData.get("forma_pagamento"));
   const valor = sanitizeMoney(formData.get("valor"));
@@ -203,7 +244,11 @@ export async function updatePaymentAction(_prevState: ActionState, formData: For
     return { success: false, message: "Pagamento invalido para atualizacao." };
   }
 
-  const inputError = validateFinancialInput({ formaPagamento, valor, percentualComissao });
+  const inputError = validateFinancialInput({
+    formaPagamento,
+    valor,
+    percentualComissao,
+  });
 
   if (inputError) {
     return { success: false, message: inputError };
@@ -212,11 +257,17 @@ export async function updatePaymentAction(_prevState: ActionState, formData: For
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar financeiro." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar financeiro.",
+    };
   }
 
   const { data: payment } = await supabase
@@ -227,7 +278,10 @@ export async function updatePaymentAction(_prevState: ActionState, formData: For
     .maybeSingle();
 
   if (!payment) {
-    return { success: false, message: "Pagamento nao encontrado para sua empresa." };
+    return {
+      success: false,
+      message: "Pagamento nao encontrado para sua empresa.",
+    };
   }
 
   const { data: appointment } = await supabase
@@ -238,7 +292,10 @@ export async function updatePaymentAction(_prevState: ActionState, formData: For
     .maybeSingle();
 
   if (!appointment || appointment.status !== "concluido") {
-    return { success: false, message: "Pagamento so pode ser mantido em agendamento concluido." };
+    return {
+      success: false,
+      message: "Pagamento so pode ser mantido em agendamento concluido.",
+    };
   }
 
   const valorComissao = roundToTwo((valor * percentualComissao) / 100);
@@ -255,14 +312,20 @@ export async function updatePaymentAction(_prevState: ActionState, formData: For
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar pagamento: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel atualizar pagamento: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/financeiro");
   return { success: true, message: "Pagamento atualizado com sucesso." };
 }
 
-export async function deletePaymentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function deletePaymentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
 
   if (!id) {
@@ -272,17 +335,30 @@ export async function deletePaymentAction(_prevState: ActionState, formData: For
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar financeiro." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar financeiro.",
+    };
   }
 
-  const { error } = await supabase.from("payments").delete().eq("id", id).eq("company_id", companyId);
+  const { error } = await supabase
+    .from("payments")
+    .delete()
+    .eq("id", id)
+    .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel excluir pagamento: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel excluir pagamento: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/financeiro");

@@ -92,6 +92,18 @@ export function OnboardingForm() {
         />
       </div>
 
+      <div className="flex items-center gap-2">
+        <input
+          id="unico-atendente"
+          name="unico_atendente"
+          type="checkbox"
+          className="h-4 w-4 accent-amber-400"
+        />
+        <label htmlFor="unico-atendente" className="text-sm text-zinc-200">
+          Sou o único atendente / Atendimento próprio
+        </label>
+      </div>
+
       <SubmitButton />
 
       {state.message ? (

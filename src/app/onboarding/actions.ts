@@ -31,15 +31,18 @@ export async function completeOnboardingAction(
   const nomeEmpresa = sanitizeText(formData.get("nomeEmpresa"));
   const telefone = sanitizeText(formData.get("telefone"));
   const endereco = sanitizeText(formData.get("endereco"));
+  const unicoAtendente = formData.get("unico_atendente") === "on";
 
   const fieldErrors: OnboardingActionState["fieldErrors"] = {};
 
   if (nomeResponsavel.length < 3) {
-    fieldErrors.nomeResponsavel = "Informe seu nome com pelo menos 3 caracteres.";
+    fieldErrors.nomeResponsavel =
+      "Informe seu nome com pelo menos 3 caracteres.";
   }
 
   if (nomeEmpresa.length < 2) {
-    fieldErrors.nomeEmpresa = "Informe o nome da empresa com pelo menos 2 caracteres.";
+    fieldErrors.nomeEmpresa =
+      "Informe o nome da empresa com pelo menos 2 caracteres.";
   }
 
   if (fieldErrors.nomeEmpresa || fieldErrors.nomeResponsavel) {
@@ -98,6 +101,25 @@ export async function completeOnboardingAction(
       success: false,
       message: `Empresa criada, mas houve erro ao criar o perfil admin: ${profileError.message}`,
     };
+  }
+
+  if (unicoAtendente) {
+    const { error: employeeError } = await supabase.from("employees").insert({
+      company_id: companyId,
+      user_id: user.id,
+      nome: nomeResponsavel,
+      email: (user.email ?? "").toLowerCase() || null,
+      telefone: telefone || null,
+      percentual_comissao: null,
+      ativo: true,
+    });
+
+    if (employeeError) {
+      return {
+        success: false,
+        message: `Empresa criada, mas houve erro ao cadastrar o atendente: ${employeeError.message}`,
+      };
+    }
   }
 
   revalidatePath("/painel");
