@@ -3,6 +3,7 @@
 Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas RLS nas proximas etapas.
 
 ## Arquivos atuais
+
 - `001_etapa3_schema_rls.sql`: modelagem inicial do banco com RLS multi-tenant.
 - `etapa3_como_executar.md`: guia de execucao do script no Supabase SQL Editor.
 - `002_etapa6_conflito_agendamentos.sql`: reforco de agendamentos com `data_hora_fim` e bloqueio de sobreposicao por funcionario.
@@ -14,3 +15,4 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `007_etapa14_logo_empresa_storage.sql`: bucket e policies para logo da empresa.
 - `008_etapa15_agendamento_publico.sql`: configuracoes e policies para agendamento publico.
 - `009_etapa16_master_plataforma.sql`: acesso master global para visao de empresas.
+- `010_fix_grants_authenticated.sql`: correcao de permissoes (GRANT) para o role `authenticated` nas tabelas do schema `public`. Necessario ao criar o banco do zero via SQL Editor (o GRANT padrao do Supabase para novas tabelas nao e herdado quando a tabela e criada manualmente como `postgres`); sem ele ocorre o erro `permission denied for table profiles` (ou outra tabela) mesmo com as policies de RLS corretas.
