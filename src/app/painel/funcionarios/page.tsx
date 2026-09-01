@@ -16,7 +16,8 @@ type EmployeeRow = {
 };
 
 export default async function FuncionariosPage() {
-  const { supabase, companyId, userId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, userId, role, redirectTo } =
+    await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -33,36 +34,42 @@ export default async function FuncionariosPage() {
     .order("created_at", { ascending: false });
 
   const employeeRows: EmployeeRow[] = (employees ?? []) as EmployeeRow[];
-  const isCurrentUserRegistered = employeeRows.some((employee) => employee.user_id === userId);
+  const isCurrentUserRegistered = employeeRows.some(
+    (employee) => employee.user_id === userId,
+  );
 
   return (
     <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-100">Funcionarios</h1>
-            <p className="text-sm text-zinc-300">Cadastre e mantenha a equipe da sua empresa.</p>
-          </div>
-        </header>
-
-        {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
-
-        <CreateEmployeeForm />
-
-        <div className="space-y-3">
-          <h2 className="text-lg font-medium text-zinc-100">Lista de funcionarios</h2>
-
-          {employeeRows.length === 0 ? (
-            <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
-              Nenhum funcionario cadastrado ainda.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {employeeRows.map((employee) => (
-                <EmployeeItemForm key={employee.id} employee={employee} />
-              ))}
-            </div>
-          )}
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-zinc-100">Funcionarios</h1>
+          <p className="text-sm text-zinc-300">
+            Cadastre e mantenha a equipe da sua empresa.
+          </p>
         </div>
+      </header>
+
+      {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
+
+      <CreateEmployeeForm />
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-medium text-zinc-100">
+          Lista de funcionarios
+        </h2>
+
+        {employeeRows.length === 0 ? (
+          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+            Nenhum funcionario cadastrado ainda.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {employeeRows.map((employee) => (
+              <EmployeeItemForm key={employee.id} employee={employee} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -30,35 +30,54 @@ function sanitizePercentual(value: FormDataEntryValue | null): number | null {
 }
 
 function validatePercentual(value: number | null): boolean {
-  return value === null || (Number.isFinite(value) && value >= 0 && value <= 100);
+  return (
+    value === null || (Number.isFinite(value) && value >= 0 && value <= 100)
+  );
 }
 
 async function getCompanyScope() {
   return getAccessContext();
 }
 
-export async function createEmployeeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function createEmployeeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const nome = sanitizeText(formData.get("nome"));
   const telefone = sanitizeText(formData.get("telefone"));
-  const percentualComissao = sanitizePercentual(formData.get("percentual_comissao"));
+  const percentualComissao = sanitizePercentual(
+    formData.get("percentual_comissao"),
+  );
   const ativo = formData.get("ativo") === "on";
 
   if (nome.length < 2) {
-    return { success: false, message: "Informe o nome do funcionario com pelo menos 2 caracteres." };
+    return {
+      success: false,
+      message: "Informe o nome do funcionario com pelo menos 2 caracteres.",
+    };
   }
 
   if (!validatePercentual(percentualComissao)) {
-    return { success: false, message: "Informe um percentual de comissao entre 0 e 100." };
+    return {
+      success: false,
+      message: "Informe um percentual de comissao entre 0 e 100.",
+    };
   }
 
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar funcionarios." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar funcionarios.",
+    };
   }
 
   const { error } = await supabase.from("employees").insert({
@@ -70,40 +89,63 @@ export async function createEmployeeAction(_prevState: ActionState, formData: Fo
   });
 
   if (error) {
-    return { success: false, message: `Nao foi possivel criar funcionario: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel criar funcionario: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/funcionarios");
   return { success: true, message: "Funcionario criado com sucesso." };
 }
 
-export async function updateEmployeeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function updateEmployeeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
   const nome = sanitizeText(formData.get("nome"));
   const telefone = sanitizeText(formData.get("telefone"));
-  const percentualComissao = sanitizePercentual(formData.get("percentual_comissao"));
+  const percentualComissao = sanitizePercentual(
+    formData.get("percentual_comissao"),
+  );
   const ativo = formData.get("ativo") === "on";
 
   if (!id) {
-    return { success: false, message: "Funcionario invalido para atualizacao." };
+    return {
+      success: false,
+      message: "Funcionario invalido para atualizacao.",
+    };
   }
 
   if (nome.length < 2) {
-    return { success: false, message: "Informe o nome do funcionario com pelo menos 2 caracteres." };
+    return {
+      success: false,
+      message: "Informe o nome do funcionario com pelo menos 2 caracteres.",
+    };
   }
 
   if (!validatePercentual(percentualComissao)) {
-    return { success: false, message: "Informe um percentual de comissao entre 0 e 100." };
+    return {
+      success: false,
+      message: "Informe um percentual de comissao entre 0 e 100.",
+    };
   }
 
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar funcionarios." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar funcionarios.",
+    };
   }
 
   const { error } = await supabase
@@ -118,14 +160,20 @@ export async function updateEmployeeAction(_prevState: ActionState, formData: Fo
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar funcionario: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel atualizar funcionario: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/funcionarios");
   return { success: true, message: "Funcionario atualizado com sucesso." };
 }
 
-export async function deleteEmployeeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function deleteEmployeeAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
 
   if (!id) {
@@ -135,17 +183,30 @@ export async function deleteEmployeeAction(_prevState: ActionState, formData: Fo
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem gerenciar funcionarios." };
+    return {
+      success: false,
+      message: "Apenas administradores podem gerenciar funcionarios.",
+    };
   }
 
-  const { error } = await supabase.from("employees").delete().eq("id", id).eq("company_id", companyId);
+  const { error } = await supabase
+    .from("employees")
+    .delete()
+    .eq("id", id)
+    .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel excluir funcionario: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel excluir funcionario: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/funcionarios");
@@ -168,8 +229,17 @@ export async function getMyProfileForEmployeeFormAction(): Promise<MyProfileForE
   }
 
   const [{ data: profile }, { data: company }] = await Promise.all([
-    supabase.from("profiles").select("nome").eq("id", userId).eq("company_id", companyId).maybeSingle(),
-    supabase.from("companies").select("telefone").eq("id", companyId).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("nome")
+      .eq("id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("companies")
+      .select("telefone")
+      .eq("id", companyId)
+      .maybeSingle(),
   ]);
 
   if (!profile) {
@@ -192,11 +262,17 @@ export async function registerMyselfAsEmployeeAction(
   const { supabase, userId, companyId, role } = await getCompanyScope();
 
   if (!userId || !companyId) {
-    return { success: false, message: "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!isAdmin(role)) {
-    return { success: false, message: "Apenas administradores podem realizar esta acao." };
+    return {
+      success: false,
+      message: "Apenas administradores podem realizar esta acao.",
+    };
   }
 
   const { data: existingEmployee } = await supabase
@@ -207,16 +283,31 @@ export async function registerMyselfAsEmployeeAction(
     .maybeSingle();
 
   if (existingEmployee) {
-    return { success: false, message: "Voce ja possui um registro de funcionario nesta empresa." };
+    return {
+      success: false,
+      message: "Voce ja possui um registro de funcionario nesta empresa.",
+    };
   }
 
   const [{ data: profile }, { data: company }] = await Promise.all([
-    supabase.from("profiles").select("nome, email").eq("id", userId).eq("company_id", companyId).maybeSingle(),
-    supabase.from("companies").select("telefone").eq("id", companyId).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("nome, email")
+      .eq("id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("companies")
+      .select("telefone")
+      .eq("id", companyId)
+      .maybeSingle(),
   ]);
 
   if (!profile) {
-    return { success: false, message: "Nao foi possivel carregar os dados do seu perfil." };
+    return {
+      success: false,
+      message: "Nao foi possivel carregar os dados do seu perfil.",
+    };
   }
 
   const { error } = await supabase.from("employees").insert({
@@ -230,9 +321,15 @@ export async function registerMyselfAsEmployeeAction(
   });
 
   if (error) {
-    return { success: false, message: `Nao foi possivel cadastrar voce como funcionario: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel cadastrar voce como funcionario: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/funcionarios");
-  return { success: true, message: "Voce foi cadastrado como funcionario com sucesso." };
+  return {
+    success: true,
+    message: "Voce foi cadastrado como funcionario com sucesso.",
+  };
 }

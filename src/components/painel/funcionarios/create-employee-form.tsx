@@ -4,7 +4,10 @@ import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { createEmployeeAction, getMyProfileForEmployeeFormAction } from "@/app/painel/funcionarios/actions";
+import {
+  createEmployeeAction,
+  getMyProfileForEmployeeFormAction,
+} from "@/app/painel/funcionarios/actions";
 
 type ActionState = {
   success: boolean;
@@ -20,14 +23,21 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+      disabled={pending}
+    >
       {pending ? "Salvando..." : "Adicionar funcionario"}
     </Button>
   );
 }
 
 export function CreateEmployeeForm() {
-  const [state, formAction] = useActionState<ActionState, FormData>(createEmployeeAction, INITIAL_STATE);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    createEmployeeAction,
+    INITIAL_STATE,
+  );
   const [isFillingMyData, setIsFillingMyData] = useState(false);
   const nomeInputRef = useRef<HTMLInputElement>(null);
   const telefoneInputRef = useRef<HTMLInputElement>(null);
@@ -55,23 +65,36 @@ export function CreateEmployeeForm() {
   return (
     <>
       {state.message ? (
-        <div className="sticky top-3 z-30 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-30 flex justify-center"
+          aria-live="polite"
+        >
           <div
             className={`w-full max-w-2xl rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
               state.success
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
-            style={state.success ? { animation: "employee-toast-fade 3.5s ease forwards" } : undefined}
+            style={
+              state.success
+                ? { animation: "employee-toast-fade 3.5s ease forwards" }
+                : undefined
+            }
           >
             {state.message}
           </div>
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2">
+      <form
+        action={formAction}
+        className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
+      >
         <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-funcionario-nome" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-funcionario-nome"
+            className="text-sm text-zinc-200"
+          >
             Nome
           </label>
           <input
@@ -86,7 +109,10 @@ export function CreateEmployeeForm() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="novo-funcionario-telefone" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-funcionario-telefone"
+            className="text-sm text-zinc-200"
+          >
             Telefone
           </label>
           <input
@@ -100,7 +126,10 @@ export function CreateEmployeeForm() {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="novo-funcionario-percentual" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-funcionario-percentual"
+            className="text-sm text-zinc-200"
+          >
             Comissao (%) (opcional)
           </label>
           <input
@@ -116,7 +145,12 @@ export function CreateEmployeeForm() {
         </div>
 
         <label className="flex items-center gap-2 text-sm text-zinc-200 md:col-span-2">
-          <input name="ativo" type="checkbox" defaultChecked className="h-4 w-4 accent-amber-400" />
+          <input
+            name="ativo"
+            type="checkbox"
+            defaultChecked
+            className="h-4 w-4 accent-amber-400"
+          />
           Funcionario ativo
         </label>
 

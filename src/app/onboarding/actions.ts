@@ -36,11 +36,13 @@ export async function completeOnboardingAction(
   const fieldErrors: OnboardingActionState["fieldErrors"] = {};
 
   if (nomeResponsavel.length < 3) {
-    fieldErrors.nomeResponsavel = "Informe seu nome com pelo menos 3 caracteres.";
+    fieldErrors.nomeResponsavel =
+      "Informe seu nome com pelo menos 3 caracteres.";
   }
 
   if (nomeEmpresa.length < 2) {
-    fieldErrors.nomeEmpresa = "Informe o nome da empresa com pelo menos 2 caracteres.";
+    fieldErrors.nomeEmpresa =
+      "Informe o nome da empresa com pelo menos 2 caracteres.";
   }
 
   if (fieldErrors.nomeEmpresa || fieldErrors.nomeResponsavel) {
