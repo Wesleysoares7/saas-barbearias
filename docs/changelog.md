@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-01 - Correcao: permission denied for table profiles (banco recriado)
+### Adicionado
+- Script `docs/database/010_fix_grants_authenticated.sql` concedendo GRANT de `select/insert/update/delete` ao role `authenticated` em todas as tabelas do schema `public`.
+
+### Corrigido
+- Erro `permission denied for table profiles` ao concluir o onboarding em um banco Supabase recriado do zero. Causa: ao rodar os scripts SQL manualmente pelo SQL Editor (executados como `postgres`), os privilegios padrao para `authenticated`/`anon` (normalmente herdados via `ALTER DEFAULT PRIVILEGES` do `supabase_admin`) nao sao aplicados automaticamente as novas tabelas. RLS restringe linhas, mas nao concede acesso a tabela; sem o GRANT explicito, a operacao falha antes mesmo de avaliar as policies.
+
 ## 2026-08-06 - Etapa 17: Permissoes totais na area master
 ### Adicionado
 - Client administrativo `src/lib/supabase/admin.ts` usando `SUPABASE_SERVICE_ROLE_KEY` para operacoes globais controladas da plataforma.
