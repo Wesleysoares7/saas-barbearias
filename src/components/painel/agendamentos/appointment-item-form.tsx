@@ -33,6 +33,7 @@ type AppointmentItem = {
 type OptionItem = {
   id: string;
   nome: string;
+  telefone?: string | null;
   duracao?: number;
   valor?: number;
 };
