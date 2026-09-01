@@ -10,8 +10,9 @@ type EmployeeItem = {
   id: string;
   nome: string;
   telefone: string | null;
-  percentual_comissao: number;
+  percentual_comissao: number | null;
   ativo: boolean;
+  email?: string | null;
 };
 
 type ActionState = {
@@ -115,7 +116,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
 
           <div className="space-y-1">
             <label htmlFor={`funcionario-comissao-${employee.id}`} className="text-sm text-zinc-200">
-              Comissao (%)
+              Comissao (%) (opcional)
             </label>
             <input
               id={`funcionario-comissao-${employee.id}`}
@@ -124,9 +125,8 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
               min={0}
               max={100}
               step="0.01"
-              defaultValue={employee.percentual_comissao}
+              defaultValue={employee.percentual_comissao ?? ""}
               className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-              required
             />
           </div>
 
@@ -154,6 +154,13 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
             <p className="text-sm text-zinc-100">{employee.nome}</p>
           </div>
 
+          {employee.email ? (
+            <div className="space-y-1">
+              <p className="text-xs text-zinc-400">E-mail</p>
+              <p className="text-sm text-zinc-100">{employee.email}</p>
+            </div>
+          ) : null}
+
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Telefone</p>
             <p className="text-sm text-zinc-100">{employee.telefone?.trim() || "Nao informado"}</p>
@@ -161,7 +168,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
 
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Comissao (%)</p>
-            <p className="text-sm text-zinc-100">{employee.percentual_comissao}</p>
+            <p className="text-sm text-zinc-100">{employee.percentual_comissao ?? "Nao informado"}</p>
           </div>
 
           <div className="space-y-1 md:col-span-2">

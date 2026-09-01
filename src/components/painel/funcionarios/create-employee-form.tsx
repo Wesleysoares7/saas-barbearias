@@ -1,10 +1,10 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { createEmployeeAction } from "@/app/painel/funcionarios/actions";
+import { createEmployeeAction, getMyProfileForEmployeeFormAction } from "@/app/painel/funcionarios/actions";
 
 type ActionState = {
   success: boolean;
@@ -28,6 +28,29 @@ function SubmitButton() {
 
 export function CreateEmployeeForm() {
   const [state, formAction] = useActionState<ActionState, FormData>(createEmployeeAction, INITIAL_STATE);
+  const [isFillingMyData, setIsFillingMyData] = useState(false);
+  const nomeInputRef = useRef<HTMLInputElement>(null);
+  const telefoneInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleFillMyData() {
+    setIsFillingMyData(true);
+
+    try {
+      const profile = await getMyProfileForEmployeeFormAction();
+
+      if (profile) {
+        if (nomeInputRef.current) {
+          nomeInputRef.current.value = profile.nome;
+        }
+
+        if (telefoneInputRef.current) {
+          telefoneInputRef.current.value = profile.telefone;
+        }
+      }
+    } finally {
+      setIsFillingMyData(false);
+    }
+  }
 
   return (
     <>
@@ -55,6 +78,7 @@ export function CreateEmployeeForm() {
             id="novo-funcionario-nome"
             name="nome"
             type="text"
+            ref={nomeInputRef}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Joao"
             required
@@ -69,6 +93,7 @@ export function CreateEmployeeForm() {
             id="novo-funcionario-telefone"
             name="telefone"
             type="tel"
+            ref={telefoneInputRef}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
@@ -99,11 +124,10 @@ export function CreateEmployeeForm() {
           <Button
             type="button"
             className="h-11 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-            onClick={() => {
-              // TODO: Preencher com dados do administrador
-            }}
+            onClick={handleFillMyData}
+            disabled={isFillingMyData}
           >
-            Preencher com meus dados
+            {isFillingMyData ? "Preenchendo..." : "Preencher com meus dados"}
           </Button>
           <SubmitButton />
         </div>

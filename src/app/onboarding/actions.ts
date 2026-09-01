@@ -104,7 +104,9 @@ export async function completeOnboardingAction(
   if (unicoAtendente) {
     const { error: employeeError } = await supabase.from("employees").insert({
       company_id: companyId,
+      user_id: user.id,
       nome: nomeResponsavel,
+      email: (user.email ?? "").toLowerCase() || null,
       telefone: telefone || null,
       percentual_comissao: null,
       ativo: true,

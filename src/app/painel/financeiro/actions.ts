@@ -24,7 +24,7 @@ type ServiceRow = {
 
 type EmployeeRow = {
   id: string;
-  percentual_comissao: number;
+  percentual_comissao: number | null;
 };
 
 function sanitizeText(value: FormDataEntryValue | null): string {
@@ -155,7 +155,7 @@ export async function createPaymentAction(_prevState: ActionState, formData: For
   const valor = Number.isFinite(valorInput) ? valorInput : Number(context.service.valor);
   const percentualComissao = Number.isFinite(percentualInput)
     ? percentualInput
-    : Number(context.employee.percentual_comissao);
+    : Number(context.employee.percentual_comissao ?? 0);
 
   const inputError = validateFinancialInput({ formaPagamento, valor, percentualComissao });
 

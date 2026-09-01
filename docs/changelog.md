@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-09-01 - Cadastro rapido do administrador como funcionario
+### Adicionado
+- Script `docs/database/011_etapa_funcionario_admin.sql` adicionando `user_id` e `email` a tabela `employees`.
+- Cartao de destaque "Cadastrar-me como funcionario" na tela de Funcionarios, exibido apenas quando o administrador logado ainda nao possui um registro de funcionario vinculado (via `user_id`). Copia nome e e-mail do perfil e telefone da empresa, com comissao em branco.
+- Onboarding ("Sou o unico atendente") passou a vincular o funcionario criado ao `user_id` e `email` do administrador, para ser reconhecido pelo novo cartao.
+
+## 2026-09-01 - Simplificar cadastro e permitir atendente unico
+### Adicionado
+- Script `docs/database/010_etapa_comissao_opcional.sql` removendo a obrigatoriedade do campo `percentual_comissao` na tabela `employees`.
+- Opcao "Sou o unico atendente / Atendimento proprio" no onboarding: ao marcar, o sistema cria automaticamente um registro em `employees` com os dados do administrador (sem comissao definida).
+- Botao "Preencher com meus dados" no cadastro de funcionario, que busca nome do perfil logado e telefone da empresa para agilizar o auto-cadastro do administrador como funcionario.
+
+### Alterado
+- Percentual de comissao do funcionario agora e opcional (campo vazio salva como `null`) tanto no cadastro quanto na edicao.
+
+### Corrigido
+- Removida duplicidade de validacao/chaves em `src/app/painel/funcionarios/actions.ts` que fazia a comissao continuar obrigatoria mesmo apos a mudanca (bug ja presente no commit anterior desta branch).
+- Removido arquivo binario `saas-barbearias-auditoria.zip` versionado por engano; `*.zip` adicionado ao `.gitignore`.
+
 ## 2026-08-06 - Etapa 17: Permissoes totais na area master
 ### Adicionado
 - Client administrativo `src/lib/supabase/admin.ts` usando `SUPABASE_SERVICE_ROLE_KEY` para operacoes globais controladas da plataforma.

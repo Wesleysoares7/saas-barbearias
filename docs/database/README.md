@@ -14,3 +14,5 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `007_etapa14_logo_empresa_storage.sql`: bucket e policies para logo da empresa.
 - `008_etapa15_agendamento_publico.sql`: configuracoes e policies para agendamento publico.
 - `009_etapa16_master_plataforma.sql`: acesso master global para visao de empresas.
+- `010_etapa_comissao_opcional.sql`: remove a obrigatoriedade (NOT NULL/default) da coluna `percentual_comissao` em `employees`, permitindo cadastrar funcionario sem definir comissao (ex.: administrador que atua como atendente unico).
+- `011_etapa_funcionario_admin.sql`: adiciona `user_id` (vinculo com `auth.users`) e `email` em `employees`, permitindo detectar se o administrador logado ja possui registro de funcionario e copiar seus dados com um clique.

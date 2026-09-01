@@ -38,6 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# arquivos compactados gerados localmente (auditorias, backups, etc.)
+*.zip
 next-env.d.ts
 
 # AI context snapshots

@@ -21,7 +21,7 @@ type ServiceRow = {
 type EmployeeRow = {
   id: string;
   nome: string;
-  percentual_comissao: number;
+  percentual_comissao: number | null;
 };
 
 type PaymentRow = {
@@ -159,7 +159,9 @@ export default async function FinanceiroPage({
   const payments = (paymentsResponse.data ?? []) as PaymentRow[];
 
   const serviceValueById = new Map(services.map((service) => [service.id, Number(service.valor)]));
-  const employeeCommissionById = new Map(employees.map((employee) => [employee.id, Number(employee.percentual_comissao)]));
+  const employeeCommissionById = new Map(
+    employees.map((employee) => [employee.id, Number(employee.percentual_comissao ?? 0)]),
+  );
   const employeeNameById = new Map(employees.map((employee) => [employee.id, employee.nome]));
   const appointmentEmployeeById = new Map(appointments.map((appointment) => [appointment.id, appointment.employee_id]));
 

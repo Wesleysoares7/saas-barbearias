@@ -2,18 +2,21 @@ import { redirect } from "next/navigation";
 
 import { CreateEmployeeForm } from "@/components/painel/funcionarios/create-employee-form";
 import { EmployeeItemForm } from "@/components/painel/funcionarios/employee-item-form";
+import { RegisterMyselfAsEmployeeCard } from "@/components/painel/funcionarios/register-myself-as-employee-card";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 
 type EmployeeRow = {
   id: string;
   nome: string;
   telefone: string | null;
-  percentual_comissao: number;
+  percentual_comissao: number | null;
   ativo: boolean;
+  user_id: string | null;
+  email: string | null;
 };
 
 export default async function FuncionariosPage() {
-  const { supabase, companyId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, userId, role, redirectTo } = await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -25,11 +28,12 @@ export default async function FuncionariosPage() {
 
   const { data: employees } = await supabase
     .from("employees")
-    .select("id, nome, telefone, percentual_comissao, ativo")
+    .select("id, nome, telefone, percentual_comissao, ativo, user_id, email")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   const employeeRows: EmployeeRow[] = (employees ?? []) as EmployeeRow[];
+  const isCurrentUserRegistered = employeeRows.some((employee) => employee.user_id === userId);
 
   return (
     <div className="space-y-5">
@@ -39,6 +43,8 @@ export default async function FuncionariosPage() {
             <p className="text-sm text-zinc-300">Cadastre e mantenha a equipe da sua empresa.</p>
           </div>
         </header>
+
+        {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
 
         <CreateEmployeeForm />
 
