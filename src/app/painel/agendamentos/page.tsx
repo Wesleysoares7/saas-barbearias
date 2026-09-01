@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
+import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
 import {
   canAccessModule,
   canPerformAction,
