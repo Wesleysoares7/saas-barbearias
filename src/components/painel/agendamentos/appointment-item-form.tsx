@@ -4,8 +4,16 @@ import { type FormEvent, useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
-import { deleteAppointmentAction, updateAppointmentAction } from "@/app/painel/agendamentos/actions";
-import { calculateEndDateIso, hasEmployeeConflict, type AppointmentSlot } from "@/lib/appointments/conflict";
+import {
+  deleteAppointmentAction,
+  updateAppointmentAction,
+} from "@/app/painel/agendamentos/actions";
+import { CompleteAppointmentModal } from "@/components/painel/agendamentos/complete-appointment-modal";
+import {
+  calculateEndDateIso,
+  hasEmployeeConflict,
+  type AppointmentSlot,
+} from "@/lib/appointments/conflict";
 
 type AppointmentStatus = "agendado" | "concluido" | "cancelado";
 
@@ -26,6 +34,7 @@ type OptionItem = {
   id: string;
   nome: string;
   duracao?: number;
+  valor?: number;
 };
 
 type ActionState = {
@@ -48,7 +57,8 @@ function getStatusMeta(status: AppointmentStatus): StatusMeta {
   if (status === "concluido") {
     return {
       label: "Concluido",
-      badgeClassName: "border-emerald-500/50 bg-emerald-600/15 text-emerald-200",
+      badgeClassName:
+        "border-emerald-500/50 bg-emerald-600/15 text-emerald-200",
       cardClassName: "border-emerald-500/35",
     };
   }
@@ -88,7 +98,11 @@ function UpdateButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+      disabled={pending}
+    >
       {pending ? "Salvando..." : "Salvar"}
     </Button>
   );
@@ -98,7 +112,12 @@ function DeleteButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="outline" className="h-9 border-zinc-600 text-zinc-100" disabled={pending}>
+    <Button
+      type="submit"
+      variant="outline"
+      className="h-9 border-zinc-600 text-zinc-100"
+      disabled={pending}
+    >
       {pending ? "Excluindo..." : "Excluir"}
     </Button>
   );
@@ -112,6 +131,7 @@ export function AppointmentItemForm({
   appointmentSlots,
   canUpdate,
   canDelete,
+  canCompleteAndCharge,
 }: {
   appointment: AppointmentItem;
   employees: OptionItem[];
@@ -120,22 +140,35 @@ export function AppointmentItemForm({
   appointmentSlots: AppointmentSlot[];
   canUpdate: boolean;
   canDelete: boolean;
+  canCompleteAndCharge: boolean;
 }) {
   const [clientError, setClientError] = useState<string | null>(null);
+  const [completeMessage, setCompleteMessage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [updateState, updateAction] = useActionState<ActionState, FormData>(updateAppointmentAction, INITIAL_STATE);
-  const [deleteState, deleteAction] = useActionState<ActionState, FormData>(deleteAppointmentAction, INITIAL_STATE);
+  const [updateState, updateAction] = useActionState<ActionState, FormData>(
+    updateAppointmentAction,
+    INITIAL_STATE,
+  );
+  const [deleteState, deleteAction] = useActionState<ActionState, FormData>(
+    deleteAppointmentAction,
+    INITIAL_STATE,
+  );
   const statusMeta = getStatusMeta(appointment.status);
-  const shouldShowEditForm = isEditing || (!updateState.success && Boolean(updateState.message));
+  const shouldShowEditForm =
+    isEditing || (!updateState.success && Boolean(updateState.message));
 
   const serviceDurationsById = useMemo(() => {
-    return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
+    return new Map(
+      services.map((service) => [service.id, Number(service.duracao ?? 0)]),
+    );
   }, [services]);
 
   function handleUpdateSubmit(event: FormEvent<HTMLFormElement>) {
     if (!canUpdate) {
       event.preventDefault();
-      setClientError("Seu perfil nao tem permissao para atualizar agendamentos.");
+      setClientError(
+        "Seu perfil nao tem permissao para atualizar agendamentos.",
+      );
       return;
     }
 
@@ -146,7 +179,12 @@ export function AppointmentItemForm({
     const dataHoraInput = String(formData.get("data_hora") ?? "").trim();
     const statusInput = String(formData.get("status") ?? "").trim();
 
-    if (!employeeId || !serviceId || !dataHoraInput || statusInput !== "agendado") {
+    if (
+      !employeeId ||
+      !serviceId ||
+      !dataHoraInput ||
+      statusInput !== "agendado"
+    ) {
       setClientError(null);
       return;
     }
@@ -171,7 +209,9 @@ export function AppointmentItemForm({
 
     if (hasConflict) {
       event.preventDefault();
-      setClientError("O horario selecionado esta indisponivel para este funcionario.");
+      setClientError(
+        "O horario selecionado esta indisponivel para este funcionario.",
+      );
       return;
     }
 
@@ -179,16 +219,41 @@ export function AppointmentItemForm({
   }
 
   return (
-    <article className={`rounded-xl border bg-zinc-950/60 p-4 ${statusMeta.cardClassName}`}>
+    <article
+      className={`rounded-xl border bg-zinc-950/60 p-4 ${statusMeta.cardClassName}`}
+    >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">Status atual</p>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${statusMeta.badgeClassName}`}>
+        <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+          Status atual
+        </p>
+        <span
+          className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${statusMeta.badgeClassName}`}
+        >
           {statusMeta.label}
         </span>
       </div>
 
+      {completeMessage ? (
+        <div
+          className="sticky top-3 z-20 mb-3 flex justify-center"
+          aria-live="polite"
+        >
+          <div
+            className="w-full rounded-lg border border-emerald-500/50 bg-emerald-600/15 px-4 py-3 text-sm font-medium text-emerald-200"
+            style={{
+              animation: "appointment-item-toast-fade 3.5s ease forwards",
+            }}
+          >
+            {completeMessage}
+          </div>
+        </div>
+      ) : null}
+
       {clientError ? (
-        <div className="sticky top-3 z-20 mb-3 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-20 mb-3 flex justify-center"
+          aria-live="polite"
+        >
           <div className="w-full rounded-lg border border-amber-500/50 bg-amber-600/15 px-4 py-3 text-sm font-medium text-amber-200">
             {clientError}
           </div>
@@ -196,14 +261,23 @@ export function AppointmentItemForm({
       ) : null}
 
       {updateState.message ? (
-        <div className="sticky top-3 z-20 mb-3 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-20 mb-3 flex justify-center"
+          aria-live="polite"
+        >
           <div
             className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
               updateState.success
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
-            style={updateState.success ? { animation: "appointment-item-toast-fade 3.5s ease forwards" } : undefined}
+            style={
+              updateState.success
+                ? {
+                    animation: "appointment-item-toast-fade 3.5s ease forwards",
+                  }
+                : undefined
+            }
           >
             {updateState.message}
           </div>
@@ -211,14 +285,23 @@ export function AppointmentItemForm({
       ) : null}
 
       {deleteState.message ? (
-        <div className="sticky top-3 z-20 mb-3 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-20 mb-3 flex justify-center"
+          aria-live="polite"
+        >
           <div
             className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
               deleteState.success
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
-            style={deleteState.success ? { animation: "appointment-item-toast-fade 3.5s ease forwards" } : undefined}
+            style={
+              deleteState.success
+                ? {
+                    animation: "appointment-item-toast-fade 3.5s ease forwards",
+                  }
+                : undefined
+            }
           >
             {deleteState.message}
           </div>
@@ -226,11 +309,18 @@ export function AppointmentItemForm({
       ) : null}
 
       {shouldShowEditForm ? (
-        <form action={updateAction} onSubmit={handleUpdateSubmit} className="grid gap-3 md:grid-cols-2">
+        <form
+          action={updateAction}
+          onSubmit={handleUpdateSubmit}
+          className="grid gap-3 md:grid-cols-2"
+        >
           <input type="hidden" name="id" value={appointment.id} />
 
           <div className="space-y-1 md:col-span-2">
-            <label htmlFor={`agendamento-customer-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-customer-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Cliente cadastrado (opcional)
             </label>
             <select
@@ -249,7 +339,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label htmlFor={`agendamento-cliente-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-cliente-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Nome do cliente
             </label>
             <input
@@ -263,7 +356,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor={`agendamento-telefone-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-telefone-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Telefone do cliente (manual)
             </label>
             <input
@@ -276,7 +372,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor={`agendamento-data-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-data-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Data e horario
             </label>
             <input
@@ -290,7 +389,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor={`agendamento-funcionario-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-funcionario-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Funcionario
             </label>
             <select
@@ -310,7 +412,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor={`agendamento-servico-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-servico-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Servico
             </label>
             <select
@@ -330,7 +435,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1">
-            <label htmlFor={`agendamento-status-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-status-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Status
             </label>
             <select
@@ -347,7 +455,10 @@ export function AppointmentItemForm({
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label htmlFor={`agendamento-observacoes-${appointment.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`agendamento-observacoes-${appointment.id}`}
+              className="text-sm text-zinc-200"
+            >
               Observacoes
             </label>
             <textarea
@@ -360,8 +471,19 @@ export function AppointmentItemForm({
           </div>
 
           <div className="md:col-span-2 flex items-center justify-start gap-3">
-            {canUpdate ? <UpdateButton /> : <p className="text-xs text-zinc-400">Sem permissao para atualizar este agendamento.</p>}
-            <Button type="button" variant="outline" className="h-9 border-zinc-600 text-zinc-100" onClick={() => setIsEditing(false)}>
+            {canUpdate ? (
+              <UpdateButton />
+            ) : (
+              <p className="text-xs text-zinc-400">
+                Sem permissao para atualizar este agendamento.
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 border-zinc-600 text-zinc-100"
+              onClick={() => setIsEditing(false)}
+            >
               Cancelar
             </Button>
           </div>
@@ -375,46 +497,86 @@ export function AppointmentItemForm({
 
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Telefone</p>
-            <p className="text-sm text-zinc-100">{appointment.cliente_telefone?.trim() || "Nao informado"}</p>
+            <p className="text-sm text-zinc-100">
+              {appointment.cliente_telefone?.trim() || "Nao informado"}
+            </p>
           </div>
 
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Horario</p>
-            <p className="text-sm text-zinc-100">{toDateTimeLocal(appointment.data_hora).replace("T", " ")}</p>
+            <p className="text-sm text-zinc-100">
+              {toDateTimeLocal(appointment.data_hora).replace("T", " ")}
+            </p>
           </div>
 
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Funcionario</p>
-            <p className="text-sm text-zinc-100">{employees.find((employee) => employee.id === appointment.employee_id)?.nome ?? "Nao informado"}</p>
+            <p className="text-sm text-zinc-100">
+              {employees.find(
+                (employee) => employee.id === appointment.employee_id,
+              )?.nome ?? "Nao informado"}
+            </p>
           </div>
 
           <div className="space-y-1">
             <p className="text-xs text-zinc-400">Servico</p>
-            <p className="text-sm text-zinc-100">{services.find((service) => service.id === appointment.service_id)?.nome ?? "Nao informado"}</p>
+            <p className="text-sm text-zinc-100">
+              {services.find((service) => service.id === appointment.service_id)
+                ?.nome ?? "Nao informado"}
+            </p>
           </div>
 
           <div className="space-y-1 md:col-span-2">
             <p className="text-xs text-zinc-400">Observacoes</p>
-            <p className="text-sm text-zinc-100">{appointment.observacoes?.trim() || "Sem observacoes"}</p>
+            <p className="text-sm text-zinc-100">
+              {appointment.observacoes?.trim() || "Sem observacoes"}
+            </p>
           </div>
 
           <div className="md:col-span-2 flex items-center justify-start gap-3">
             {canUpdate ? (
-              <Button type="button" className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300" onClick={() => setIsEditing(true)}>
+              <Button
+                type="button"
+                className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+                onClick={() => setIsEditing(true)}
+              >
                 Editar
               </Button>
+            ) : null}
+
+            {canCompleteAndCharge && appointment.status === "agendado" ? (
+              <CompleteAppointmentModal
+                appointmentId={appointment.id}
+                clienteNome={appointment.cliente_nome}
+                servicoNome={
+                  services.find(
+                    (service) => service.id === appointment.service_id,
+                  )?.nome ?? "Servico"
+                }
+                valorSugerido={
+                  services.find(
+                    (service) => service.id === appointment.service_id,
+                  )?.valor ?? 0
+                }
+                onCompleted={(message) => setCompleteMessage(message)}
+              />
             ) : null}
           </div>
         </div>
       )}
 
       {canDelete ? (
-        <form action={deleteAction} className="mt-3 flex items-center justify-end gap-3">
+        <form
+          action={deleteAction}
+          className="mt-3 flex items-center justify-end gap-3"
+        >
           <input type="hidden" name="id" value={appointment.id} />
           <DeleteButton />
         </form>
       ) : (
-        <p className="mt-3 text-right text-xs text-zinc-500">Seu perfil nao pode excluir agendamentos.</p>
+        <p className="mt-3 text-right text-xs text-zinc-500">
+          Seu perfil nao pode excluir agendamentos.
+        </p>
       )}
 
       <style jsx>{`
