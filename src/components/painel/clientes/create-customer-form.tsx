@@ -120,7 +120,7 @@ export function CreateCustomerForm() {
         </div>
       </form>
 
-      <style jsx>{`
+      <style>{`
         @keyframes customer-toast-fade {
           0% {
             opacity: 1;

@@ -101,6 +101,9 @@ export default async function AgendamentosPage() {
   const services: OptionItem[] = (servicesResponse.data ?? []) as OptionItem[];
   const customers: OptionItem[] = (customersResponse.data ??
     []) as OptionItem[];
+
+  // Log para depuração - remover depois
+  console.log('Clientes encontrados:', customers.length, customers);
   const appointments: AppointmentRow[] = (appointmentsResponse.data ??
     []) as AppointmentRow[];
   const appointmentSlots: AppointmentSlot[] = appointments.map(
