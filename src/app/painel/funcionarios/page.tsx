@@ -1,5 +1,14 @@
 import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { CreateEmployeeForm } from "@/components/painel/funcionarios/create-employee-form";
 import { EmployeeItemForm } from "@/components/painel/funcionarios/employee-item-form";
 import { RegisterMyselfAsEmployeeCard } from "@/components/painel/funcionarios/register-myself-as-employee-card";
@@ -127,16 +136,31 @@ export default async function FuncionariosPage() {
             Cadastre e mantenha a equipe da sua empresa.
           </p>
         </div>
+        
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+              <Plus className="size-4 mr-2" />
+              Novo Funcionario
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Novo Funcionario</DialogTitle>
+            </DialogHeader>
+            <CreateEmployeeForm />
+          </DialogContent>
+        </Dialog>
       </header>
 
       {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
 
-      <CreateEmployeeForm />
-
       <div className="space-y-3">
-        <h2 className="text-lg font-medium text-zinc-100">
-          Lista de funcionarios
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-zinc-100">
+            Lista de funcionarios
+          </h2>
+        </div>
 
         {employeeRows.length === 0 ? (
           <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">

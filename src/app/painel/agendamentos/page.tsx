@@ -1,5 +1,14 @@
 import { redirect } from "next/navigation";
+import { Plus } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
 import {
@@ -92,6 +101,9 @@ export default async function AgendamentosPage() {
   const services: OptionItem[] = (servicesResponse.data ?? []) as OptionItem[];
   const customers: OptionItem[] = (customersResponse.data ??
     []) as OptionItem[];
+
+  // Log para depuração - remover depois
+  console.log('Clientes encontrados:', customers.length, customers);
   const appointments: AppointmentRow[] = (appointmentsResponse.data ??
     []) as AppointmentRow[];
   const appointmentSlots: AppointmentSlot[] = appointments.map(
@@ -114,6 +126,28 @@ export default async function AgendamentosPage() {
             sua empresa.
           </p>
         </div>
+        
+        {canCreateAppointment && employees.length > 0 && services.length > 0 && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                <Plus className="size-4 mr-2" />
+                Novo Agendamento
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl">
+              <DialogHeader>
+                <DialogTitle>Novo Agendamento</DialogTitle>
+              </DialogHeader>
+              <CreateAppointmentForm
+                employees={employees}
+                services={services}
+                customers={customers}
+                appointmentSlots={appointmentSlots}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </header>
 
       {employees.length === 0 || services.length === 0 ? (
@@ -121,24 +155,19 @@ export default async function AgendamentosPage() {
           Para criar agendamentos, cadastre pelo menos um funcionario ativo e um
           servico ativo.
         </p>
-      ) : canCreateAppointment ? (
-        <CreateAppointmentForm
-          employees={employees}
-          services={services}
-          customers={customers}
-          appointmentSlots={appointmentSlots}
-        />
-      ) : (
+      ) : !canCreateAppointment ? (
         <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
           Seu perfil pode visualizar e atualizar agendamentos, mas nao pode
           criar novos.
         </p>
-      )}
+      ) : null}
 
       <div className="space-y-3">
-        <h2 className="text-lg font-medium text-zinc-100">
-          Lista de agendamentos
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-zinc-100">
+            Lista de agendamentos
+          </h2>
+        </div>
 
         {appointments.length === 0 ? (
           <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">

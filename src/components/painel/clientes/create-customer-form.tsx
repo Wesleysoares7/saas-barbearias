@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 
 import { createCustomerAction } from "@/app/painel/clientes/actions";
@@ -28,6 +28,16 @@ function SubmitButton() {
 
 export function CreateCustomerForm() {
   const [state, formAction] = useActionState<ActionState, FormData>(createCustomerAction, INITIAL_STATE);
+
+  // Recarregar página após sucesso
+  useEffect(() => {
+    if (state.success) {
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.success]);
 
   return (
     <>
@@ -110,7 +120,7 @@ export function CreateCustomerForm() {
         </div>
       </form>
 
-      <style jsx>{`
+      <style>{`
         @keyframes customer-toast-fade {
           0% {
             opacity: 1;

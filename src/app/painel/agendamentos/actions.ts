@@ -164,6 +164,11 @@ export async function createAppointmentAction(
   const dataHoraInput = sanitizeText(formData.get("data_hora"));
   const statusInput = sanitizeText(formData.get("status"));
   const observacoes = sanitizeText(formData.get("observacoes"));
+  // Novos campos para criação de cliente no agendamento
+  const novoClienteNome = sanitizeText(formData.get("novo_cliente_nome"));
+  const novoClienteTelefone = sanitizeText(formData.get("novo_cliente_telefone"));
+  const novoClienteEmail = sanitizeText(formData.get("novo_cliente_email"));
+  const novoClienteObservacoes = sanitizeText(formData.get("novo_cliente_observacoes"));
 
   if (!employeeId) {
     return { success: false, message: "Selecione um funcionario." };
@@ -203,6 +208,42 @@ export async function createAppointmentAction(
   let clienteNome = clienteNomeInput;
   let clienteTelefone = clienteTelefoneInput;
 
+  // Se não há customerId selecionado mas há dados de novo cliente, criar o cliente
+  console.log("Tentando criar cliente:", {
+    nome: novoClienteNome.trim(),
+    telefone: novoClienteTelefone.trim() || null,
+    email: novoClienteEmail.trim() || null,
+    observacoes: novoClienteObservacoes.trim() || null,
+    companyId
+  });
+  
+  let newCustomerCreated = false;
+  
+  if (!customerId && novoClienteNome.trim()) {
+    const { data: newCustomer, error: customerError } = await supabase
+      .from("customers")
+      .insert({
+        company_id: companyId,
+        nome: novoClienteNome.trim(),
+        telefone: novoClienteTelefone.trim() || null,
+        email: novoClienteEmail.trim() || null,
+        observacoes: novoClienteObservacoes.trim() || null,
+        ativo: true,
+      })
+      .select("id, nome, telefone")
+      .single();
+
+    if (customerError) {
+      console.error("Erro ao criar cliente:", customerError);
+      // Continua sem cliente, mas usa os dados informados
+    } else if (newCustomer) {
+      console.log("Cliente criado com sucesso:", newCustomer);
+      customerId = newCustomer.id;
+      clienteNome = String(newCustomer.nome ?? "").trim();
+      clienteTelefone = String(newCustomer.telefone ?? "").trim();
+      newCustomerCreated = true;
+    }
+  }
   if (customerId) {
     const { data: customer } = await supabase
       .from("customers")
@@ -304,6 +345,9 @@ export async function createAppointmentAction(
   }
 
   revalidatePath("/painel/agendamentos");
+  if (newCustomerCreated) {
+    revalidatePath("/painel/clientes");
+  }
   return { success: true, message: "Agendamento criado com sucesso." };
 }
 

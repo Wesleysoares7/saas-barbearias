@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,18 @@ function SubmitButton() {
   );
 }
 
-export function CreateServiceForm() {
+export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
   const [state, formAction] = useActionState<ActionState, FormData>(createServiceAction, INITIAL_STATE);
+
+  // Fechar modal após sucesso
+  useEffect(() => {
+    if (state.success && onSuccess) {
+      const timer = setTimeout(() => {
+        onSuccess();
+      }, 1500); // Espera 1.5 segundos para mostrar a mensagem de sucesso
+      return () => clearTimeout(timer);
+    }
+  }, [state.success, onSuccess]);
 
   return (
     <>
@@ -122,3 +132,5 @@ export function CreateServiceForm() {
     </>
   );
 }
+
+

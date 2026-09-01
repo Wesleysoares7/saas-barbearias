@@ -50,6 +50,9 @@ export function CreateAppointmentForm({
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
+  const [customerEmail, setCustomerEmail] = useState<string>("");
+  const [customerObservations, setCustomerObservations] = useState<string>("");
+  const [isNewCustomer, setIsNewCustomer] = useState<boolean>(false);
 
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
@@ -63,6 +66,9 @@ export function CreateAppointmentForm({
       if (selectedCustomer) {
         setCustomerName(selectedCustomer.nome);
         setCustomerPhone(selectedCustomer.telefone || "");
+        setCustomerEmail("");
+        setCustomerObservations("");
+        setIsNewCustomer(false);
         // Focar automaticamente no campo de data e horário
         const dataHoraInput = document.getElementById("novo-agendamento-data-hora");
         if (dataHoraInput) {
@@ -73,6 +79,17 @@ export function CreateAppointmentForm({
       // Limpar campos se nenhum cliente for selecionado
       setCustomerName("");
       setCustomerPhone("");
+      setCustomerEmail("");
+      setCustomerObservations("");
+      setIsNewCustomer(false);
+    }
+  }
+
+  function handleNewCustomerInput() {
+    if (customerName.trim() && !selectedCustomerId) {
+      setIsNewCustomer(true);
+    } else {
+      setIsNewCustomer(false);
     }
   }
 
@@ -110,6 +127,14 @@ export function CreateAppointmentForm({
       event.preventDefault();
       setClientError("Este funcionario ja possui um agendamento nesse horario.");
       return;
+    }
+
+    // Se for um novo cliente, adicionar os dados ao FormData
+    if (isNewCustomer && customerName.trim()) {
+      formData.append("novo_cliente_nome", customerName.trim());
+      formData.append("novo_cliente_telefone", customerPhone.trim());
+      formData.append("novo_cliente_email", customerEmail.trim());
+      formData.append("novo_cliente_observacoes", customerObservations.trim());
     }
 
     setClientError(null);
@@ -174,7 +199,10 @@ export function CreateAppointmentForm({
             name="cliente_nome"
             type="text"
             value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
+            onChange={(e) => {
+              setCustomerName(e.target.value);
+              handleNewCustomerInput();
+            }}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Carlos"
             required
@@ -190,11 +218,47 @@ export function CreateAppointmentForm({
             name="cliente_telefone"
             type="tel"
             value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
+            onChange={(e) => {
+              setCustomerPhone(e.target.value);
+              handleNewCustomerInput();
+            }}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
         </div>
+
+        {/* Campos para novo cliente (apenas visíveis quando não está selecionando um cliente existente) */}
+        {isNewCustomer && (
+          <>
+            <div className="space-y-1">
+              <label htmlFor="novo-agendamento-cliente-email" className="text-sm text-zinc-200">
+                E-mail do cliente (opcional)
+              </label>
+              <input
+                id="novo-agendamento-cliente-email"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+                placeholder="cliente@email.com"
+              />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <label htmlFor="novo-agendamento-cliente-observacoes" className="text-sm text-zinc-200">
+                Observações do cliente (opcional)
+              </label>
+              <textarea
+                id="novo-agendamento-cliente-observacoes"
+                value={customerObservations}
+                onChange={(e) => setCustomerObservations(e.target.value)}
+                rows={2}
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+                placeholder="Preferências, alergias, anotações importantes..."
+              />
+            </div>
+          </>
+        )}
 
         <div className="space-y-1">
           <label htmlFor="novo-agendamento-data-hora" className="text-sm text-zinc-200">
@@ -282,7 +346,7 @@ export function CreateAppointmentForm({
         </div>
       </form>
 
-      <style jsx>{`
+      <style>{`
         @keyframes appointment-toast-fade {
           0% {
             opacity: 1;

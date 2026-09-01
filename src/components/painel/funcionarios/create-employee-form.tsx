@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,16 @@ export function CreateEmployeeForm() {
   const [isSelf, setIsSelf] = useState(false);
   const nomeInputRef = useRef<HTMLInputElement>(null);
   const telefoneInputRef = useRef<HTMLInputElement>(null);
+
+  // Recarregar página após sucesso
+  useEffect(() => {
+    if (state.success) {
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.success]);
 
   async function handleFillMyData() {
     setIsFillingMyData(true);
