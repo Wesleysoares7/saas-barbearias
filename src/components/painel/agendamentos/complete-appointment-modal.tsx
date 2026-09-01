@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
@@ -68,18 +68,19 @@ export function CompleteAppointmentModal({
 }) {
   const [open, setOpen] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState("pix");
+  const [handledMessage, setHandledMessage] = useState<string | null>(null);
   const [state, formAction] = useActionState<ActionState, FormData>(
     completeAppointmentAndRegisterPaymentAction,
     INITIAL_STATE,
   );
 
-  useEffect(() => {
-    if (state.success) {
-      setOpen(false);
-      onCompleted?.(state.message);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
+  // Ajusta o estado durante a renderizacao (em vez de useEffect) para evitar
+  // cascata de re-render sincrona; ver https://react.dev/learn/you-might-not-need-an-effect
+  if (state.success && state.message !== handledMessage) {
+    setHandledMessage(state.message);
+    setOpen(false);
+    onCompleted?.(state.message);
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

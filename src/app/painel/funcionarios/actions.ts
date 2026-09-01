@@ -255,6 +255,7 @@ export async function getMyProfileForEmployeeFormAction(): Promise<MyProfileForE
 // Usado pelo botao "Cadastrar-me como funcionario" na lista de funcionarios, para o
 // administrador que nao marcou "atendente unico" no onboarding e ainda nao tem um
 // registro de funcionario proprio. Nao ha suporte a avatar no projeto ainda.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function registerMyselfAsEmployeeAction(
   _prevState: ActionState,
   _formData: FormData,
