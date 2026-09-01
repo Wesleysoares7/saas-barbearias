@@ -15,6 +15,7 @@ type ActionState = {
 type OptionItem = {
   id: string;
   nome: string;
+  telefone?: string | null;
   duracao?: number;
 };
 
@@ -46,10 +47,34 @@ export function CreateAppointmentForm({
 }) {
   const [clientError, setClientError] = useState<string | null>(null);
   const [state, formAction] = useActionState<ActionState, FormData>(createAppointmentAction, INITIAL_STATE);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [customerName, setCustomerName] = useState<string>("");
+  const [customerPhone, setCustomerPhone] = useState<string>("");
 
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
   }, [services]);
+
+  function handleCustomerSelection(customerId: string) {
+    setSelectedCustomerId(customerId);
+    
+    if (customerId) {
+      const selectedCustomer = customers.find(customer => customer.id === customerId);
+      if (selectedCustomer) {
+        setCustomerName(selectedCustomer.nome);
+        setCustomerPhone(selectedCustomer.telefone || "");
+        // Focar automaticamente no campo de data e horário
+        const dataHoraInput = document.getElementById("novo-agendamento-data-hora");
+        if (dataHoraInput) {
+          setTimeout(() => dataHoraInput.focus(), 100);
+        }
+      }
+    } else {
+      // Limpar campos se nenhum cliente for selecionado
+      setCustomerName("");
+      setCustomerPhone("");
+    }
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const formData = new FormData(event.currentTarget);
@@ -121,14 +146,15 @@ export function CreateAppointmentForm({
         className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
       >
         <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-agendamento-customer" className="text-sm text-zinc-200">
+          <label htmlFor="novo-agendamento-cliente-cadastrado" className="text-sm text-zinc-200">
             Cliente cadastrado (opcional)
           </label>
           <select
-            id="novo-agendamento-customer"
+            id="novo-agendamento-cliente-cadastrado"
             name="customer_id"
+            value={selectedCustomerId}
+            onChange={(e) => handleCustomerSelection(e.target.value)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            defaultValue=""
           >
             <option value="">Selecionar depois / nao vincular</option>
             {customers.map((customer) => (
@@ -147,6 +173,8 @@ export function CreateAppointmentForm({
             id="novo-agendamento-cliente"
             name="cliente_nome"
             type="text"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Carlos"
             required
@@ -161,6 +189,8 @@ export function CreateAppointmentForm({
             id="novo-agendamento-telefone"
             name="cliente_telefone"
             type="tel"
+            value={customerPhone}
+            onChange={(e) => setCustomerPhone(e.target.value)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
