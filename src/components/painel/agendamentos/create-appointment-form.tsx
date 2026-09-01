@@ -146,35 +146,17 @@ export function CreateAppointmentForm({
         className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
       >
         <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-agendamento-customer" className="text-sm text-zinc-200">
-            Cliente cadastrado (opcional)
-          </label>
-          <select
-            id="novo-agendamento-customer"
-            name="customer_id"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            defaultValue=""
-          >
-            <option value="">Selecionar depois / nao vincular</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-agendamento-cliente-cadastrado" className="text-sm text-zinc-200">
             Cliente cadastrado (opcional)
           </label>
           <select
             id="novo-agendamento-cliente-cadastrado"
+            name="customer_id"
             value={selectedCustomerId}
             onChange={(e) => handleCustomerSelection(e.target.value)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
           >
-            <option value="">Selecione um cliente</option>
+            <option value="">Selecionar depois / nao vincular</option>
             {customers.map((customer) => (
               <option key={customer.id} value={customer.id}>
                 {customer.nome}
