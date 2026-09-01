@@ -46,10 +46,10 @@ export function CompletedAppointmentItem({ appointment }: CompletedAppointmentIt
           
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="flex-shrink-0 rounded-md bg-zinc-700/50 p-1.5 text-xs text-zinc-300 hover:bg-zinc-600/50 hover:text-zinc-100"
+            className="flex-shrink-0 rounded-md bg-zinc-600/70 p-2 text-sm font-medium text-zinc-100 hover:bg-zinc-500/60 hover:text-white transition-colors"
             title="Ver detalhes do agendamento"
           >
-            {showDetails ? '▲' : '▼'}
+            {showDetails ? '▲ Ocultar' : '▼ Detalhes'}
           </button>
         </div>
       </div>
