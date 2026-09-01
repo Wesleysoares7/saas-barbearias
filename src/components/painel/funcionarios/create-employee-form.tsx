@@ -39,6 +39,7 @@ export function CreateEmployeeForm() {
     INITIAL_STATE,
   );
   const [isFillingMyData, setIsFillingMyData] = useState(false);
+  const [isSelf, setIsSelf] = useState(false);
   const nomeInputRef = useRef<HTMLInputElement>(null);
   const telefoneInputRef = useRef<HTMLInputElement>(null);
 
@@ -56,6 +57,8 @@ export function CreateEmployeeForm() {
         if (telefoneInputRef.current) {
           telefoneInputRef.current.value = profile.telefone;
         }
+
+        setIsSelf(true);
       }
     } finally {
       setIsFillingMyData(false);
@@ -90,6 +93,8 @@ export function CreateEmployeeForm() {
         action={formAction}
         className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
       >
+        <input type="hidden" name="is_self" value={isSelf ? "1" : "0"} />
+
         <div className="space-y-1 md:col-span-2">
           <label
             htmlFor="novo-funcionario-nome"
@@ -102,6 +107,7 @@ export function CreateEmployeeForm() {
             name="nome"
             type="text"
             ref={nomeInputRef}
+            onChange={() => setIsSelf(false)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Joao"
             required
@@ -120,6 +126,7 @@ export function CreateEmployeeForm() {
             name="telefone"
             type="tel"
             ref={telefoneInputRef}
+            onChange={() => setIsSelf(false)}
             className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
