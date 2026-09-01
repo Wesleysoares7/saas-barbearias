@@ -1,5 +1,5 @@
 -- Etapa: vincular funcionario ao usuario administrador (auto-cadastro)
--- Execute no Supabase SQL Editor apos a etapa 010.
+-- Execute no Supabase SQL Editor apos a etapa 012.
 --
 -- Contexto: para detectar se o administrador logado ja possui um registro
 -- de funcionario (e permitir o botao "Cadastrar-me como funcionario" na tela

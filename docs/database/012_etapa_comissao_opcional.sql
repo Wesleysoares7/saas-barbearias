@@ -1,5 +1,5 @@
 -- Etapa: tornar percentual de comissao opcional para funcionarios
--- Execute no Supabase SQL Editor apos a etapa 010.
+-- Execute no Supabase SQL Editor apos a etapa 011 (010_fix_grants_authenticated.sql).
 --
 -- Contexto: o cadastro de funcionario passou a permitir salvar sem definir
 -- o percentual de comissao (ex.: administrador que atua como atendente unico

@@ -4,7 +4,7 @@
 
 ### Adicionado
 
-- Script `docs/database/011_etapa_funcionario_admin.sql` adicionando `user_id` e `email` a tabela `employees`.
+- Script `docs/database/013_etapa_funcionario_admin.sql` adicionando `user_id` e `email` a tabela `employees`.
 - Cartao de destaque "Cadastrar-me como funcionario" na tela de Funcionarios, exibido apenas quando o administrador logado ainda nao possui um registro de funcionario vinculado (via `user_id`). Copia nome e e-mail do perfil e telefone da empresa, com comissao em branco.
 - Onboarding ("Sou o unico atendente") passou a vincular o funcionario criado ao `user_id` e `email` do administrador, para ser reconhecido pelo novo cartao.
 
@@ -12,7 +12,7 @@
 
 ### Adicionado
 
-- Script `docs/database/010_etapa_comissao_opcional.sql` removendo a obrigatoriedade do campo `percentual_comissao` na tabela `employees`.
+- Script `docs/database/012_etapa_comissao_opcional.sql` removendo a obrigatoriedade do campo `percentual_comissao` na tabela `employees`.
 - Opcao "Sou o unico atendente / Atendimento proprio" no onboarding: ao marcar, o sistema cria automaticamente um registro em `employees` com os dados do administrador (sem comissao definida).
 - Botao "Preencher com meus dados" no cadastro de funcionario, que busca nome do perfil logado e telefone da empresa para agilizar o auto-cadastro do administrador como funcionario.
 
@@ -24,6 +24,16 @@
 
 - Removida duplicidade de validacao/chaves em `src/app/painel/funcionarios/actions.ts` que fazia a comissao continuar obrigatoria mesmo apos a mudanca (bug ja presente no commit anterior desta branch).
 - Removido arquivo binario `saas-barbearias-auditoria.zip` versionado por engano; `*.zip` adicionado ao `.gitignore`.
+
+## 2026-09-01 - Correcao: permission denied for table profiles (banco recriado)
+
+### Adicionado
+
+- Script `docs/database/010_fix_grants_authenticated.sql` concedendo GRANT de `select/insert/update/delete` ao role `authenticated` em todas as tabelas do schema `public`.
+
+### Corrigido
+
+- Erro `permission denied for table profiles` ao concluir o onboarding em um banco Supabase recriado do zero. Causa: ao rodar os scripts SQL manualmente pelo SQL Editor (executados como `postgres`), os privilegios padrao para `authenticated`/`anon` (normalmente herdados via `ALTER DEFAULT PRIVILEGES` do `supabase_admin`) nao sao aplicados automaticamente as novas tabelas. RLS restringe linhas, mas nao concede acesso a tabela; sem o GRANT explicito, a operacao falha antes mesmo de avaliar as policies.
 
 ## 2026-08-06 - Etapa 17: Permissoes totais na area master
 
