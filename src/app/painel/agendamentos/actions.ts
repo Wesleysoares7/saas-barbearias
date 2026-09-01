@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { calculateEndDateIso } from "@/lib/appointments/conflict";
-import { canPerformAction, getAccessContext } from "@/lib/auth/access";
+import { canPerformAction, getAccessContext, isAdmin } from "@/lib/auth/access";
 
 type ActionState = {
   success: boolean;
@@ -12,14 +12,21 @@ type ActionState = {
 
 type AppointmentStatus = "agendado" | "concluido" | "cancelado";
 
-const APPOINTMENT_STATUS: AppointmentStatus[] = ["agendado", "concluido", "cancelado"];
+const APPOINTMENT_STATUS: AppointmentStatus[] = [
+  "agendado",
+  "concluido",
+  "cancelado",
+];
 
 function mapAppointmentDatabaseError(message: string): string {
   if (message.includes("data_hora_fim")) {
     return "Seu banco ainda nao foi atualizado para conflitos de horario. Execute o script docs/database/002_etapa6_conflito_agendamentos.sql no Supabase SQL Editor e tente novamente.";
   }
 
-  if (message.includes("customer_id") || message.includes("appointments_customer_company_fk")) {
+  if (
+    message.includes("customer_id") ||
+    message.includes("appointments_customer_company_fk")
+  ) {
     return "Seu banco ainda nao foi atualizado para clientes em agendamentos. Execute o script docs/database/006_etapa13_agendamentos_clientes.sql no Supabase SQL Editor e tente novamente.";
   }
 
@@ -59,8 +66,18 @@ async function ensureReferencesBelongToCompany(
   supabase: Awaited<ReturnType<typeof getAccessContext>>["supabase"],
 ): Promise<string | null> {
   const [{ data: employee }, { data: service }] = await Promise.all([
-    supabase.from("employees").select("id").eq("id", employeeId).eq("company_id", companyId).maybeSingle(),
-    supabase.from("services").select("id").eq("id", serviceId).eq("company_id", companyId).maybeSingle(),
+    supabase
+      .from("employees")
+      .select("id")
+      .eq("id", employeeId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("services")
+      .select("id")
+      .eq("id", serviceId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
   ]);
 
   if (!employee) {
@@ -135,7 +152,10 @@ async function hasConflictForEmployee(
   return { hasConflict: (data?.length ?? 0) > 0, errorMessage: null };
 }
 
-export async function createAppointmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function createAppointmentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const customerIdInput = sanitizeText(formData.get("customer_id"));
   const clienteNomeInput = sanitizeText(formData.get("cliente_nome"));
   const clienteTelefoneInput = sanitizeText(formData.get("cliente_telefone"));
@@ -166,11 +186,17 @@ export async function createAppointmentAction(_prevState: ActionState, formData:
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId || !role) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!canPerformAction(role, "agendamentos", "create")) {
-    return { success: false, message: "Seu perfil nao tem permissao para criar agendamentos." };
+    return {
+      success: false,
+      message: "Seu perfil nao tem permissao para criar agendamentos.",
+    };
   }
 
   let customerId: string | null = customerIdInput || null;
@@ -186,7 +212,10 @@ export async function createAppointmentAction(_prevState: ActionState, formData:
       .maybeSingle();
 
     if (!customer) {
-      return { success: false, message: "Cliente selecionado invalido para sua empresa." };
+      return {
+        success: false,
+        message: "Cliente selecionado invalido para sua empresa.",
+      };
     }
 
     clienteNome = String(customer.nome ?? "").trim();
@@ -196,19 +225,34 @@ export async function createAppointmentAction(_prevState: ActionState, formData:
   }
 
   if (clienteNome.length < 2) {
-    return { success: false, message: "Informe o nome do cliente com pelo menos 2 caracteres." };
+    return {
+      success: false,
+      message: "Informe o nome do cliente com pelo menos 2 caracteres.",
+    };
   }
 
-  const referenceError = await ensureReferencesBelongToCompany(employeeId, serviceId, companyId, supabase);
+  const referenceError = await ensureReferencesBelongToCompany(
+    employeeId,
+    serviceId,
+    companyId,
+    supabase,
+  );
 
   if (referenceError) {
     return { success: false, message: referenceError };
   }
 
-  const durationMinutes = await getServiceDurationMinutes(serviceId, companyId, supabase);
+  const durationMinutes = await getServiceDurationMinutes(
+    serviceId,
+    companyId,
+    supabase,
+  );
 
   if (!durationMinutes) {
-    return { success: false, message: "Nao foi possivel calcular a duracao do servico selecionado." };
+    return {
+      success: false,
+      message: "Nao foi possivel calcular a duracao do servico selecionado.",
+    };
   }
 
   const dataHoraFim = calculateEndDateIso(dataHora, durationMinutes);
@@ -263,7 +307,10 @@ export async function createAppointmentAction(_prevState: ActionState, formData:
   return { success: true, message: "Agendamento criado com sucesso." };
 }
 
-export async function updateAppointmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function updateAppointmentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
   const customerIdInput = sanitizeText(formData.get("customer_id"));
   const clienteNomeInput = sanitizeText(formData.get("cliente_nome"));
@@ -275,7 +322,10 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
   const observacoes = sanitizeText(formData.get("observacoes"));
 
   if (!id) {
-    return { success: false, message: "Agendamento invalido para atualizacao." };
+    return {
+      success: false,
+      message: "Agendamento invalido para atualizacao.",
+    };
   }
 
   if (!employeeId) {
@@ -299,11 +349,17 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId || !role) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!canPerformAction(role, "agendamentos", "update")) {
-    return { success: false, message: "Seu perfil nao tem permissao para atualizar agendamentos." };
+    return {
+      success: false,
+      message: "Seu perfil nao tem permissao para atualizar agendamentos.",
+    };
   }
 
   let customerId: string | null = customerIdInput || null;
@@ -319,7 +375,10 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
       .maybeSingle();
 
     if (!customer) {
-      return { success: false, message: "Cliente selecionado invalido para sua empresa." };
+      return {
+        success: false,
+        message: "Cliente selecionado invalido para sua empresa.",
+      };
     }
 
     clienteNome = String(customer.nome ?? "").trim();
@@ -329,19 +388,34 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
   }
 
   if (clienteNome.length < 2) {
-    return { success: false, message: "Informe o nome do cliente com pelo menos 2 caracteres." };
+    return {
+      success: false,
+      message: "Informe o nome do cliente com pelo menos 2 caracteres.",
+    };
   }
 
-  const referenceError = await ensureReferencesBelongToCompany(employeeId, serviceId, companyId, supabase);
+  const referenceError = await ensureReferencesBelongToCompany(
+    employeeId,
+    serviceId,
+    companyId,
+    supabase,
+  );
 
   if (referenceError) {
     return { success: false, message: referenceError };
   }
 
-  const durationMinutes = await getServiceDurationMinutes(serviceId, companyId, supabase);
+  const durationMinutes = await getServiceDurationMinutes(
+    serviceId,
+    companyId,
+    supabase,
+  );
 
   if (!durationMinutes) {
-    return { success: false, message: "Nao foi possivel calcular a duracao do servico selecionado." };
+    return {
+      success: false,
+      message: "Nao foi possivel calcular a duracao do servico selecionado.",
+    };
   }
 
   const dataHoraFim = calculateEndDateIso(dataHora, durationMinutes);
@@ -368,7 +442,8 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
     if (conflictResult.hasConflict) {
       return {
         success: false,
-        message: "O horario selecionado esta indisponivel para este funcionario.",
+        message:
+          "O horario selecionado esta indisponivel para este funcionario.",
       };
     }
   }
@@ -400,7 +475,10 @@ export async function updateAppointmentAction(_prevState: ActionState, formData:
   return { success: true, message: "Agendamento atualizado com sucesso." };
 }
 
-export async function deleteAppointmentAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function deleteAppointmentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
 
   if (!id) {
@@ -410,19 +488,197 @@ export async function deleteAppointmentAction(_prevState: ActionState, formData:
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
 
   if (!companyId || !role) {
-    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
   }
 
   if (!canPerformAction(role, "agendamentos", "delete")) {
-    return { success: false, message: "Seu perfil nao tem permissao para excluir agendamentos." };
+    return {
+      success: false,
+      message: "Seu perfil nao tem permissao para excluir agendamentos.",
+    };
   }
 
-  const { error } = await supabase.from("appointments").delete().eq("id", id).eq("company_id", companyId);
+  const { error } = await supabase
+    .from("appointments")
+    .delete()
+    .eq("id", id)
+    .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel excluir agendamento: ${error.message}` };
+    return {
+      success: false,
+      message: `Nao foi possivel excluir agendamento: ${error.message}`,
+    };
   }
 
   revalidatePath("/painel/agendamentos");
   return { success: true, message: "Agendamento excluido com sucesso." };
+}
+
+function sanitizeMoney(value: FormDataEntryValue | null): number {
+  const textValue = sanitizeText(value).replace(",", ".");
+  const parsedValue = Number(textValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : Number.NaN;
+}
+
+// Fluxo em etapa unica: concluir o atendimento e registrar o pagamento juntos.
+// Supabase-js nao suporta transacao multi-tabela no client; em caso de falha ao
+// inserir o pagamento, a atualizacao do status e revertida (melhor esforco).
+export async function completeAppointmentAndRegisterPaymentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const appointmentId = sanitizeText(formData.get("appointment_id"));
+  const formaPagamento = sanitizeText(formData.get("forma_pagamento"));
+  const valorFinalInput = sanitizeText(formData.get("valor_final"));
+  const observacoes = sanitizeText(formData.get("observacoes"));
+
+  if (!appointmentId) {
+    return { success: false, message: "Agendamento invalido." };
+  }
+
+  if (!formaPagamento) {
+    return { success: false, message: "Selecione a forma de pagamento." };
+  }
+
+  const { supabase, companyId, role, errorMessage } = await getCompanyScope();
+
+  if (!companyId || !role) {
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
+  }
+
+  if (!isAdmin(role)) {
+    return {
+      success: false,
+      message:
+        "Apenas administradores podem concluir atendimento e registrar pagamento.",
+    };
+  }
+
+  const { data: appointment } = await supabase
+    .from("appointments")
+    .select("id, status, service_id, employee_id")
+    .eq("id", appointmentId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (!appointment) {
+    return {
+      success: false,
+      message: "Agendamento invalido para sua empresa.",
+    };
+  }
+
+  if (appointment.status === "cancelado") {
+    return {
+      success: false,
+      message: "Nao e possivel concluir um agendamento cancelado.",
+    };
+  }
+
+  const { data: existingPayment } = await supabase
+    .from("payments")
+    .select("id")
+    .eq("appointment_id", appointmentId)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (existingPayment) {
+    return {
+      success: false,
+      message: "Este agendamento ja possui pagamento registrado.",
+    };
+  }
+
+  const [{ data: service }, { data: employee }] = await Promise.all([
+    supabase
+      .from("services")
+      .select("id, valor")
+      .eq("id", appointment.service_id)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("employees")
+      .select("id, percentual_comissao")
+      .eq("id", appointment.employee_id)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+  ]);
+
+  if (!service) {
+    return {
+      success: false,
+      message: "Nao foi possivel obter dados do servico deste agendamento.",
+    };
+  }
+
+  const valorFinalParsed = sanitizeMoney(formData.get("valor_final"));
+  const valor =
+    valorFinalInput && Number.isFinite(valorFinalParsed)
+      ? valorFinalParsed
+      : Number(service.valor);
+
+  if (!Number.isFinite(valor) || valor < 0) {
+    return {
+      success: false,
+      message: "Informe um valor valido para o pagamento.",
+    };
+  }
+
+  const percentualComissao = Number(employee?.percentual_comissao ?? 0);
+  const valorComissao =
+    Math.round(((valor * percentualComissao) / 100) * 100) / 100;
+
+  const { error: updateError } = await supabase
+    .from("appointments")
+    .update({
+      status: "concluido",
+      ...(observacoes ? { observacoes } : {}),
+    })
+    .eq("id", appointmentId)
+    .eq("company_id", companyId);
+
+  if (updateError) {
+    return {
+      success: false,
+      message: `Nao foi possivel concluir o agendamento: ${mapAppointmentDatabaseError(updateError.message)}`,
+    };
+  }
+
+  const { error: paymentError } = await supabase.from("payments").insert({
+    company_id: companyId,
+    appointment_id: appointmentId,
+    valor,
+    forma_pagamento: formaPagamento,
+    percentual_comissao: percentualComissao,
+    valor_comissao: valorComissao,
+  });
+
+  if (paymentError) {
+    await supabase
+      .from("appointments")
+      .update({ status: appointment.status })
+      .eq("id", appointmentId)
+      .eq("company_id", companyId);
+
+    return {
+      success: false,
+      message: `Nao foi possivel registrar o pagamento: ${paymentError.message}`,
+    };
+  }
+
+  revalidatePath("/painel");
+  revalidatePath("/painel/agendamentos");
+  revalidatePath("/painel/financeiro");
+  return {
+    success: true,
+    message: "Atendimento concluido e pagamento registrado com sucesso!",
+  };
 }

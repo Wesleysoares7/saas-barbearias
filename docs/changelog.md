@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-09-01 - Concluir atendimento e cobrar em uma unica tela
+
+### Adicionado
+
+- Server action `completeAppointmentAndRegisterPaymentAction` em `src/app/painel/agendamentos/actions.ts`: conclui o agendamento (`status = concluido`) e registra o pagamento correspondente em `payments` em um unico envio, calculando a comissao a partir do percentual atual do funcionario. Reverte o status do agendamento (melhor esforco) se o registro do pagamento falhar.
+- Componente `src/components/ui/dialog.tsx`: wrapper de Dialog (Radix UI) para uso geral no projeto.
+- Componente `complete-appointment-modal.tsx`: modal "Concluir & Cobrar" com resumo do cliente/servico, valor editavel (pre-preenchido com o valor do servico), selecao rapida de forma de pagamento (Pix, Cartao credito, Cartao debito, Dinheiro) e observacoes opcionais.
+- Botao de destaque "Concluir & Cobrar" no card de agendamentos com status `agendado`, visivel apenas para quem tem permissao de criar lancamentos financeiros (administradores).
+- Notificacao de sucesso no topo do card ao concluir o atendimento pelo novo fluxo.
+
+### Alterado
+
+- Consulta de servicos em `/painel/agendamentos` passou a trazer o campo `valor`, usado para pre-preencher o modal de conclusao.
+
 ## 2026-09-01 - Cadastro rapido do administrador como funcionario
 
 ### Adicionado
