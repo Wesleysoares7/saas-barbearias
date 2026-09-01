@@ -116,6 +116,42 @@ export default async function AgendamentosPage() {
     }),
   );
 
+  // Separar agendamentos concluídos dos pendentes
+  const pendingAppointments = appointments.filter(appointment => appointment.status !== "concluido");
+  const completedAppointments = appointments.filter(appointment => appointment.status === "concluido");
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
+  };
+
+  // Componente para agendamentos concluídos reduzidos
+  function CompletedAppointmentItem({ appointment }: { appointment: AppointmentRow }) {
+    return (
+      <div className="rounded-lg border border-emerald-500/20 bg-emerald-600/10 p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-sm font-medium text-emerald-200">
+              {appointment.cliente_nome}
+            </h4>
+            <p className="text-xs text-emerald-400/80">
+              {formatDate(appointment.data_hora)}
+            </p>
+          </div>
+          <span className="flex-shrink-0 rounded-full bg-emerald-600/20 px-2 py-1 text-xs font-medium text-emerald-300">
+            Concluído
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-3">
@@ -175,7 +211,8 @@ export default async function AgendamentosPage() {
           </p>
         ) : (
           <div className="space-y-3">
-            {appointments.map((appointment) => (
+            {/* Agendamentos pendentes (agendados/cancelados) */}
+            {pendingAppointments.map((appointment) => (
               <AppointmentItemForm
                 key={appointment.id}
                 appointment={appointment}
@@ -188,6 +225,23 @@ export default async function AgendamentosPage() {
                 canCompleteAndCharge={canCompleteAndCharge}
               />
             ))}
+
+            {/* Agendamentos concluídos - versão reduzida */}
+            {completedAppointments.length > 0 && (
+              <div className="pt-6 border-t border-zinc-800">
+                <h3 className="text-lg font-semibold text-zinc-300 mb-4">
+                  Agendamentos Concluídos
+                </h3>
+                <div className="space-y-2">
+                  {completedAppointments.map((appointment) => (
+                    <CompletedAppointmentItem
+                      key={appointment.id}
+                      appointment={appointment}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
