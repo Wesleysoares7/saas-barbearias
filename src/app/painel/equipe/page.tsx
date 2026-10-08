@@ -1,3 +1,5 @@
+import { Users } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
 import { redirect } from "next/navigation";
 
 import { CreateTeamInviteForm } from "@/components/painel/equipe/create-team-invite-form";
@@ -52,18 +54,13 @@ export default async function EquipePage() {
 
   return (
     <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-100">Equipe, convites e papeis</h1>
-            <p className="text-sm text-zinc-300">Gerencie papeis e convites de acesso da equipe da sua empresa.</p>
-          </div>
-        </header>
+        <PageHeader icon={Users} title="Equipe, convites e papeis" description="Gerencie papeis e convites de acesso da equipe da sua empresa." />
 
         <div className="space-y-3">
           <h2 className="text-lg font-medium text-zinc-100">Membros da equipe</h2>
 
           {members.length === 0 ? (
-            <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
               Nenhum membro encontrado para esta empresa.
             </p>
           ) : (
@@ -87,7 +84,7 @@ export default async function EquipePage() {
               <CreateTeamInviteForm />
 
               {invites.length === 0 ? (
-                <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+                <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
                   Nenhum convite enviado ainda.
                 </p>
               ) : (

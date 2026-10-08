@@ -1,5 +1,7 @@
+import { Wallet } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { PageHeader } from "@/components/painel/ui/page-header";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -308,17 +310,9 @@ export default async function FinanceiroPage({
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Financeiro</h1>
-          <p className="text-sm text-zinc-300">
-            Registre pagamentos, acompanhe o faturamento total e veja a comissao
-            por funcionario.
-          </p>
-        </div>
-      </header>
+      <PageHeader icon={Wallet} title="Financeiro" description="Registre pagamentos, acompanhe o faturamento total e veja a comissao por funcionario." />
 
-      <form className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-3">
+      <form className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-3">
         <div className="space-y-1">
           <label htmlFor="financeiro-start" className="text-sm text-zinc-200">
             Data inicial
@@ -328,7 +322,7 @@ export default async function FinanceiroPage({
             name="start"
             type="date"
             defaultValue={start}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           />
         </div>
@@ -342,7 +336,7 @@ export default async function FinanceiroPage({
             name="end"
             type="date"
             defaultValue={end}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           />
         </div>
@@ -350,7 +344,7 @@ export default async function FinanceiroPage({
         <div className="flex items-end">
           <button
             type="submit"
-            className="h-10 rounded-lg border border-zinc-600 bg-zinc-900 px-4 text-sm font-medium text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
+            className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-medium text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
           >
             Atualizar periodo
           </button>
@@ -366,7 +360,7 @@ export default async function FinanceiroPage({
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="min-h-28 rounded-2xl border border-zinc-700/70 bg-zinc-950/60 p-5 shadow-lg shadow-black/10">
+        <article className="min-h-28 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
           <p className="text-xs text-zinc-400">Faturamento total</p>
           <p className="mt-2 text-3xl font-semibold text-zinc-100">
             {formatCurrency(totalFaturamento)}
@@ -387,9 +381,9 @@ export default async function FinanceiroPage({
           </p>
         </article>
 
-        <article className="min-h-28 rounded-2xl border border-sky-500/35 bg-sky-600/10 p-5 shadow-lg shadow-sky-950/20">
-          <p className="text-xs text-sky-200/80">Funcionarios com vendas</p>
-          <p className="mt-2 text-3xl font-semibold text-sky-100">
+        <article className="min-h-28 rounded-2xl border border-brand/35 bg-brand/10 p-5 ">
+          <p className="text-xs text-brand/80">Funcionarios com vendas</p>
+          <p className="mt-2 text-3xl font-semibold text-brand">
             {
               employeeFinancialSummaries.filter(
                 (summary) => summary.quantidadePagamentos > 0,
@@ -399,7 +393,7 @@ export default async function FinanceiroPage({
         </article>
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-zinc-700/60 bg-zinc-950/60 p-5 shadow-lg shadow-black/10">
+      <div className="space-y-3 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-medium text-zinc-100">
@@ -412,7 +406,7 @@ export default async function FinanceiroPage({
         </div>
 
         {employeeFinancialSummaries.length === 0 ? (
-          <p className="rounded-lg border border-zinc-700/60 bg-zinc-900/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-lg border border-border bg-surface p-4 text-sm text-zinc-300">
             Nenhum funcionario cadastrado ainda.
           </p>
         ) : (
@@ -420,7 +414,7 @@ export default async function FinanceiroPage({
             {employeeFinancialSummaries.map((summary) => (
               <article
                 key={summary.id}
-                className="grid gap-3 rounded-xl border border-zinc-700/70 bg-zinc-900/80 p-5 md:grid-cols-4"
+                className="grid gap-3 rounded-xl border border-border bg-surface p-5 md:grid-cols-4"
               >
                 <div>
                   <p className="text-xs text-zinc-400">Funcionario</p>
@@ -462,7 +456,7 @@ export default async function FinanceiroPage({
         </h2>
 
         {paymentItems.length === 0 ? (
-          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum pagamento registrado ainda.
           </p>
         ) : (

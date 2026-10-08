@@ -1,3 +1,5 @@
+import { Users } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -146,19 +148,12 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
 
   return (
     <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-100">Historico do cliente</h1>
-            <p className="text-sm text-zinc-300">Acompanhe atendimentos e pagamentos vinculados ao cliente selecionado.</p>
-          </div>
-
-          <Link
+        <PageHeader icon={Users} title="Historico do cliente" description="Acompanhe atendimentos e pagamentos vinculados ao cliente selecionado." actions={<><Link
             href="/painel/clientes"
-            className="rounded-lg border border-zinc-600 px-4 py-2 text-sm text-zinc-200 transition hover:border-amber-400 hover:text-amber-300"
+            className="rounded-lg border border-border px-4 py-2 text-sm text-zinc-200 transition hover:border-amber-400 hover:text-amber-300"
           >
             Voltar para clientes
-          </Link>
-        </header>
+          </Link></>} />
 
         {hasCustomerTableIssue ? (
           <div className="rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
@@ -167,7 +162,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
         ) : null}
 
         {customer ? (
-          <div className="grid gap-3 rounded-xl border border-zinc-700/70 bg-zinc-950/60 p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 sm:grid-cols-2 lg:grid-cols-4">
             <div>
               <p className="text-xs text-zinc-400">Cliente</p>
               <p className="text-sm font-medium text-zinc-100">{customer.nome}</p>
@@ -188,7 +183,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
         ) : null}
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-lg border border-zinc-700/70 bg-zinc-950/60 p-4">
+          <article className="rounded-lg border border-border bg-surface-2 p-4">
             <p className="text-xs text-zinc-400">Atendimentos (total)</p>
             <p className="mt-1 text-2xl font-semibold text-zinc-100">{totalAppointments}</p>
           </article>
@@ -200,9 +195,9 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
             <p className="text-xs text-rose-200/80">Cancelados</p>
             <p className="mt-1 text-2xl font-semibold text-rose-100">{totalCanceled}</p>
           </article>
-          <article className="rounded-lg border border-sky-500/35 bg-sky-600/10 p-4">
-            <p className="text-xs text-sky-200/80">Faturamento pago</p>
-            <p className="mt-1 text-2xl font-semibold text-sky-100">{formatCurrency(totalPaid)}</p>
+          <article className="rounded-lg border border-brand/35 bg-brand/10 p-4">
+            <p className="text-xs text-brand/80">Faturamento pago</p>
+            <p className="mt-1 text-2xl font-semibold text-brand">{formatCurrency(totalPaid)}</p>
           </article>
         </div>
 
@@ -210,7 +205,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
           <h2 className="text-lg font-medium text-zinc-100">Linha do tempo de atendimentos</h2>
 
           {appointments.length === 0 ? (
-            <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
               Nenhum atendimento vinculado a este cliente ainda.
             </p>
           ) : (
@@ -221,7 +216,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
                 const employeeName = employeeNameById.get(appointment.employee_id) ?? "Funcionario removido";
 
                 return (
-                  <article key={appointment.id} className="rounded-xl border border-zinc-700/70 bg-zinc-950/60 p-4">
+                  <article key={appointment.id} className="rounded-xl border border-border bg-surface-2 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="text-sm font-medium text-zinc-100">{formatDateTime(appointment.data_hora)}</p>
                       <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${getStatusBadge(appointment.status)}`}>
@@ -245,7 +240,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
                     </div>
 
                     {appointment.observacoes ? (
-                      <p className="mt-3 rounded-lg border border-zinc-700/70 bg-zinc-900/60 px-3 py-2 text-xs text-zinc-400">
+                      <p className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-zinc-400">
                         {appointment.observacoes}
                       </p>
                     ) : null}

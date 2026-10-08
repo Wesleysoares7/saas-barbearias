@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
+import { Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,13 +37,10 @@ export default async function ClientesPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Clientes</h1>
-          <p className="text-sm text-zinc-300">Cadastre e mantenha sua base de clientes com dados de contato.</p>
-        </div>
-        
-        <Dialog>
+      <PageHeader icon={Users} title="Clientes" description="Cadastre e mantenha sua base de clientes com dados de contato."
+        actions={
+          <>
+<Dialog>
           <DialogTrigger asChild>
             <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
               <Plus className="size-4 mr-2" />
@@ -56,7 +54,9 @@ export default async function ClientesPage() {
             <CreateCustomerForm />
           </DialogContent>
         </Dialog>
-      </header>
+          </>
+        }
+      />
 
       {hasCustomerTableIssue ? (
         <div className="rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
@@ -70,7 +70,7 @@ export default async function ClientesPage() {
             </div>
 
             {customerRows.length === 0 ? (
-              <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
                 Nenhum cliente cadastrado ainda.
               </p>
             ) : (

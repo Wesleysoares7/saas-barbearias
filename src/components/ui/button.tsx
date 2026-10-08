@@ -10,11 +10,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-fuchsia-500 via-rose-500 to-orange-400 text-white shadow-[0_12px_30px_-18px_rgba(236,72,153,0.9)] hover:scale-[1.02] hover:brightness-110",
+          "bg-gradient-to-r from-brand via-rose-500 to-orange-400 text-white shadow-[0_12px_30px_-18px_rgba(236,72,153,0.9)] hover:scale-[1.02] hover:brightness-110",
         outline:
-          "border-fuchsia-400/45 bg-zinc-950/55 text-fuchsia-100 hover:border-fuchsia-300 hover:bg-fuchsia-500/15 hover:text-white aria-expanded:bg-fuchsia-500/15 aria-expanded:text-white",
+          "border-brand/45 bg-surface-2 text-brand hover:border-brand hover:bg-brand/15 hover:text-white aria-expanded:bg-brand/15 aria-expanded:text-white",
         secondary:
-          "bg-gradient-to-r from-sky-500/90 to-cyan-400/90 text-zinc-950 shadow-[0_12px_30px_-18px_rgba(56,189,248,0.85)] hover:scale-[1.02] hover:brightness-110 aria-expanded:brightness-110",
+          "bg-gradient-to-r from-brand/90 to-cyan-400/90 text-zinc-950 shadow-[0_12px_30px_-18px_rgba(56,189,248,0.85)] hover:scale-[1.02] hover:brightness-110 aria-expanded:brightness-110",
         ghost:
           "text-zinc-100 hover:bg-white/10 hover:text-white aria-expanded:bg-white/10 aria-expanded:text-white",
         destructive:

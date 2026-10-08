@@ -56,7 +56,7 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2">
+      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-servico-nome" className="text-sm text-zinc-200">
             Nome
@@ -65,7 +65,7 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             id="novo-servico-nome"
             name="nome"
             type="text"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Corte masculino"
             required
           />
@@ -81,7 +81,7 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             type="number"
             min={1}
             step={1}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="45"
             required
           />
@@ -97,7 +97,7 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             type="number"
             min={0}
             step="0.01"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="50"
             required
           />

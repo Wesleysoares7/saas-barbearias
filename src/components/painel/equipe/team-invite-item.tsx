@@ -32,7 +32,7 @@ function RevokeButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="outline" className="h-9 border-zinc-600 text-zinc-100" disabled={pending}>
+    <Button type="submit" variant="outline" className="h-9 border-border text-zinc-100" disabled={pending}>
       {pending ? "Revogando..." : "Revogar"}
     </Button>
   );
@@ -80,7 +80,7 @@ export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {
   }
 
   return (
-    <article className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+    <article className="rounded-xl border border-border bg-surface-2 p-4">
       {state.message ? (
         <div className="mb-3" aria-live="polite">
           <div
@@ -102,14 +102,14 @@ export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {
           <p className="text-xs text-zinc-400">Status: {getStatusLabel(invite.status)}</p>
           <p className="text-xs text-zinc-400">Expira em: {formatDate(invite.expiresAt)}</p>
 
-          <div className="rounded-lg border border-zinc-700/70 bg-zinc-900/70 px-3 py-2">
+          <div className="rounded-lg border border-border bg-surface px-3 py-2">
             <p className="text-[11px] text-zinc-400">Link do convite</p>
             <p className="mt-1 break-all text-xs text-zinc-200">{inviteLink}</p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button type="button" variant="outline" className="h-9 border-zinc-600 text-zinc-100" onClick={handleCopyLink}>
+          <Button type="button" variant="outline" className="h-9 border-border text-zinc-100" onClick={handleCopyLink}>
             Copiar link
           </Button>
 

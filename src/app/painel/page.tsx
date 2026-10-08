@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/access";
+import { CalendarClock, CheckCircle2, Clock, LayoutDashboard, Wallet, XCircle } from "lucide-react";
+
+import { PageHeader } from "@/components/painel/ui/page-header";
+import { Panel } from "@/components/painel/ui/panel";
+import { StatCard } from "@/components/painel/ui/stat-card";
 import type { AppointmentStatus } from "@/types";
 
 type AppointmentRow = {
@@ -75,16 +80,6 @@ export default async function PainelPage() {
     redirect(redirectTo ?? "/login");
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: company } = await supabase
-    .from("companies")
-    .select("nome")
-    .eq("id", companyId)
-    .maybeSingle();
-
   const now = new Date();
   const startOfDay = new Date(now);
   startOfDay.setHours(0, 0, 0, 0);
@@ -155,47 +150,25 @@ export default async function PainelPage() {
 
   return (
     <div className="space-y-5">
-      <header>
-        <h1 className="text-2xl font-semibold text-zinc-100">Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-300">Visao rapida da agenda do dia.</p>
-      </header>
+      <PageHeader icon={LayoutDashboard} title="Dashboard" description="Visao rapida da agenda do dia." />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <article className="rounded-lg border border-zinc-700/70 bg-zinc-950/70 p-4">
-          <p className="text-xs text-zinc-400">Agendamentos hoje</p>
-          <p className="mt-1 text-2xl font-semibold text-zinc-100">{totalToday}</p>
-        </article>
-
-        <article className="rounded-lg border border-sky-500/35 bg-sky-600/10 p-4">
-          <p className="text-xs text-sky-200/80">Faturamento hoje</p>
-          <p className="mt-1 text-2xl font-semibold text-sky-100">{formatCurrency(revenueToday)}</p>
-        </article>
-
-        <article className="rounded-lg border border-amber-500/35 bg-amber-600/10 p-4">
-          <p className="text-xs text-amber-200/80">Agendados</p>
-          <p className="mt-1 text-2xl font-semibold text-amber-100">{totalScheduled}</p>
-        </article>
-
-        <article className="rounded-lg border border-emerald-500/35 bg-emerald-600/10 p-4">
-          <p className="text-xs text-emerald-200/80">Concluidos</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-100">{totalConcluded}</p>
-        </article>
-
-        <article className="rounded-lg border border-rose-500/35 bg-rose-600/10 p-4">
-          <p className="text-xs text-rose-200/80">Cancelados</p>
-          <p className="mt-1 text-2xl font-semibold text-rose-100">{totalCanceled}</p>
-        </article>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        <StatCard label="Agendamentos hoje" value={totalToday} icon={CalendarClock} />
+        <StatCard className="col-span-2 sm:col-span-1" label="Faturamento hoje" value={formatCurrency(revenueToday)} icon={Wallet} tone="success" />
+        <StatCard label="Agendados" value={totalScheduled} icon={Clock} tone="warning" />
+        <StatCard label="Concluidos" value={totalConcluded} icon={CheckCircle2} tone="success" />
+        <StatCard label="Cancelados" value={totalCanceled} icon={XCircle} tone="danger" />
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
-        <article className="rounded-lg border border-zinc-700/70 bg-zinc-950/70 p-4">
+        <Panel>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-zinc-100">Proximos atendimentos de hoje</h2>
-            <p className="text-xs text-zinc-400">{nextAppointments.length} pendente(s)</p>
+            <h2 className="text-sm font-semibold text-foreground">Proximos atendimentos de hoje</h2>
+            <p className="text-xs text-muted-foreground">{nextAppointments.length} pendente(s)</p>
           </div>
 
           {nextAppointments.length === 0 ? (
-            <p className="mt-3 rounded-lg border border-zinc-700/70 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-300">
+            <p className="mt-3 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted-foreground">
               Nenhum agendamento pendente para hoje.
             </p>
           ) : (
@@ -203,11 +176,11 @@ export default async function PainelPage() {
               {nextAppointments.slice(0, 6).map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-zinc-700/70 bg-zinc-900/70 px-3 py-2"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm text-zinc-100">{appointment.cliente_nome}</p>
-                    <p className="text-xs text-zinc-400">{formatDateTime(appointment.data_hora)}</p>
+                    <p className="text-sm text-foreground">{appointment.cliente_nome}</p>
+                    <p className="text-xs text-muted-foreground">{formatDateTime(appointment.data_hora)}</p>
                   </div>
                   <span
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${getStatusBadge(appointment.status)}`}
@@ -218,13 +191,13 @@ export default async function PainelPage() {
               ))}
             </div>
           )}
-        </article>
+        </Panel>
 
-        <article className="rounded-lg border border-zinc-700/70 bg-zinc-950/70 p-4">
-          <h2 className="text-sm font-semibold text-zinc-100">Servicos mais vendidos (mes)</h2>
+        <Panel>
+          <h2 className="text-sm font-semibold text-foreground">Servicos mais vendidos (mes)</h2>
 
           {topServices.length === 0 ? (
-            <p className="mt-3 rounded-lg border border-zinc-700/70 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-300">
+            <p className="mt-3 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted-foreground">
               Sem servicos concluidos no mes atual.
             </p>
           ) : (
@@ -232,9 +205,9 @@ export default async function PainelPage() {
               {topServices.map((service, index) => (
                 <div
                   key={service.serviceId}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-zinc-700/70 bg-zinc-900/70 px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
                 >
-                  <p className="text-sm text-zinc-100">
+                  <p className="text-sm text-foreground">
                     {index + 1}. {service.serviceName}
                   </p>
                   <span className="rounded-full border border-amber-500/40 bg-amber-600/10 px-2.5 py-1 text-[11px] font-semibold text-amber-200">
@@ -245,15 +218,7 @@ export default async function PainelPage() {
             </div>
           )}
 
-          <p className="mt-4 text-xs text-zinc-400">Empresa</p>
-          <p className="mt-1 text-sm text-zinc-100">{company?.nome ?? "Empresa nao encontrada"}</p>
-
-          <p className="mt-4 text-xs text-zinc-400">Usuario logado</p>
-          <p className="mt-1 text-sm text-zinc-100">{user?.email ?? "Usuario sem e-mail"}</p>
-
-          <p className="mt-4 text-xs text-zinc-400">Papel de acesso</p>
-          <p className="mt-1 text-sm text-zinc-100">{role === "admin" ? "Administrador" : "Equipe"}</p>
-        </article>
+        </Panel>
       </div>
     </div>
   );

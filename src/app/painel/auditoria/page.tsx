@@ -1,3 +1,5 @@
+import { Shield } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -169,14 +171,9 @@ export default async function AuditoriaPage({
 
   return (
     <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-100">Auditoria</h1>
-            <p className="text-sm text-zinc-300">Acompanhe alteracoes sensiveis da sua empresa.</p>
-          </div>
-        </header>
+        <PageHeader icon={Shield} title="Auditoria" description="Acompanhe alteracoes sensiveis da sua empresa." />
 
-        <form className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-5">
+        <form className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-5">
           <div className="space-y-1">
             <label htmlFor="auditoria-from" className="text-xs text-zinc-400">
               De
@@ -186,7 +183,7 @@ export default async function AuditoriaPage({
               name="from"
               type="date"
               defaultValue={fromInput}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             />
           </div>
 
@@ -199,7 +196,7 @@ export default async function AuditoriaPage({
               name="to"
               type="date"
               defaultValue={toInput}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             />
           </div>
 
@@ -211,7 +208,7 @@ export default async function AuditoriaPage({
               id="auditoria-action"
               name="action"
               defaultValue={actionInput}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             >
               <option value="">Todas</option>
               {uniqueActions.map((action) => (
@@ -230,7 +227,7 @@ export default async function AuditoriaPage({
               id="auditoria-entity"
               name="entity"
               defaultValue={entityInput}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             >
               <option value="">Todas</option>
               {uniqueEntities.map((entity) => (
@@ -251,21 +248,21 @@ export default async function AuditoriaPage({
               type="text"
               defaultValue={queryInput}
               placeholder="ator, acao, entidade..."
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             />
           </div>
 
           <div className="md:col-span-5 flex items-center gap-2">
             <button
               type="submit"
-              className="h-10 rounded-lg border border-sky-500/40 bg-sky-600/10 px-4 text-sm font-medium text-sky-200 transition hover:border-sky-400"
+              className="h-10 rounded-lg border border-brand/40 bg-brand/10 px-4 text-sm font-medium text-brand transition hover:border-brand"
             >
               Aplicar filtros
             </button>
 
             <Link
               href="/painel/auditoria"
-              className="h-10 rounded-lg border border-zinc-600 px-4 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-zinc-100 inline-flex items-center"
+              className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-zinc-100 inline-flex items-center"
             >
               Limpar
             </Link>
@@ -276,14 +273,14 @@ export default async function AuditoriaPage({
           <div className="md:col-span-5 flex flex-wrap items-center gap-2">
             <Link
               href={exportAuditCsvHref}
-              className="h-10 rounded-lg border border-zinc-600 px-4 text-sm font-medium text-zinc-200 transition hover:border-sky-400 hover:text-sky-300 inline-flex items-center"
+              className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-zinc-200 transition hover:border-brand hover:text-brand inline-flex items-center"
             >
               Exportar auditoria (CSV)
             </Link>
 
             <Link
               href={exportAuditPdfHref}
-              className="h-10 rounded-lg border border-zinc-600 px-4 text-sm font-medium text-zinc-200 transition hover:border-sky-400 hover:text-sky-300 inline-flex items-center"
+              className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-zinc-200 transition hover:border-brand hover:text-brand inline-flex items-center"
             >
               Exportar auditoria (PDF)
             </Link>
@@ -295,7 +292,7 @@ export default async function AuditoriaPage({
             Para habilitar auditoria, execute o script docs/database/003_etapa11_convites_auditoria.sql no Supabase SQL Editor.
           </p>
         ) : filteredLogs.length === 0 ? (
-          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum evento de auditoria encontrado para os filtros informados.
           </p>
         ) : (
@@ -304,7 +301,7 @@ export default async function AuditoriaPage({
               const actor = log.actor_id ? profileById.get(log.actor_id) : null;
 
               return (
-                <article key={log.id} className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+                <article key={log.id} className="rounded-xl border border-border bg-surface-2 p-4">
                   <div className="grid gap-2 sm:grid-cols-2">
                     <p className="text-xs text-zinc-400">Quando: {formatDate(log.created_at)}</p>
                     <p className="text-xs text-zinc-400 sm:text-right">Acao: {log.action}</p>
@@ -319,7 +316,7 @@ export default async function AuditoriaPage({
                     Ator: {actor ? `${actor.nome} (${actor.email})` : log.actor_id ?? "Sistema"}
                   </p>
 
-                  <pre className="mt-3 overflow-x-auto rounded-lg border border-zinc-700/70 bg-zinc-900/70 p-3 text-xs text-zinc-300">
+                  <pre className="mt-3 overflow-x-auto rounded-lg border border-border bg-surface p-3 text-xs text-zinc-300">
                     {formatMetadata(log.metadata)}
                   </pre>
                 </article>

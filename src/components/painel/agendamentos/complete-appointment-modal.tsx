@@ -102,7 +102,7 @@ export function CompleteAppointmentModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="rounded-lg border border-zinc-700/70 bg-zinc-950/60 p-3 text-sm text-zinc-200">
+        <div className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-zinc-200">
           <p>
             <span className="text-zinc-400">Cliente:</span> {clienteNome}
           </p>
@@ -129,7 +129,7 @@ export function CompleteAppointmentModal({
               min={0}
               step="0.01"
               defaultValue={valorSugerido}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -144,7 +144,7 @@ export function CompleteAppointmentModal({
                   className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
                     formaPagamento === method.value
                       ? "border-amber-400 bg-amber-400/15 text-amber-200"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"
+                      : "border-border bg-surface text-zinc-300 hover:border-border"
                   }`}
                 >
                   {method.label}
@@ -164,7 +164,7 @@ export function CompleteAppointmentModal({
               id={`observacoes-${appointmentId}`}
               name="observacoes"
               rows={2}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
               placeholder="Detalhes adicionais do atendimento"
             />
           </div>

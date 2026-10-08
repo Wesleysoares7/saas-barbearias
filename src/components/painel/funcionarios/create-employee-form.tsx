@@ -101,7 +101,7 @@ export function CreateEmployeeForm() {
 
       <form
         action={formAction}
-        className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
+        className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2"
       >
         <input type="hidden" name="is_self" value={isSelf ? "1" : "0"} />
 
@@ -118,7 +118,7 @@ export function CreateEmployeeForm() {
             type="text"
             ref={nomeInputRef}
             onChange={() => setIsSelf(false)}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Joao"
             required
           />
@@ -137,7 +137,7 @@ export function CreateEmployeeForm() {
             type="tel"
             ref={telefoneInputRef}
             onChange={() => setIsSelf(false)}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
         </div>
@@ -156,7 +156,7 @@ export function CreateEmployeeForm() {
             min={0}
             max={100}
             step="0.01"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="40"
           />
         </div>

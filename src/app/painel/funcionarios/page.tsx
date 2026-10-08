@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
+import { Plus, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -129,15 +130,10 @@ export default async function FuncionariosPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Funcionarios</h1>
-          <p className="text-sm text-zinc-300">
-            Cadastre e mantenha a equipe da sua empresa.
-          </p>
-        </div>
-        
-        <Dialog>
+      <PageHeader icon={UserRound} title="Funcionarios" description="Cadastre e mantenha a equipe da sua empresa."
+        actions={
+          <>
+<Dialog>
           <DialogTrigger asChild>
             <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
               <Plus className="size-4 mr-2" />
@@ -151,7 +147,9 @@ export default async function FuncionariosPage() {
             <CreateEmployeeForm />
           </DialogContent>
         </Dialog>
-      </header>
+          </>
+        }
+      />
 
       {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
 
@@ -163,7 +161,7 @@ export default async function FuncionariosPage() {
         </div>
 
         {employeeRows.length === 0 ? (
-          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum funcionario cadastrado ainda.
           </p>
         ) : (

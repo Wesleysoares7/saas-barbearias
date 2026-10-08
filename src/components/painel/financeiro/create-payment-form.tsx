@@ -74,7 +74,7 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2">
+      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-pagamento-agendamento" className="text-sm text-zinc-200">
             Agendamento concluido
@@ -84,7 +84,7 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
             name="appointment_id"
             value={selectedAppointmentId}
             onChange={(event) => setSelectedAppointmentId(event.target.value)}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
             <option value="">Selecione</option>
@@ -108,7 +108,7 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
             step="0.01"
             defaultValue={selectedAppointment ? selectedAppointment.valorSugerido : undefined}
             key={`valor-${selectedAppointmentId}`}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           />
         </div>
@@ -126,7 +126,7 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
             step="0.01"
             defaultValue={selectedAppointment ? selectedAppointment.percentualComissaoSugerido : undefined}
             key={`comissao-${selectedAppointmentId}`}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           />
         </div>
@@ -139,7 +139,7 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
             id="novo-pagamento-forma"
             name="forma_pagamento"
             type="text"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Pix, Cartao, Dinheiro"
             required
           />

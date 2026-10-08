@@ -168,7 +168,7 @@ export function CreateAppointmentForm({
       <form
         action={formAction}
         onSubmit={handleSubmit}
-        className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2"
+        className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2"
       >
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-agendamento-cliente-cadastrado" className="text-sm text-zinc-200">
@@ -179,7 +179,7 @@ export function CreateAppointmentForm({
             name="customer_id"
             value={selectedCustomerId}
             onChange={(e) => handleCustomerSelection(e.target.value)}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
           >
             <option value="">Selecionar depois / nao vincular</option>
             {customers.map((customer) => (
@@ -203,7 +203,7 @@ export function CreateAppointmentForm({
               setCustomerName(e.target.value);
               handleNewCustomerInput();
             }}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Carlos"
             required
           />
@@ -222,7 +222,7 @@ export function CreateAppointmentForm({
               setCustomerPhone(e.target.value);
               handleNewCustomerInput();
             }}
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
         </div>
@@ -239,7 +239,7 @@ export function CreateAppointmentForm({
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+                className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
                 placeholder="cliente@email.com"
               />
             </div>
@@ -253,7 +253,7 @@ export function CreateAppointmentForm({
                 value={customerObservations}
                 onChange={(e) => setCustomerObservations(e.target.value)}
                 rows={2}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
                 placeholder="Preferências, alergias, anotações importantes..."
               />
             </div>
@@ -268,7 +268,7 @@ export function CreateAppointmentForm({
             id="novo-agendamento-data-hora"
             name="data_hora"
             type="datetime-local"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           />
         </div>
@@ -280,7 +280,7 @@ export function CreateAppointmentForm({
           <select
             id="novo-agendamento-funcionario"
             name="employee_id"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
             <option value="">Selecione</option>
@@ -299,7 +299,7 @@ export function CreateAppointmentForm({
           <select
             id="novo-agendamento-servico"
             name="service_id"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
             <option value="">Selecione</option>
@@ -319,7 +319,7 @@ export function CreateAppointmentForm({
             id="novo-agendamento-status"
             name="status"
             defaultValue="agendado"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
             <option value="agendado">Agendado</option>
@@ -336,7 +336,7 @@ export function CreateAppointmentForm({
             id="novo-agendamento-observacoes"
             name="observacoes"
             rows={3}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Detalhes adicionais do atendimento"
           />
         </div>

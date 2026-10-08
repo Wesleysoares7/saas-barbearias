@@ -2,18 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type MouseEvent } from "react";
+import { useEffect, useState } from "react";
 import {
   BellRing,
   CalendarClock,
+  ChevronLeft,
+  ChevronRight,
   FileBarChart2,
   LayoutDashboard,
+  LogOut,
   Scissors,
   Shield,
   UserRound,
   Users,
   Wallet,
+  type LucideIcon,
 } from "lucide-react";
+
+import { signOutAction } from "@/app/painel/actions";
 
 export type SidebarNavItem = {
   href: string;
@@ -34,11 +40,12 @@ export type SidebarNavItem = {
 
 type SidebarNavProps = {
   items: SidebarNavItem[];
-  orientation?: "vertical" | "horizontal";
-  closeOnNavigate?: boolean;
+  companyName: string;
 };
 
-function isActivePath(pathname: string, href: string): boolean {
+const STORAGE_KEY = "painel-sidebar-expanded";
+
+export function isActivePath(pathname: string, href: string): boolean {
   if (href === "/painel") {
     return pathname === "/painel";
   }
@@ -46,126 +53,126 @@ function isActivePath(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getIcon(icon: SidebarNavItem["icon"]) {
-  if (icon === "dashboard") {
-    return LayoutDashboard;
-  }
+export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
+  const icons: Record<SidebarNavItem["icon"], LucideIcon> = {
+    dashboard: LayoutDashboard,
+    agendamentos: CalendarClock,
+    relatorios: FileBarChart2,
+    clientes: Users,
+    funcionarios: UserRound,
+    servicos: Scissors,
+    financeiro: Wallet,
+    equipe: Users,
+    auditoria: Shield,
+    notificacoes: BellRing,
+  };
 
-  if (icon === "agendamentos") {
-    return CalendarClock;
-  }
-
-  if (icon === "relatorios") {
-    return FileBarChart2;
-  }
-
-  if (icon === "clientes") {
-    return Users;
-  }
-
-  if (icon === "funcionarios") {
-    return UserRound;
-  }
-
-  if (icon === "servicos") {
-    return Scissors;
-  }
-
-  if (icon === "financeiro") {
-    return Wallet;
-  }
-
-  if (icon === "equipe") {
-    return Users;
-  }
-
-  if (icon === "auditoria") {
-    return Shield;
-  }
-
-  return BellRing;
+  return icons[icon];
 }
 
-export function SidebarNav({ items, orientation = "vertical", closeOnNavigate = false }: SidebarNavProps) {
+export function SidebarNav({ items, companyName }: SidebarNavProps) {
   const pathname = usePathname();
-  const isVertical = orientation === "vertical";
+  const [expanded, setExpanded] = useState(false);
   const sections = [...new Set(items.map((item) => item.section))];
 
-  function handleNavigate(event: MouseEvent<HTMLAnchorElement>) {
-    if (!closeOnNavigate) {
-      return;
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      try {
+        setExpanded(window.localStorage.getItem(STORAGE_KEY) === "1");
+      } catch {
+        // localStorage indisponivel: mantem recolhido
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  function toggle() {
+    const next = !expanded;
+    setExpanded(next);
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
+    } catch {
+      // ignora falhas de persistencia
     }
-
-    const detailsElement = event.currentTarget.closest("details");
-
-    if (detailsElement instanceof HTMLDetailsElement) {
-      detailsElement.open = false;
-    }
-  }
-
-  if (!isVertical) {
-    return (
-      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label="Navegacao principal do painel">
-        {items.map((item) => {
-          const active = isActivePath(pathname, item.href);
-          const Icon = getIcon(item.icon);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={handleNavigate}
-              className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-medium transition ${
-                active
-                  ? "border-fuchsia-400/70 bg-fuchsia-500/20 text-fuchsia-100"
-                  : "border-zinc-700/70 bg-zinc-900/50 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-800/70"
-              }`}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                <Icon className="size-3.5" />
-                {item.label}
-              </span>
-            </Link>
-          );
-        })}
-      </nav>
-    );
   }
 
   return (
-    <nav className="space-y-4" aria-label="Navegacao principal do painel">
-      {sections.map((section) => {
-        const sectionItems = items.filter((item) => item.section === section);
+    <aside
+      className={`relative z-30 hidden shrink-0 border-r border-border bg-surface transition-[width] duration-200 lg:block ${
+        expanded ? "w-60" : "w-16"
+      }`}
+    >
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={expanded ? "Recolher menu" : "Expandir menu"}
+        className="absolute top-4 -right-3 z-20 flex size-6 items-center justify-center rounded-full border border-border bg-surface-2 text-muted-foreground transition hover:text-brand"
+      >
+        {expanded ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+      </button>
 
-        return (
-          <div key={section} className="space-y-1.5">
-            <p className="px-1 text-[10px] font-semibold tracking-[0.2em] text-zinc-500 uppercase">{section}</p>
-
-            {sectionItems.map((item) => {
-              const active = isActivePath(pathname, item.href);
-              const Icon = getIcon(item.icon);
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={handleNavigate}
-                  className={`group block rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
-                    active
-                      ? "border-fuchsia-400/70 bg-fuchsia-500/20 text-fuchsia-100 shadow-[0_10px_30px_-22px_rgba(217,70,239,0.9)]"
-                      : "border-zinc-700/70 bg-zinc-900/50 text-zinc-200 hover:border-zinc-500 hover:bg-zinc-800/70"
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-2.5">
-                    <Icon className={`size-4 ${active ? "text-fuchsia-200" : "text-zinc-400 group-hover:text-zinc-200"}`} />
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
+      <div className="sticky top-0 flex h-screen flex-col py-3">
+        <div className={`flex items-center gap-3 pb-3 ${expanded ? "px-3" : "justify-center"}`}>
+          <div
+            title={companyName}
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-base font-bold text-brand-foreground"
+          >
+            {companyName.charAt(0).toUpperCase()}
           </div>
-        );
-      })}
-    </nav>
+          {expanded ? <span className="truncate text-sm font-semibold text-foreground">{companyName}</span> : null}
+        </div>
+
+        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-2" aria-label="Navegacao principal do painel">
+          {sections.map((section) => (
+            <div key={section} className="flex flex-col gap-1">
+              {expanded ? (
+                <p className="px-2 pb-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">{section}</p>
+              ) : null}
+
+              {items
+                .filter((item) => item.section === section)
+                .map((item) => {
+                  const active = isActivePath(pathname, item.href);
+                  const Icon = getIcon(item.icon);
+
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={item.label}
+                      aria-label={item.label}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex h-10 items-center gap-3 rounded-xl text-sm font-medium transition ${
+                        expanded ? "w-full px-3" : "mx-auto w-10 justify-center"
+                      } ${active ? "bg-brand/15 text-brand" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}
+                    >
+                      <Icon className="size-5 shrink-0" />
+                      {expanded ? <span className="truncate">{item.label}</span> : null}
+                    </Link>
+                  );
+                })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="px-3 pt-2">
+          <form action={signOutAction}>
+            <button
+              type="submit"
+              title="Sair"
+              aria-label="Sair"
+              className={`flex h-10 items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground transition hover:bg-surface-2 hover:text-rose-300 ${
+                expanded ? "w-full px-3" : "mx-auto w-10 justify-center"
+              }`}
+            >
+              <LogOut className="size-5 shrink-0" />
+              {expanded ? <span>Sair</span> : null}
+            </button>
+          </form>
+        </div>
+      </div>
+    </aside>
   );
 }
