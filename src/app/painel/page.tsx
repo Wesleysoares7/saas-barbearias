@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/access";
@@ -7,6 +8,7 @@ import { CalendarClock, CheckCircle2, Clock, LayoutDashboard, Wallet, XCircle } 
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
+import { StatusPill } from "@/components/painel/ui/status-pill";
 import type { AppointmentStatus } from "@/types";
 
 type AppointmentRow = {
@@ -141,9 +143,45 @@ export default async function PainelPage() {
     .sort((left, right) => right.total - left.total)
     .slice(0, 5);
 
+  let onboardingSteps: { label: string; href: string; done: boolean }[] = [];
+
+  if (role === "admin") {
+    const [servicesCount, employeesCount, appointmentsCount] = await Promise.all([
+      supabase.from("services").select("id", { count: "exact", head: true }).eq("company_id", companyId).eq("ativo", true),
+      supabase.from("employees").select("id", { count: "exact", head: true }).eq("company_id", companyId).eq("ativo", true),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("company_id", companyId),
+    ]);
+
+    onboardingSteps = [
+      { label: "Cadastrar um servico", href: "/painel/servicos", done: (servicesCount.count ?? 0) > 0 },
+      { label: "Ter um funcionario ativo, incluindo voce", href: "/painel/funcionarios", done: (employeesCount.count ?? 0) > 0 },
+      { label: "Criar o primeiro agendamento", href: "/painel/agendamentos", done: (appointmentsCount.count ?? 0) > 0 },
+    ];
+  }
+
+  const showOnboarding = onboardingSteps.length > 0 && onboardingSteps.some((step) => !step.done);
+
   return (
     <div className="space-y-5">
       <PageHeader icon={LayoutDashboard} title="Dashboard" description="Visao rapida da agenda do dia." />
+
+      {showOnboarding ? (
+        <Panel title="Primeiros passos">
+          <ul className="space-y-2">
+            {onboardingSteps.map((step) => (
+              <li key={step.label}>
+                <Link
+                  href={step.href}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-3 text-sm text-foreground hover:border-brand"
+                >
+                  <span className="min-w-0 truncate">{step.label}</span>
+                  <StatusPill tone={step.done ? "success" : "warning"}>{step.done ? "Feito" : "Pendente"}</StatusPill>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Agendamentos hoje" value={totalToday} icon={CalendarClock} />

@@ -97,12 +97,16 @@ export function OnboardingForm() {
           id="unico-atendente"
           name="unico_atendente"
           type="checkbox"
+          defaultChecked
           className="h-4 w-4 accent-amber-400"
         />
         <label htmlFor="unico-atendente" className="text-sm text-zinc-200">
           Sou o único atendente / Atendimento próprio
         </label>
       </div>
+      <p className="text-xs text-muted-foreground">
+        Você poderá cadastrar mais funcionários depois, no menu Funcionários.
+      </p>
 
       <SubmitButton />
 

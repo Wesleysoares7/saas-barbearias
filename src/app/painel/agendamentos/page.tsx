@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { CalendarClock, Plus } from "lucide-react";
@@ -104,8 +105,6 @@ export default async function AgendamentosPage() {
   const customers: OptionItem[] = (customersResponse.data ??
     []) as OptionItem[];
 
-  // Log para depuração - remover depois
-  console.log("Clientes encontrados:", customers.length, customers);
   const appointments: AppointmentRow[] = (appointmentsResponse.data ??
     []) as AppointmentRow[];
   const appointmentSlots: AppointmentSlot[] = appointments.map(
@@ -189,10 +188,36 @@ export default async function AgendamentosPage() {
       />
 
       {employees.length === 0 || services.length === 0 ? (
-        <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
-          Para criar agendamentos, cadastre pelo menos um funcionario ativo e um
-          servico ativo.
-        </p>
+        <div className="space-y-2">
+          {services.length === 0 ? (
+            <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
+              {role === "admin" ? (
+                <>
+                  Cadastre pelo menos um servico ativo para criar agendamentos.{" "}
+                  <Link href="/painel/servicos" className="font-medium underline">
+                    Ir para Servicos
+                  </Link>
+                </>
+              ) : (
+                "Cadastre pelo menos um servico ativo para criar agendamentos. Peca ao administrador."
+              )}
+            </p>
+          ) : null}
+          {employees.length === 0 ? (
+            <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
+              {role === "admin" ? (
+                <>
+                  Cadastre pelo menos um funcionario ativo (voce pode se cadastrar como funcionario).{" "}
+                  <Link href="/painel/funcionarios" className="font-medium underline">
+                    Ir para Funcionarios
+                  </Link>
+                </>
+              ) : (
+                "Cadastre pelo menos um funcionario ativo. Peca ao administrador."
+              )}
+            </p>
+          ) : null}
+        </div>
       ) : !canCreateAppointment ? (
         <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
           Seu perfil pode visualizar e atualizar agendamentos, mas nao pode
