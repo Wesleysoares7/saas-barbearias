@@ -1,4 +1,5 @@
 import { canPerformAction, getAccessContext } from "@/lib/auth/access";
+import { addDaysToInput, endOfDayIso, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
 type AuditRow = {
   id: string;
@@ -26,13 +27,6 @@ function normalizeDate(value: string, fallback: string): string {
   }
 
   return value;
-}
-
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 
 function formatMetadata(metadata: Record<string, unknown>): string {
@@ -70,9 +64,8 @@ export async function GET(request: Request) {
   }
 
   const url = new URL(request.url);
-  const now = new Date();
-  const defaultFrom = toDateInputValue(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30));
-  const defaultTo = toDateInputValue(now);
+  const defaultTo = todayInputValue();
+  const defaultFrom = addDaysToInput(defaultTo, -30);
 
   const fromInput = normalizeDate(sanitizeText(url.searchParams.get("from")), defaultFrom);
   const toInput = normalizeDate(sanitizeText(url.searchParams.get("to")), defaultTo);
@@ -80,8 +73,8 @@ export async function GET(request: Request) {
   const entityInput = sanitizeText(url.searchParams.get("entity"));
   const queryInput = sanitizeText(url.searchParams.get("q")).toLowerCase();
 
-  const fromIso = new Date(`${fromInput}T00:00:00`).toISOString();
-  const toIso = new Date(`${toInput}T23:59:59.999`).toISOString();
+  const fromIso = startOfDayIso(fromInput);
+  const toIso = endOfDayIso(toInput);
 
   let logsQuery = supabase
     .from("audit_logs")

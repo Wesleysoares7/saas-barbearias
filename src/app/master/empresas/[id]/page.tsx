@@ -8,6 +8,7 @@ import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import { getPlatformAccessContext } from "@/lib/auth/access";
+import { formatDateTimeBR } from "@/lib/datetime";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -38,16 +39,6 @@ type AuditRow = {
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
 }
 
 export default async function MasterCompanyDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -200,7 +191,7 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
               <li key={log.id} className="rounded-xl border border-border bg-surface-2 p-3">
                 <p className="truncate text-sm text-foreground">{log.action}</p>
                 <p className="text-xs text-muted-foreground">
-                  {log.entity} | {formatDateTime(log.created_at)}
+                  {log.entity} | {formatDateTimeBR(log.created_at)}
                 </p>
               </li>
             ))}

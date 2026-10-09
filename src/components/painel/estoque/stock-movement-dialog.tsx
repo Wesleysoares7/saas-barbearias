@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -15,6 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ALLOWED_REASONS, REASON_LABELS, type StockMovementReason, type StockMovementType } from "@/types/stock";
+import { todayInputValue } from "@/lib/datetime";
 
 type ActionState = {
   success: boolean;
@@ -28,14 +29,6 @@ const INITIAL_STATE: ActionState = {
 
 const FIELD_CLASS =
   "h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-base text-foreground outline-none focus:border-brand";
-
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
 
 function ConfirmButton({ tipo }: { tipo: StockMovementType }) {
   const { pending } = useFormStatus();
@@ -165,7 +158,7 @@ export function StockMovementDialog({
               id={`mov-data-${productId}-${tipo}`}
               name="data_movimento"
               type="date"
-              defaultValue={toDateInputValue(new Date())}
+              defaultValue={todayInputValue()}
               className={FIELD_CLASS}
             />
           </div>

@@ -18,6 +18,7 @@ import {
   getAccessContext,
 } from "@/lib/auth/access";
 import type { AppointmentStatus } from "@/types";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type OptionItem = {
   id: string;
@@ -125,16 +126,7 @@ export default async function AgendamentosPage() {
     (appointment) => appointment.status === "concluido",
   );
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
+  const formatDate = (dateString: string) => formatDateTimeBR(dateString);
 
   // Componente para agendamentos concluídos reduzidos
   function CompletedAppointmentItem({

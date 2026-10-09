@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 
 import { markAllNotificationsReadAction, markNotificationReadAction } from "./actions";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type NotificationSeverity = "info" | "warning" | "critical";
 
@@ -52,16 +53,9 @@ function getSeverityLabel(severity: NotificationSeverity): string {
 }
 
 function formatDateTime(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 function sanitizeText(value: string | null | undefined): string {

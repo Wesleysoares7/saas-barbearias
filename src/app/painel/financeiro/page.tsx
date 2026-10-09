@@ -7,6 +7,7 @@ import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { endOfDayIso, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
 type AppointmentRow = {
   id: string;
@@ -97,14 +98,6 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
 function normalizeDateInput(
   value: string | undefined,
   fallback: string,
@@ -136,16 +129,14 @@ export default async function FinanceiroPage({
     redirect("/painel");
   }
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const defaultStart = toDateInputValue(startOfMonth);
-  const defaultEnd = toDateInputValue(now);
+  const defaultStart = monthStartInputValue();
+  const defaultEnd = todayInputValue();
 
   const start = normalizeDateInput(resolvedSearchParams.start, defaultStart);
   const end = normalizeDateInput(resolvedSearchParams.end, defaultEnd);
 
-  const startDate = new Date(`${start}T00:00:00.000`);
-  const endDate = new Date(`${end}T23:59:59.999`);
+  const startDate = new Date(startOfDayIso(start));
+  const endDate = new Date(endOfDayIso(end));
 
   const [
     appointmentsResponse,

@@ -8,6 +8,7 @@ import {
 } from "@/app/master/actions";
 import { signOutAction } from "@/app/painel/actions";
 import { getPlatformAccessContext } from "@/lib/auth/access";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type CompanyRow = {
   id: string;
@@ -17,17 +18,10 @@ type CompanyRow = {
   created_at: string;
 };
 
-function formatDate(dateIso: string) {
-  const date = new Date(dateIso);
+function formatDate(dateIso: string): string {
+  const formatted = formatDateTimeBR(dateIso);
 
-  if (Number.isNaN(date.getTime())) {
-    return "Data invalida";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? "Data invalida" : formatted;
 }
 
 export default async function MasterCompaniesPage() {

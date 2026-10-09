@@ -1,16 +1,10 @@
 import { FileBarChart2 } from "lucide-react";
 import { PageHeader } from "@/components/painel/ui/page-header";
+import { monthStartInputValue, todayInputValue } from "@/lib/datetime";
 type SearchParams = {
   start?: string;
   end?: string;
 };
-
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
 
 function normalizeDateInput(value: string | undefined, fallback: string): string {
   if (!value) {
@@ -30,11 +24,8 @@ export default async function RelatoriosPage({
   searchParams?: Promise<SearchParams>;
 }) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const defaultStart = toDateInputValue(startOfMonth);
-  const defaultEnd = toDateInputValue(now);
+  const defaultStart = monthStartInputValue();
+  const defaultEnd = todayInputValue();
 
   const start = normalizeDateInput(resolvedSearchParams.start, defaultStart);
   const end = normalizeDateInput(resolvedSearchParams.end, defaultEnd);

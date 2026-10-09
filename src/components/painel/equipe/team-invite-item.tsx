@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { revokeTeamInviteAction } from "@/app/painel/equipe/actions";
 import { Button } from "@/components/ui/button";
 import { type UserRole } from "@/lib/auth/access";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type InviteStatus = "pending" | "accepted" | "revoked" | "expired";
 
@@ -55,16 +56,9 @@ function getStatusLabel(status: InviteStatus): string {
 }
 
 function formatDate(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {

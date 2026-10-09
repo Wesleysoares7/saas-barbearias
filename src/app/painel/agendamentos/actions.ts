@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { calculateEndDateIso } from "@/lib/appointments/conflict";
 import { canPerformAction, getAccessContext, isAdmin } from "@/lib/auth/access";
+import { localDateTimeToIso } from "@/lib/datetime";
 
 type ActionState = {
   success: boolean;
@@ -42,13 +43,7 @@ function sanitizeText(value: FormDataEntryValue | null): string {
 }
 
 function parseDateTimeLocal(value: string): string | null {
-  const parsedDate = new Date(value);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return null;
-  }
-
-  return parsedDate.toISOString();
+  return localDateTimeToIso(value);
 }
 
 async function getCompanyScope() {

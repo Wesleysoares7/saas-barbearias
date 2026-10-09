@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { formatDateTimeBR } from "@/lib/datetime";
+
 interface CompletedAppointmentItemProps {
   appointment: {
     id: string;
@@ -16,16 +18,7 @@ interface CompletedAppointmentItemProps {
 export function CompletedAppointmentItem({ appointment }: CompletedAppointmentItemProps) {
   const [showDetails, setShowDetails] = useState(false);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  };
+  const formatDate = (dateString: string) => formatDateTimeBR(dateString);
 
   return (
     <div className="rounded-lg border border-emerald-500/20 bg-emerald-600/10 p-3">

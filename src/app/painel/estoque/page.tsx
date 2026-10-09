@@ -10,6 +10,7 @@ import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { endOfDayIso, formatDateTimeBR, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 import { REASON_LABELS, type Product, type StockMovement } from "@/types/stock";
 
 type SearchParams = {
@@ -54,24 +55,6 @@ function formatCurrency(value: number): string {
 
 function formatQuantity(value: number): string {
   return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(value);
-}
-
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(date);
-}
-
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
 }
 
 function normalizeDateInput(value: string | undefined, fallback: string): string {
@@ -194,9 +177,8 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
   const categoria = (resolvedSearchParams.categoria ?? "").trim();
   const page = parsePage(resolvedSearchParams.pagina);
 
-  const now = new Date();
-  const defaultStart = toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1));
-  const defaultEnd = toDateInputValue(now);
+  const defaultStart = monthStartInputValue();
+  const defaultEnd = todayInputValue();
   const start = normalizeDateInput(resolvedSearchParams.start, defaultStart);
   const end = normalizeDateInput(resolvedSearchParams.end, defaultEnd);
   const produtoId = (resolvedSearchParams.produto ?? "").trim();
@@ -264,8 +246,8 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
         { count: "exact" },
       )
       .eq("company_id", companyId)
-      .gte("data_movimento", new Date(`${start}T00:00:00.000`).toISOString())
-      .lte("data_movimento", new Date(`${end}T23:59:59.999`).toISOString());
+      .gte("data_movimento", startOfDayIso(start))
+      .lte("data_movimento", endOfDayIso(end));
 
     if (produtoId) {
       movementsQuery = movementsQuery.eq("product_id", produtoId);
@@ -548,7 +530,7 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
                   <tbody>
                     {movements.map((movement) => (
                       <tr key={movement.id} className="border-b border-border/60 align-middle">
-                        <td className="py-2 pr-2 text-foreground">{formatDateTime(movement.data_movimento)}</td>
+                        <td className="py-2 pr-2 text-foreground">{formatDateTimeBR(movement.data_movimento)}</td>
                         <td className="truncate py-2 pr-2 text-foreground">{getProductName(movement.products)}</td>
                         <td className="py-2 pr-2">
                           <StatusPill tone={movement.tipo === "entrada" ? "success" : "danger"}>
@@ -579,7 +561,7 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
                       </StatusPill>
                     </div>
                     <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {formatDateTime(movement.data_movimento)} | {REASON_LABELS[movement.motivo]} |{" "}
+                      {formatDateTimeBR(movement.data_movimento)} | {REASON_LABELS[movement.motivo]} |{" "}
                       {formatQuantity(Number(movement.quantidade))} {getProductUnit(movement.products)} |{" "}
                       {formatCurrency(Number(movement.custo_total))}
                     </p>
