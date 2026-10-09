@@ -11,7 +11,8 @@ type ModuleKey =
   | "equipe"
   | "auditoria"
   | "notificacoes"
-  | "clientes";
+  | "clientes"
+  | "estoque";
 type ModuleAction = "read" | "create" | "update" | "delete" | "export" | "manage";
 
 type AccessContext = {

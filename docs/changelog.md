@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-09 - Etapa 14: modulo de Estoque (almoxarifado)
+
+### Adicionado
+
+- Modulo `/painel/estoque` (somente admin): cadastro de produtos, entradas/saidas com validacao de tipo/motivo, busca por nome, alerta de estoque baixo e lista das ultimas 50 movimentacoes por periodo. O app grava apenas em `stock_movements`; saldo e custo medio vem do trigger do banco. Acoes registradas em `audit_logs`.
+- Financeiro: bloco "Resumo do periodo" (Receitas - Comissoes - Compras de estoque = Saldo) e consumo de estoque exibido separadamente.
+
 ## 2026-09-01 - Corrigir verificacao de vinculo do administrador na lista de funcionarios
 
 ### Corrigido
