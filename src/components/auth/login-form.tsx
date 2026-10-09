@@ -1,6 +1,7 @@
 "use client";
 
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -67,16 +68,12 @@ export function LoginForm() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isDisabled = useMemo(
-    () =>
-      isSubmitting ||
-      !form.email ||
-      (mode !== "recover" && !form.password),
-    [form.email, form.password, isSubmitting, mode],
-  );
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isSubmitting) {
+      return;
+    }
 
     const validationErrors =
       mode === "recover"
@@ -191,12 +188,12 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <div className="grid grid-cols-3 gap-2 rounded-lg bg-zinc-800/70 p-1">
+      <div className="grid grid-cols-3 gap-2 rounded-lg bg-surface-2 p-1">
         <button
           type="button"
           onClick={() => switchMode("login")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
-            mode === "login" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
+          className={`min-h-11 rounded-md text-sm font-medium transition ${
+            mode === "login" ? "bg-brand text-brand-foreground" : "text-foreground hover:bg-surface"
           }`}
         >
           Entrar
@@ -204,8 +201,8 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => switchMode("signup")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
-            mode === "signup" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
+          className={`min-h-11 rounded-md text-sm font-medium transition ${
+            mode === "signup" ? "bg-brand text-brand-foreground" : "text-foreground hover:bg-surface"
           }`}
         >
           Cadastrar
@@ -213,8 +210,8 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => switchMode("recover")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
-            mode === "recover" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
+          className={`min-h-11 rounded-md text-sm font-medium transition ${
+            mode === "recover" ? "bg-brand text-brand-foreground" : "text-foreground hover:bg-surface"
           }`}
         >
           Recuperar
@@ -222,7 +219,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="email" className="block text-sm font-medium text-zinc-200">
+        <label htmlFor="email" className="block text-sm font-medium text-foreground">
           E-mail
         </label>
         <input
@@ -232,13 +229,13 @@ export function LoginForm() {
           autoComplete="email"
           value={form.email}
           onChange={(event) => onFieldChange("email", event.target.value)}
-          className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
+          className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
           placeholder="voce@barbearia.com"
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "email-error" : undefined}
         />
         {errors.email ? (
-          <p id="email-error" className="text-sm text-amber-300">
+          <p id="email-error" className="text-sm text-destructive">
             {errors.email}
           </p>
         ) : null}
@@ -246,7 +243,7 @@ export function LoginForm() {
 
       {mode !== "recover" ? (
         <div className="space-y-2">
-          <label htmlFor="password" className="block text-sm font-medium text-zinc-200">
+          <label htmlFor="password" className="block text-sm font-medium text-foreground">
             Senha
           </label>
           <div className="relative">
@@ -257,32 +254,41 @@ export function LoginForm() {
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               value={form.password}
               onChange={(event) => onFieldChange("password", event.target.value)}
-              className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 pr-24 text-sm text-zinc-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
-              placeholder="********"
+              className="h-11 w-full rounded-lg border border-border bg-surface px-3 pr-24 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+              placeholder={mode === "signup" ? "Crie uma senha" : "Sua senha"}
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
             />
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-amber-300 hover:text-amber-200"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-brand hover:opacity-80"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? "Ocultar" : "Mostrar"}
             </button>
           </div>
           {errors.password ? (
-            <p id="password-error" className="text-sm text-amber-300">
+            <p id="password-error" className="text-sm text-destructive">
               {errors.password}
             </p>
+          ) : null}
+          {mode === "login" ? (
+            <button
+              type="button"
+              onClick={() => switchMode("recover")}
+              className="inline-flex min-h-11 items-center text-xs text-brand hover:underline"
+            >
+              Esqueci minha senha
+            </button>
           ) : null}
         </div>
       ) : null}
 
       <Button
         type="submit"
-        className="h-11 w-full bg-amber-400 text-zinc-950 hover:bg-amber-300"
-        disabled={isDisabled}
+        className="h-11 w-full bg-brand text-brand-foreground hover:bg-brand/90 disabled:opacity-60"
+        disabled={isSubmitting}
       >
         {isSubmitting
           ? "Processando..."
@@ -293,16 +299,30 @@ export function LoginForm() {
               : "Enviar link de recuperacao"}
       </Button>
 
-      {errors.form ? <p className="text-sm text-amber-300">{errors.form}</p> : null}
+      {mode === "signup" ? (
+        <p className="text-center text-xs text-muted-foreground">
+          Ao criar a conta, voce aceita os{" "}
+          <Link href="/termos" target="_blank" rel="noopener noreferrer" className="text-brand underline">
+            Termos de uso
+          </Link>{" "}
+          e a{" "}
+          <Link href="/privacidade" target="_blank" rel="noopener noreferrer" className="text-brand underline">
+            Politica de privacidade
+          </Link>
+          .
+        </p>
+      ) : null}
+
+      {errors.form ? <p className="text-sm text-destructive">{errors.form}</p> : null}
       {successMessage ? <p className="text-sm text-emerald-300">{successMessage}</p> : null}
       {!successMessage && isConfirmed ? (
         <p className="text-sm text-emerald-300">Conta confirmada com sucesso. Agora voce pode entrar.</p>
       ) : null}
       {!errors.form && authFlowError === "confirmacao_falhou" ? (
-        <p className="text-sm text-amber-300">Nao foi possivel confirmar sua conta. Solicite um novo e-mail de confirmacao.</p>
+        <p className="text-sm text-destructive">Nao foi possivel confirmar sua conta. Solicite um novo e-mail de confirmacao.</p>
       ) : null}
 
-      <p className="text-center text-xs text-zinc-400">
+      <p className="text-center text-xs text-muted-foreground">
         {mode === "login"
           ? "Use seu e-mail e senha para entrar."
           : mode === "signup"
