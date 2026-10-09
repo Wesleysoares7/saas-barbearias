@@ -1,4 +1,4 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAccessContext } from "@/lib/auth/access";
 
 type PaymentRow = {
   id: string;
@@ -54,19 +54,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const range = buildDateRange(url);
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  const { supabase, userId, companyId } = await getAccessContext();
 
-  if (userError || !user) {
+  if (!userId) {
     return Response.json({ error: "Nao autenticado." }, { status: 401 });
   }
 
-  const { data: companyId, error: companyError } = await supabase.rpc("current_company_id");
-
-  if (companyError || !companyId) {
+  if (!companyId) {
     return Response.json({ error: "Empresa nao encontrada para este usuario." }, { status: 400 });
   }
 

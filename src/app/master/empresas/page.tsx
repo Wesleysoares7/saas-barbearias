@@ -127,6 +127,12 @@ export default async function MasterCompaniesPage() {
             <div className="space-y-3">
               {companyList.map((company) => (
                 <div key={company.id} className="grid gap-3 rounded-xl border border-zinc-700/70 bg-zinc-950/45 p-3 sm:grid-cols-5">
+                  <Link
+                    href={`/master/empresas/${company.id}`}
+                    className="truncate text-sm font-semibold text-emerald-200 underline-offset-2 hover:underline sm:col-span-5"
+                  >
+                    {company.nome}
+                  </Link>
                   <form action={updateMasterCompanyAction} className="contents">
                     <input type="hidden" name="id" value={company.id} />
                     <input
@@ -158,6 +164,13 @@ export default async function MasterCompaniesPage() {
                     <span className="text-[11px] text-zinc-500">ID: {company.id}</span>
                     <form action={deleteMasterCompanyAction}>
                       <input type="hidden" name="id" value={company.id} />
+                      <input
+                        name="nome_confirmacao"
+                        required
+                        placeholder="Digite o nome para excluir"
+                        aria-label={`Digite o nome ${company.nome} para confirmar a exclusao`}
+                        className="mb-2 h-9 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-xs text-zinc-100 outline-none focus:border-rose-400"
+                      />
                       <button
                         type="submit"
                         className="h-9 rounded-lg border border-rose-500/60 bg-rose-500/15 px-3 text-xs font-medium text-rose-100 transition hover:bg-rose-500/25"
