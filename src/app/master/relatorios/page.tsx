@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { signOutAction } from "@/app/painel/actions";
 import { getPlatformAccessContext } from "@/lib/auth/access";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { endOfDayIso, startOfDayIso } from "@/lib/datetime";
 
 type CompanyRow = {
   id: string;
@@ -57,7 +58,7 @@ function parseStartDate(dateValue: string | undefined) {
     return null;
   }
 
-  const parsed = new Date(`${dateValue}T00:00:00.000Z`);
+  const parsed = new Date(startOfDayIso(dateValue));
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
@@ -66,7 +67,7 @@ function parseEndDate(dateValue: string | undefined) {
     return null;
   }
 
-  const parsed = new Date(`${dateValue}T23:59:59.999Z`);
+  const parsed = new Date(endOfDayIso(dateValue));
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 

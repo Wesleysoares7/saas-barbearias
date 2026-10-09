@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import type { AppointmentStatus, CustomerRow } from "@/types";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type AppointmentRow = {
   id: string;
@@ -36,16 +37,9 @@ type PaymentRow = {
 };
 
 function formatDateTime(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 function formatCurrency(value: number): string {

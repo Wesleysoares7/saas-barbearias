@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/access";
+import { endOfDayIso, formatDateTimeBR, monthEndInputValue, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 import { CalendarClock, CheckCircle2, Clock, LayoutDashboard, Wallet, XCircle } from "lucide-react";
 
 import { PageHeader } from "@/components/painel/ui/page-header";
@@ -26,16 +27,9 @@ type ServiceRow = {
 };
 
 function formatDateTime(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 function formatCurrency(value: number): string {
@@ -81,35 +75,34 @@ export default async function PainelPage() {
   }
 
   const now = new Date();
-  const startOfDay = new Date(now);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(now);
-  endOfDay.setHours(23, 59, 59, 999);
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+  const today = todayInputValue(now);
+  const startOfDay = startOfDayIso(today);
+  const endOfDay = endOfDayIso(today);
+  const startOfMonth = startOfDayIso(monthStartInputValue(now));
+  const endOfMonth = endOfDayIso(monthEndInputValue(now));
 
   const [todayAppointmentsResponse, paymentsTodayResponse, servicesResponse, concludedMonthResponse] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, cliente_nome, data_hora, status")
       .eq("company_id", companyId)
-      .gte("data_hora", startOfDay.toISOString())
-      .lte("data_hora", endOfDay.toISOString())
+      .gte("data_hora", startOfDay)
+      .lte("data_hora", endOfDay)
       .order("data_hora", { ascending: true }),
     supabase
       .from("payments")
       .select("valor")
       .eq("company_id", companyId)
-      .gte("created_at", startOfDay.toISOString())
-      .lte("created_at", endOfDay.toISOString()),
+      .gte("created_at", startOfDay)
+      .lte("created_at", endOfDay),
     supabase.from("services").select("id, nome").eq("company_id", companyId),
     supabase
       .from("appointments")
       .select("service_id")
       .eq("company_id", companyId)
       .eq("status", "concluido")
-      .gte("data_hora", startOfMonth.toISOString())
-      .lte("data_hora", endOfMonth.toISOString()),
+      .gte("data_hora", startOfMonth)
+      .lte("data_hora", endOfMonth),
   ]);
 
   const todayAppointments = (todayAppointmentsResponse.data ?? []) as AppointmentRow[];

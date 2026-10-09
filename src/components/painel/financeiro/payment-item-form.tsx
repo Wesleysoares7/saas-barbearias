@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { deletePaymentAction, updatePaymentAction } from "@/app/painel/financeiro/actions";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type PaymentItem = {
   id: string;
@@ -48,16 +49,9 @@ function DeleteButton() {
 }
 
 function formatDateTimeLabel(iso: string): string {
-  const date = new Date(iso);
+  const formatted = formatDateTimeBR(iso);
 
-  if (Number.isNaN(date.getTime())) {
-    return iso;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? iso : formatted;
 }
 
 export function PaymentItemForm({ payment }: { payment: PaymentItem }) {

@@ -1,8 +1,9 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
+import { dateInputToNoonIso } from "@/lib/datetime";
 import {
   ALLOWED_REASONS,
   STOCK_UNITS,
@@ -264,13 +265,11 @@ export async function registerStockMovementAction(_prevState: ActionState, formD
       return { success: false, message: "Informe uma data valida." };
     }
 
-    const parsedDate = new Date(`${dataMovimento}T12:00:00`);
+    movementDate = dateInputToNoonIso(dataMovimento);
 
-    if (Number.isNaN(parsedDate.getTime())) {
+    if (!movementDate) {
       return { success: false, message: "Informe uma data valida." };
     }
-
-    movementDate = parsedDate.toISOString();
   }
 
   const { supabase, userId, companyId, role, errorMessage } = await getAccessContext();

@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { createAppointmentAction } from "@/app/painel/agendamentos/actions";
 import { calculateEndDateIso, hasEmployeeConflict, type AppointmentSlot } from "@/lib/appointments/conflict";
+import { localDateTimeToIso } from "@/lib/datetime";
 
 type ActionState = {
   success: boolean;
@@ -107,14 +108,13 @@ export function CreateAppointmentForm({
     }
 
     const durationMinutes = serviceDurationsById.get(serviceId) ?? 0;
-    const startDate = new Date(dataHoraInput);
+    const startIso = localDateTimeToIso(dataHoraInput);
 
-    if (Number.isNaN(startDate.getTime()) || durationMinutes <= 0) {
+    if (!startIso || durationMinutes <= 0) {
       setClientError(null);
       return;
     }
 
-    const startIso = startDate.toISOString();
     const endIso = calculateEndDateIso(startIso, durationMinutes);
 
     const hasConflict = hasEmployeeConflict(appointmentSlots, {

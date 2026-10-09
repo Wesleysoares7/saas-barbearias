@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { addDaysToInput, endOfDayIso, formatDateTimeBR, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
 type AuditRow = {
   id: string;
@@ -37,13 +38,6 @@ function getSingleParam(value: string | string[] | undefined): string {
   return value ?? "";
 }
 
-function toDateInputValue(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
 function normalizeDate(value: string, fallback: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return fallback;
@@ -57,16 +51,9 @@ function normalizeText(value: string): string {
 }
 
 function formatDate(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 function formatMetadata(metadata: Record<string, unknown>): string {
@@ -93,9 +80,8 @@ export default async function AuditoriaPage({
     redirect("/painel");
   }
 
-  const now = new Date();
-  const defaultFrom = toDateInputValue(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30));
-  const defaultTo = toDateInputValue(now);
+  const defaultTo = todayInputValue();
+  const defaultFrom = addDaysToInput(defaultTo, -30);
 
   const fromInput = normalizeDate(getSingleParam(resolvedSearchParams.from), defaultFrom);
   const toInput = normalizeDate(getSingleParam(resolvedSearchParams.to), defaultTo);
@@ -103,8 +89,8 @@ export default async function AuditoriaPage({
   const entityInput = normalizeText(getSingleParam(resolvedSearchParams.entity));
   const queryInput = normalizeText(getSingleParam(resolvedSearchParams.q));
 
-  const fromIso = new Date(`${fromInput}T00:00:00`).toISOString();
-  const toIso = new Date(`${toInput}T23:59:59.999`).toISOString();
+  const fromIso = startOfDayIso(fromInput);
+  const toIso = endOfDayIso(toInput);
 
   let logsQuery = supabase
     .from("audit_logs")

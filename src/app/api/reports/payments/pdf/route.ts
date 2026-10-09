@@ -1,4 +1,5 @@
 import { getAccessContext } from "@/lib/auth/access";
+import { endOfDayIso, isDateInputValue, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 import { generateReportPdf } from "@/lib/reports/pdf";
 
 type PaymentRow = {
@@ -18,21 +19,17 @@ type AppointmentRow = {
 };
 
 function buildDateRange(url: URL) {
-  const now = new Date();
-  const startDefault = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-  const endDefault = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-
   const startInput = url.searchParams.get("start");
   const endInput = url.searchParams.get("end");
 
-  const start = startInput && /^\d{4}-\d{2}-\d{2}$/.test(startInput) ? new Date(`${startInput}T00:00:00`) : startDefault;
-  const end = endInput && /^\d{4}-\d{2}-\d{2}$/.test(endInput) ? new Date(`${endInput}T23:59:59.999`) : endDefault;
+  const labelStart = isDateInputValue(startInput) ? startInput : monthStartInputValue();
+  const labelEnd = isDateInputValue(endInput) ? endInput : todayInputValue();
 
   return {
-    startIso: start.toISOString(),
-    endIso: end.toISOString(),
-    labelStart: start.toISOString().slice(0, 10),
-    labelEnd: end.toISOString().slice(0, 10),
+    startIso: startOfDayIso(labelStart),
+    endIso: endOfDayIso(labelEnd),
+    labelStart,
+    labelEnd,
   };
 }
 

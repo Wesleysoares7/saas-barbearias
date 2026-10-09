@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AcceptTeamInviteForm } from "@/components/invites/accept-team-invite-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { formatDateTimeBR } from "@/lib/datetime";
 
 type InviteStatus = "pending" | "accepted" | "revoked" | "expired";
 
@@ -15,16 +16,9 @@ type InvitePreview = {
 };
 
 function formatDate(value: string): string {
-  const date = new Date(value);
+  const formatted = formatDateTimeBR(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return formatted === "-" ? value : formatted;
 }
 
 export default async function InviteTokenPage({ params }: { params: Promise<{ token: string }> }) {

@@ -9,6 +9,7 @@ import {
   updateAppointmentAction,
 } from "@/app/painel/agendamentos/actions";
 import { CompleteAppointmentModal } from "@/components/painel/agendamentos/complete-appointment-modal";
+import { isoToLocalInputValue, localDateTimeToIso } from "@/lib/datetime";
 import {
   calculateEndDateIso,
   hasEmployeeConflict,
@@ -80,19 +81,7 @@ function getStatusMeta(status: AppointmentStatus): StatusMeta {
 }
 
 function toDateTimeLocal(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
+  return isoToLocalInputValue(value);
 }
 
 function UpdateButton() {
@@ -191,14 +180,13 @@ export function AppointmentItemForm({
     }
 
     const durationMinutes = serviceDurationsById.get(serviceId) ?? 0;
-    const startDate = new Date(dataHoraInput);
+    const startIso = localDateTimeToIso(dataHoraInput);
 
-    if (Number.isNaN(startDate.getTime()) || durationMinutes <= 0) {
+    if (!startIso || durationMinutes <= 0) {
       setClientError(null);
       return;
     }
 
-    const startIso = startDate.toISOString();
     const endIso = calculateEndDateIso(startIso, durationMinutes);
 
     const hasConflict = hasEmployeeConflict(appointmentSlots, {
