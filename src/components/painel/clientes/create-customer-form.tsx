@@ -56,7 +56,7 @@ export function CreateCustomerForm() {
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2">
+      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-cliente-nome" className="text-sm text-zinc-200">
             Nome
@@ -65,7 +65,7 @@ export function CreateCustomerForm() {
             id="novo-cliente-nome"
             name="nome"
             type="text"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Ex.: Joao Silva"
             required
           />
@@ -79,7 +79,7 @@ export function CreateCustomerForm() {
             id="novo-cliente-telefone"
             name="telefone"
             type="text"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="(11) 99999-9999"
           />
         </div>
@@ -92,7 +92,7 @@ export function CreateCustomerForm() {
             id="novo-cliente-email"
             name="email"
             type="email"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="cliente@email.com"
           />
         </div>
@@ -105,7 +105,7 @@ export function CreateCustomerForm() {
             id="novo-cliente-observacoes"
             name="observacoes"
             rows={3}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="Preferencias, alergias, anotacoes importantes..."
           />
         </div>

@@ -41,7 +41,7 @@ function DeleteButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="outline" className="h-9 border-zinc-600 text-zinc-100" disabled={pending}>
+    <Button type="submit" variant="outline" className="h-9 border-border text-zinc-100" disabled={pending}>
       {pending ? "Excluindo..." : "Excluir"}
     </Button>
   );
@@ -67,7 +67,7 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
   const shouldShowEditForm = isEditing || (!updateState.success && Boolean(updateState.message));
 
   return (
-    <article className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+    <article className="rounded-xl border border-border bg-surface-2 p-4">
       {updateState.message ? (
         <div className="sticky top-3 z-20 mb-3 flex justify-center" aria-live="polite">
           <div
@@ -98,7 +98,7 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
         </div>
       ) : null}
 
-      <div className="mb-3 rounded-lg border border-zinc-700/70 bg-zinc-900/60 p-3 text-sm text-zinc-200">
+      <div className="mb-3 rounded-lg border border-border bg-surface p-3 text-sm text-zinc-200">
         <p>
           <span className="text-zinc-400">Cliente:</span> {payment.clienteNome}
         </p>
@@ -122,7 +122,7 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
               min={0}
               step="0.01"
               defaultValue={payment.valor}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -139,7 +139,7 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
               max={100}
               step="0.01"
               defaultValue={payment.percentualComissao}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -153,21 +153,21 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
               name="forma_pagamento"
               type="text"
               defaultValue={payment.formaPagamento}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
 
           <div className="space-y-1 md:col-span-2">
             <label className="text-sm text-zinc-200">Comissao calculada atual</label>
-            <p className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100">
+            <p className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100">
               R$ {payment.valorComissao.toFixed(2)}
             </p>
           </div>
 
           <div className="md:col-span-2 flex items-center justify-start gap-3">
             <UpdateButton />
-            <Button type="button" variant="outline" className="h-9 border-zinc-600 text-zinc-100" onClick={() => setIsEditing(false)}>
+            <Button type="button" variant="outline" className="h-9 border-border text-zinc-100" onClick={() => setIsEditing(false)}>
               Cancelar
             </Button>
           </div>

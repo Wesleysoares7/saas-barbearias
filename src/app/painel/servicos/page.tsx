@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
+import { Plus, Scissors } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -42,13 +43,10 @@ export default async function ServicosPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Servicos</h1>
-          <p className="text-sm text-zinc-300">Cadastre e mantenha os servicos oferecidos pela sua empresa.</p>
-        </div>
-        
-        <Dialog>
+      <PageHeader icon={Scissors} title="Servicos" description="Cadastre e mantenha os servicos oferecidos pela sua empresa."
+        actions={
+          <>
+<Dialog>
           <DialogTrigger asChild>
             <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
               <Plus className="size-4 mr-2" />
@@ -62,7 +60,9 @@ export default async function ServicosPage() {
             <CreateServiceForm />
           </DialogContent>
         </Dialog>
-      </header>
+          </>
+        }
+      />
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -70,7 +70,7 @@ export default async function ServicosPage() {
         </div>
 
         {serviceRows.length === 0 ? (
-          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum servico cadastrado ainda.
           </p>
         ) : (

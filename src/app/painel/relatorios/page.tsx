@@ -1,3 +1,5 @@
+import { FileBarChart2 } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
 type SearchParams = {
   start?: string;
   end?: string;
@@ -44,14 +46,9 @@ export default async function RelatoriosPage({
 
   return (
     <div className="space-y-5">
-        <header className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold text-zinc-100">Relatorios e exportacao</h1>
-            <p className="mt-2 text-sm text-zinc-300">Exporte dados de agendamentos e financeiro em CSV e PDF por periodo.</p>
-          </div>
-        </header>
+        <PageHeader icon={FileBarChart2} title="Relatorios e exportacao" description="Exporte dados de agendamentos e financeiro em CSV e PDF por periodo." />
 
-        <form className="mt-5 grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-2">
+        <form className="mt-5 grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
           <div className="space-y-1">
             <label htmlFor="relatorio-start" className="text-sm text-zinc-200">
               Data inicial
@@ -61,7 +58,7 @@ export default async function RelatoriosPage({
               name="start"
               type="date"
               defaultValue={start}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
               required
             />
           </div>
@@ -75,7 +72,7 @@ export default async function RelatoriosPage({
               name="end"
               type="date"
               defaultValue={end}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-sky-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
               required
             />
           </div>
@@ -83,7 +80,7 @@ export default async function RelatoriosPage({
           <div className="md:col-span-2 flex items-center justify-start gap-3">
             <button
               type="submit"
-              className="h-10 rounded-lg border border-zinc-600 bg-zinc-900 px-4 text-sm font-medium text-zinc-100 transition hover:border-sky-400 hover:text-sky-300"
+              className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-medium text-zinc-100 transition hover:border-brand hover:text-brand"
             >
               Atualizar periodo
             </button>
@@ -93,7 +90,7 @@ export default async function RelatoriosPage({
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <a
             href={appointmentsCsvHref}
-            className="rounded-xl border border-zinc-700/70 bg-zinc-950/70 p-4 transition hover:border-sky-400/60"
+            className="rounded-xl border border-border bg-surface-2 p-4 transition hover:border-brand/60"
           >
             <p className="text-sm font-semibold text-zinc-100">Exportar agendamentos (CSV)</p>
             <p className="mt-1 text-xs text-zinc-400">Inclui cliente, status, horario, funcionario e servico.</p>
@@ -101,7 +98,7 @@ export default async function RelatoriosPage({
 
           <a
             href={appointmentsPdfHref}
-            className="rounded-xl border border-zinc-700/70 bg-zinc-950/70 p-4 transition hover:border-sky-400/60"
+            className="rounded-xl border border-border bg-surface-2 p-4 transition hover:border-brand/60"
           >
             <p className="text-sm font-semibold text-zinc-100">Exportar agendamentos (PDF)</p>
             <p className="mt-1 text-xs text-zinc-400">Resumo em PDF com periodo, total e linhas do relatorio.</p>
@@ -109,7 +106,7 @@ export default async function RelatoriosPage({
 
           <a
             href={paymentsCsvHref}
-            className="rounded-xl border border-zinc-700/70 bg-zinc-950/70 p-4 transition hover:border-sky-400/60"
+            className="rounded-xl border border-border bg-surface-2 p-4 transition hover:border-brand/60"
           >
             <p className="text-sm font-semibold text-zinc-100">Exportar financeiro (CSV)</p>
             <p className="mt-1 text-xs text-zinc-400">Inclui valor, forma de pagamento, comissao e cliente.</p>
@@ -117,7 +114,7 @@ export default async function RelatoriosPage({
 
           <a
             href={paymentsPdfHref}
-            className="rounded-xl border border-zinc-700/70 bg-zinc-950/70 p-4 transition hover:border-sky-400/60"
+            className="rounded-xl border border-border bg-surface-2 p-4 transition hover:border-brand/60"
           >
             <p className="text-sm font-semibold text-zinc-100">Exportar financeiro (PDF)</p>
             <p className="mt-1 text-xs text-zinc-400">Resumo em PDF com dados de pagamentos e comissao.</p>

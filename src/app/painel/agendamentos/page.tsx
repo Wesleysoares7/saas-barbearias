@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { Plus } from "lucide-react";
+import { PageHeader } from "@/components/painel/ui/page-header";
+import { CalendarClock, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -155,16 +156,10 @@ export default async function AgendamentosPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-100">Agendamentos</h1>
-          <p className="text-sm text-zinc-300">
-            Gerencie os agendamentos vinculados aos funcionarios e servicos da
-            sua empresa.
-          </p>
-        </div>
-        
-        {canCreateAppointment && employees.length > 0 && services.length > 0 && (
+      <PageHeader icon={CalendarClock} title="Agendamentos" description="Gerencie os agendamentos vinculados aos funcionarios e servicos da sua empresa."
+        actions={
+          <>
+{canCreateAppointment && employees.length > 0 && services.length > 0 && (
           <Dialog>
             <DialogTrigger asChild>
               <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
@@ -185,7 +180,9 @@ export default async function AgendamentosPage() {
             </DialogContent>
           </Dialog>
         )}
-      </header>
+          </>
+        }
+      />
 
       {employees.length === 0 || services.length === 0 ? (
         <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
@@ -193,7 +190,7 @@ export default async function AgendamentosPage() {
           servico ativo.
         </p>
       ) : !canCreateAppointment ? (
-        <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+        <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
           Seu perfil pode visualizar e atualizar agendamentos, mas nao pode
           criar novos.
         </p>
@@ -207,7 +204,7 @@ export default async function AgendamentosPage() {
         </div>
 
         {appointments.length === 0 ? (
-          <p className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 text-sm text-zinc-300">
+          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum agendamento cadastrado ainda.
           </p>
         ) : (
@@ -229,7 +226,7 @@ export default async function AgendamentosPage() {
 
             {/* Agendamentos concluídos - versão reduzida */}
             {completedAppointments.length > 0 && (
-              <div className="pt-6 border-t border-zinc-800">
+              <div className="pt-6 border-t border-border">
                 <h3 className="text-lg font-semibold text-zinc-300 mb-4">
                   Agendamentos Concluídos
                 </h3>

@@ -116,7 +116,7 @@ function DeleteButton() {
     <Button
       type="submit"
       variant="outline"
-      className="h-9 border-zinc-600 text-zinc-100"
+      className="h-9 border-border text-zinc-100"
       disabled={pending}
     >
       {pending ? "Excluindo..." : "Excluir"}
@@ -221,7 +221,7 @@ export function AppointmentItemForm({
 
   return (
     <article
-      className={`rounded-xl border bg-zinc-950/60 p-4 ${statusMeta.cardClassName}`}
+      className={`rounded-xl border bg-surface-2 p-4 ${statusMeta.cardClassName}`}
     >
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
@@ -328,7 +328,7 @@ export function AppointmentItemForm({
               id={`agendamento-customer-${appointment.id}`}
               name="customer_id"
               defaultValue={appointment.customer_id ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             >
               <option value="">Nao vincular</option>
               {customers.map((customer) => (
@@ -351,7 +351,7 @@ export function AppointmentItemForm({
               name="cliente_nome"
               type="text"
               defaultValue={appointment.cliente_nome}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -368,7 +368,7 @@ export function AppointmentItemForm({
               name="cliente_telefone"
               type="tel"
               defaultValue={appointment.cliente_telefone ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -384,7 +384,7 @@ export function AppointmentItemForm({
               name="data_hora"
               type="datetime-local"
               defaultValue={toDateTimeLocal(appointment.data_hora)}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -400,7 +400,7 @@ export function AppointmentItemForm({
               id={`agendamento-funcionario-${appointment.id}`}
               name="employee_id"
               defaultValue={appointment.employee_id}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             >
               <option value="">Selecione</option>
@@ -423,7 +423,7 @@ export function AppointmentItemForm({
               id={`agendamento-servico-${appointment.id}`}
               name="service_id"
               defaultValue={appointment.service_id}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             >
               <option value="">Selecione</option>
@@ -446,7 +446,7 @@ export function AppointmentItemForm({
               id={`agendamento-status-${appointment.id}`}
               name="status"
               defaultValue={appointment.status}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             >
               <option value="agendado">Agendado</option>
@@ -467,7 +467,7 @@ export function AppointmentItemForm({
               name="observacoes"
               rows={3}
               defaultValue={appointment.observacoes ?? ""}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -482,7 +482,7 @@ export function AppointmentItemForm({
             <Button
               type="button"
               variant="outline"
-              className="h-9 border-zinc-600 text-zinc-100"
+              className="h-9 border-border text-zinc-100"
               onClick={() => setIsEditing(false)}
             >
               Cancelar

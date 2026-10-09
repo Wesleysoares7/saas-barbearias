@@ -40,7 +40,7 @@ function DeleteButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" variant="outline" className="h-9 border-zinc-600 text-zinc-100" disabled={pending}>
+    <Button type="submit" variant="outline" className="h-9 border-border text-zinc-100" disabled={pending}>
       {pending ? "Excluindo..." : "Excluir"}
     </Button>
   );
@@ -53,7 +53,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
   const shouldShowEditForm = isEditing || (!updateState.success && Boolean(updateState.message));
 
   return (
-    <article className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+    <article className="rounded-xl border border-border bg-surface-2 p-4">
       {updateState.message ? (
         <div className="sticky top-3 z-20 mb-3 flex justify-center" aria-live="polite">
           <div
@@ -97,7 +97,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
               name="nome"
               type="text"
               defaultValue={customer.nome}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -111,7 +111,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
               name="telefone"
               type="text"
               defaultValue={customer.telefone ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -124,7 +124,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
               name="email"
               type="email"
               defaultValue={customer.email ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -137,7 +137,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
               name="observacoes"
               rows={3}
               defaultValue={customer.observacoes ?? ""}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -148,7 +148,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
 
           <div className="md:col-span-2 flex items-center justify-start gap-3">
             <UpdateButton />
-            <Button type="button" variant="outline" className="h-9 border-zinc-600 text-zinc-100" onClick={() => setIsEditing(false)}>
+            <Button type="button" variant="outline" className="h-9 border-border text-zinc-100" onClick={() => setIsEditing(false)}>
               Cancelar
             </Button>
           </div>
@@ -191,7 +191,7 @@ export function CustomerItemForm({ customer }: { customer: CustomerItem }) {
       <form action={deleteAction} className="mt-3 flex items-center justify-end gap-3">
         <Link
           href={`/painel/clientes/${customer.id}`}
-          className="inline-flex h-9 items-center rounded-md border border-zinc-600 px-3 text-sm text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
+          className="inline-flex h-9 items-center rounded-md border border-border px-3 text-sm text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
         >
           Ver historico
         </Link>

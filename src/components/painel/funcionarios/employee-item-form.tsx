@@ -49,7 +49,7 @@ function DeleteButton() {
     <Button
       type="submit"
       variant="outline"
-      className="h-9 border-zinc-600 text-zinc-100"
+      className="h-9 border-border text-zinc-100"
       disabled={pending}
     >
       {pending ? "Excluindo..." : "Excluir"}
@@ -71,7 +71,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
     isEditing || (!updateState.success && Boolean(updateState.message));
 
   return (
-    <article className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+    <article className="rounded-xl border border-border bg-surface-2 p-4">
       {updateState.message ? (
         <div
           className="sticky top-3 z-20 mb-3 flex justify-center"
@@ -136,7 +136,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
               name="nome"
               type="text"
               defaultValue={employee.nome}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
               required
             />
           </div>
@@ -153,7 +153,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
               name="telefone"
               type="tel"
               defaultValue={employee.telefone ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -172,7 +172,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
               max={100}
               step="0.01"
               defaultValue={employee.percentual_comissao ?? ""}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             />
           </div>
 
@@ -191,7 +191,7 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
             <Button
               type="button"
               variant="outline"
-              className="h-9 border-zinc-600 text-zinc-100"
+              className="h-9 border-border text-zinc-100"
               onClick={() => setIsEditing(false)}
             >
               Cancelar

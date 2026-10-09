@@ -45,7 +45,7 @@ export function CreateTeamInviteForm() {
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4 md:grid-cols-3">
+      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-3">
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="invite-email" className="text-sm text-zinc-200">
             E-mail do novo membro
@@ -54,7 +54,7 @@ export function CreateTeamInviteForm() {
             id="invite-email"
             name="email"
             type="email"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             placeholder="usuario@empresa.com"
             required
           />
@@ -68,7 +68,7 @@ export function CreateTeamInviteForm() {
             id="invite-role"
             name="role"
             defaultValue="employee"
-            className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
             <option value="employee">Equipe</option>

@@ -46,7 +46,7 @@ export function TeamMemberRoleForm({
   const shouldShowEditForm = isEditing || (!state.success && Boolean(state.message));
 
   return (
-    <article className="rounded-xl border border-zinc-700/60 bg-zinc-950/60 p-4">
+    <article className="rounded-xl border border-border bg-surface-2 p-4">
       {state.message ? (
         <div className="mb-3" aria-live="polite">
           <div
@@ -79,7 +79,7 @@ export function TeamMemberRoleForm({
               name="role"
               defaultValue={member.role}
               disabled={isCurrentUser}
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus:border-amber-400 disabled:opacity-60"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400 disabled:opacity-60"
             >
               <option value="admin">Administrador</option>
               <option value="employee">Equipe</option>
@@ -89,7 +89,7 @@ export function TeamMemberRoleForm({
 
           <div className="flex items-center gap-2">
             <SubmitButton />
-            <Button type="button" variant="outline" className="h-9 border-zinc-600 text-zinc-100" onClick={() => setIsEditing(false)}>
+            <Button type="button" variant="outline" className="h-9 border-border text-zinc-100" onClick={() => setIsEditing(false)}>
               Cancelar
             </Button>
           </div>
