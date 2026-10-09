@@ -1,4 +1,12 @@
+import { cookies } from "next/headers";
+
+import { SUPPORT_COOKIE } from "@/lib/auth/support";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export type AppSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
 
 export type UserRole = "admin" | "employee";
 
@@ -23,6 +31,9 @@ type AccessContext = {
   isPlatformAdmin: boolean;
   errorMessage: string | null;
   redirectTo: "/login" | "/onboarding" | "/painel" | "/master/empresas" | null;
+  supportMode: boolean;
+  supportCompanyName: string | null;
+  userEmail: string | null;
 };
 
 type PlatformAccessContext = {
@@ -115,11 +126,43 @@ export async function getAccessContext(): Promise<AccessContext> {
       isPlatformAdmin: false,
       errorMessage: "Sua sessao expirou. Faca login novamente.",
       redirectTo: "/login",
+      supportMode: false,
+      supportCompanyName: null,
+      userEmail: null,
     };
   }
 
   const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
   const hasPlatformAdminAccess = !platformAdminError && Boolean(isPlatformAdmin);
+
+  if (hasPlatformAdminAccess) {
+    const cookieStore = await cookies();
+    const supportCompanyId = cookieStore.get(SUPPORT_COOKIE)?.value ?? "";
+
+    if (UUID_PATTERN.test(supportCompanyId)) {
+      const adminClient = createSupabaseAdminClient();
+      const { data: supportCompany } = await adminClient
+        .from("companies")
+        .select("id, nome")
+        .eq("id", supportCompanyId)
+        .maybeSingle();
+
+      if (supportCompany) {
+        return {
+          supabase: adminClient as unknown as AppSupabaseClient,
+          userId: user.id,
+          companyId: supportCompany.id as string,
+          role: "admin",
+          isPlatformAdmin: true,
+          errorMessage: null,
+          redirectTo: null,
+          supportMode: true,
+          supportCompanyName: supportCompany.nome as string,
+          userEmail: user.email ?? null,
+        };
+      }
+    }
+  }
 
   const { data: companyId, error: companyError } = await supabase.rpc("current_company_id");
 
@@ -132,6 +175,9 @@ export async function getAccessContext(): Promise<AccessContext> {
       isPlatformAdmin: hasPlatformAdminAccess,
       errorMessage: hasPlatformAdminAccess ? null : "Empresa nao encontrada para este usuario. Finalize o onboarding.",
       redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/onboarding",
+      supportMode: false,
+      supportCompanyName: null,
+      userEmail: user.email ?? null,
     };
   }
 
@@ -151,6 +197,9 @@ export async function getAccessContext(): Promise<AccessContext> {
       isPlatformAdmin: hasPlatformAdminAccess,
       errorMessage: hasPlatformAdminAccess ? null : "Perfil de acesso nao encontrado para este usuario.",
       redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/painel",
+      supportMode: false,
+      supportCompanyName: null,
+      userEmail: user.email ?? null,
     };
   }
 
@@ -162,5 +211,8 @@ export async function getAccessContext(): Promise<AccessContext> {
     isPlatformAdmin: hasPlatformAdminAccess,
     errorMessage: null,
     redirectTo: null,
+    supportMode: false,
+    supportCompanyName: null,
+    userEmail: user.email ?? null,
   };
 }

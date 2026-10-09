@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { endSupportSessionAction } from "@/app/master/actions";
 import { MobileSidebarMenu } from "@/components/painel/mobile-sidebar-menu";
 import { SidebarNav } from "@/components/painel/sidebar-nav";
 import { Topbar } from "@/components/painel/topbar";
@@ -10,7 +11,8 @@ type PainelLayoutProps = {
 };
 
 export default async function PainelLayout({ children }: PainelLayoutProps) {
-  const { supabase, companyId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, supportMode, supportCompanyName, userId: contextUserId, userEmail: contextUserEmail } =
+    await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -18,7 +20,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
 
   const [companyResponse, userResponse] = await Promise.all([
     supabase.from("companies").select("nome").eq("id", companyId).maybeSingle(),
-    supabase.auth.getUser(),
+    supportMode ? Promise.resolve(null) : supabase.auth.getUser(),
   ]);
 
   const navItems = [
@@ -52,11 +54,11 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   ];
 
   const isAdmin = role === "admin";
-  const userId = userResponse.data.user?.id;
-  const userEmail = userResponse.data.user?.email ?? "Usuario sem e-mail";
+  const userId = supportMode ? contextUserId : userResponse?.data.user?.id;
+  const userEmail = (supportMode ? contextUserEmail : userResponse?.data.user?.email) ?? "Usuario sem e-mail";
   let unreadCount = 0;
 
-  if (isAdmin && userId) {
+  if (isAdmin && userId && !supportMode) {
     const { count } = await supabase
       .from("security_notifications")
       .select("id", { count: "exact", head: true })
@@ -68,7 +70,18 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   const companyName = companyResponse.data?.nome ?? "Minha empresa";
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
+      {supportMode ? (
+        <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-2 bg-brand px-4 py-2 text-sm font-medium text-brand-foreground">
+          <span className="min-w-0 truncate">Modo suporte: {supportCompanyName ?? companyName}</span>
+          <form action={endSupportSessionAction}>
+            <button type="submit" className="min-h-11 rounded-lg border border-current px-3 text-xs font-semibold sm:min-h-9">
+              Sair do modo suporte
+            </button>
+          </form>
+        </div>
+      ) : null}
+      <div className="flex min-h-0 flex-1">
       <SidebarNav items={navItems} companyName={companyName} />
 
       <div className="flex min-w-0 flex-1 flex-col">
@@ -78,6 +91,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
       </div>
 
       <MobileSidebarMenu companyName={companyName} roleLabel={isAdmin ? "Administrador" : "Equipe"} userEmail={userEmail} items={navItems} />
+      </div>
     </div>
   );
 }

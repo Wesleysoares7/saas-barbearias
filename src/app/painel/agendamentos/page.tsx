@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
-import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
 import {
   canAccessModule,
   canPerformAction,
@@ -105,7 +104,7 @@ export default async function AgendamentosPage() {
     []) as OptionItem[];
 
   // Log para depuração - remover depois
-  console.log('Clientes encontrados:', customers.length, customers);
+  console.log("Clientes encontrados:", customers.length, customers);
   const appointments: AppointmentRow[] = (appointmentsResponse.data ??
     []) as AppointmentRow[];
   const appointmentSlots: AppointmentSlot[] = appointments.map(
@@ -119,22 +118,30 @@ export default async function AgendamentosPage() {
   );
 
   // Separar agendamentos concluídos dos pendentes
-  const pendingAppointments = appointments.filter(appointment => appointment.status !== "concluido");
-  const completedAppointments = appointments.filter(appointment => appointment.status === "concluido");
+  const pendingAppointments = appointments.filter(
+    (appointment) => appointment.status !== "concluido",
+  );
+  const completedAppointments = appointments.filter(
+    (appointment) => appointment.status === "concluido",
+  );
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   };
 
   // Componente para agendamentos concluídos reduzidos
-  function CompletedAppointmentItem({ appointment }: { appointment: AppointmentRow }) {
+  function CompletedAppointmentItem({
+    appointment,
+  }: {
+    appointment: AppointmentRow;
+  }) {
     return (
       <div className="rounded-lg border border-emerald-500/20 bg-emerald-600/10 p-3">
         <div className="flex items-center justify-between gap-2">
@@ -156,30 +163,35 @@ export default async function AgendamentosPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={CalendarClock} title="Agendamentos" description="Gerencie os agendamentos vinculados aos funcionarios e servicos da sua empresa."
+      <PageHeader
+        icon={CalendarClock}
+        title="Agendamentos"
+        description="Gerencie os agendamentos vinculados aos funcionarios e servicos da sua empresa."
         actions={
           <>
-{canCreateAppointment && employees.length > 0 && services.length > 0 && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-                <Plus className="size-4 mr-2" />
-                Novo Agendamento
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Novo Agendamento</DialogTitle>
-              </DialogHeader>
-              <CreateAppointmentForm
-                employees={employees}
-                services={services}
-                customers={customers}
-                appointmentSlots={appointmentSlots}
-              />
-            </DialogContent>
-          </Dialog>
-        )}
+            {canCreateAppointment &&
+              employees.length > 0 &&
+              services.length > 0 && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                      <Plus className="size-4 mr-2" />
+                      Novo Agendamento
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>Novo Agendamento</DialogTitle>
+                    </DialogHeader>
+                    <CreateAppointmentForm
+                      employees={employees}
+                      services={services}
+                      customers={customers}
+                      appointmentSlots={appointmentSlots}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
           </>
         }
       />
