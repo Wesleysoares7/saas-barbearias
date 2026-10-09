@@ -2,6 +2,8 @@ import { Wallet } from "lucide-react";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/painel/ui/page-header";
+import { Panel } from "@/components/painel/ui/panel";
+import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -273,6 +275,27 @@ export default async function FinanceiroPage({
     ),
   );
 
+  const { data: periodMovements } = await supabase
+    .from("stock_movements")
+    .select("tipo, motivo, custo_total")
+    .eq("company_id", companyId)
+    .gte("data_movimento", startDate.toISOString())
+    .lte("data_movimento", endDate.toISOString());
+
+  const stockRows = (periodMovements ?? []) as { tipo: string; motivo: string; custo_total: number }[];
+  const totalReceitas = roundToTwo(
+    filteredPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0),
+  );
+  const totalComprasEstoque = roundToTwo(
+    stockRows
+      .filter((row) => row.tipo === "entrada" && row.motivo === "compra")
+      .reduce((sum, row) => sum + Number(row.custo_total ?? 0), 0),
+  );
+  const totalConsumoEstoque = roundToTwo(
+    stockRows.filter((row) => row.tipo === "saida").reduce((sum, row) => sum + Number(row.custo_total ?? 0), 0),
+  );
+  const saldoPeriodo = roundToTwo(totalReceitas - totalComissao - totalComprasEstoque);
+
   const availableAppointments: AppointmentOption[] = appointments
     .filter((appointment) => !paidAppointmentIds.has(appointment.id))
     .map((appointment) => {
@@ -392,6 +415,19 @@ export default async function FinanceiroPage({
           </p>
         </article>
       </div>
+
+      <Panel title="Resumo do periodo" description="Receitas - Comissoes - Compras de estoque = Saldo, conforme o filtro acima.">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+          <StatCard label="Receitas" value={formatCurrency(totalReceitas)} tone="success" />
+          <StatCard label="Comissoes" value={formatCurrency(totalComissao)} tone="warning" />
+          <StatCard label="Compras de estoque" value={formatCurrency(totalComprasEstoque)} tone="warning" />
+          <StatCard label="Saldo" value={formatCurrency(saldoPeriodo)} tone={saldoPeriodo < 0 ? "danger" : "success"} />
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Consumo de estoque no periodo (nao entra no saldo):{" "}
+          <span className="font-medium text-foreground">{formatCurrency(totalConsumoEstoque)}</span>
+        </p>
+      </Panel>
 
       <div className="space-y-3 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
         <div className="flex flex-wrap items-center justify-between gap-2">

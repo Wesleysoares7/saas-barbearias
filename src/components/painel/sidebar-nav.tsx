@@ -11,6 +11,7 @@ import {
   FileBarChart2,
   LayoutDashboard,
   LogOut,
+  Package,
   Scissors,
   Shield,
   UserRound,
@@ -33,6 +34,7 @@ export type SidebarNavItem = {
     | "funcionarios"
     | "servicos"
     | "financeiro"
+    | "estoque"
     | "equipe"
     | "auditoria"
     | "notificacoes";
@@ -62,6 +64,7 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
     funcionarios: UserRound,
     servicos: Scissors,
     financeiro: Wallet,
+    estoque: Package,
     equipe: Users,
     auditoria: Shield,
     notificacoes: BellRing,

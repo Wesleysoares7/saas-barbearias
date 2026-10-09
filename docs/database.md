@@ -23,6 +23,7 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - `docs/database/007_etapa14_logo_empresa_storage.sql`
 - `docs/database/008_etapa15_agendamento_publico.sql`
 - `docs/database/009_etapa16_master_plataforma.sql`
+- `docs/database/014_etapa_almoxarifado_estoque.sql` (tabelas `products` e `stock_movements`)
 
 ## Estrategia multi-tenant
 - Todas as tabelas de dominio terao company_id.
@@ -73,4 +74,5 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - Para habilitar notificacoes sensiveis, execute `004_etapa12_notificacoes.sql` no Supabase SQL Editor.
 - Para habilitar cadastro de clientes, execute `005_etapa13_clientes.sql` no Supabase SQL Editor.
 - Para integrar clientes aos agendamentos, execute `006_etapa13_agendamentos_clientes.sql` no Supabase SQL Editor.
-- Para habilitar acesso master global, execute `009_etapa16_master_plataforma.sql` no Supabase SQL Editor e inclua o `user_id` desejado em `public.platform_admins`.
+- Para habilitar acesso master global, execute `009_etapa16_master_plataforma.sql`
+- `docs/database/014_etapa_almoxarifado_estoque.sql` (tabelas `products` e `stock_movements`) no Supabase SQL Editor e inclua o `user_id` desejado em `public.platform_admins`.

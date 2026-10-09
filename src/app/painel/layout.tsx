@@ -34,6 +34,9 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
     ...(canAccessModule(role, "servicos")
       ? [{ href: "/painel/servicos", label: "Servicos", section: "Gestao", icon: "servicos" as const }]
       : []),
+    ...(canAccessModule(role, "estoque")
+      ? [{ href: "/painel/estoque", label: "Estoque", section: "Gestao", icon: "estoque" as const }]
+      : []),
     ...(canAccessModule(role, "financeiro")
       ? [{ href: "/painel/financeiro", label: "Financeiro", section: "Gestao", icon: "financeiro" as const }]
       : []),

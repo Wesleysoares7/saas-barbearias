@@ -137,5 +137,14 @@ Checklist:
 - [x] Historico de atendimentos por cliente
 - [x] Atualizar documentacao de encerramento da etapa
 
+## Etapa 14 - Almoxarifado (estoque)
+Status: Concluida em 2026-10-09
+
+Checklist:
+- [x] Script SQL `014_etapa_almoxarifado_estoque.sql` (`products` e `stock_movements`, saldo e custo medio por trigger)
+- [x] Modulo `/painel/estoque` (somente admin) com produtos, entradas e saidas
+- [x] Resumo do periodo no financeiro (receitas, comissoes, compras de estoque e saldo)
+- [x] Atualizar documentacao de encerramento da etapa
+
 ## Proximas etapas (aguardando autorizacao)
-- Definir Etapa 14.
+- Definir Etapa 15.
