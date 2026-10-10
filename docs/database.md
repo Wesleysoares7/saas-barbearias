@@ -24,6 +24,7 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - `docs/database/008_etapa15_agendamento_publico.sql`
 - `docs/database/009_etapa16_master_plataforma.sql`
 - `docs/database/014_etapa_almoxarifado_estoque.sql` (tabelas `products` e `stock_movements`)
+- `docs/database/016_etapa_caixa_saldo_lancamentos.sql` (tabela `cash_entries` e funcao `finance_summary`)
 
 ## Estrategia multi-tenant
 - Todas as tabelas de dominio terao company_id.

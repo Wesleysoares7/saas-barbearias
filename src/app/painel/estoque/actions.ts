@@ -47,24 +47,39 @@ function isMovementType(value: string): value is StockMovementType {
   return value === "entrada" || value === "saida";
 }
 
-function mapStockDatabaseError(message: string): string {
-  if (message.includes("Estoque insuficiente")) {
-    const available = message.match(/Disponivel:\s*([\d.,-]+)/);
+type DbError = {
+  code?: string | null;
+  message: string;
+};
+
+function mapStockDatabaseError(error: DbError): string {
+  const code = error.code ?? "";
+
+  if (code === "42P01" || code === "PGRST205" || code === "PGRST202") {
+    return "Seu banco ainda nao foi atualizado para o estoque. Execute o script docs/database/014_etapa_almoxarifado_estoque.sql no Supabase SQL Editor e tente novamente.";
+  }
+
+  if (code === "42501") {
+    console.error("Permissao negada no estoque:", { code, message: error.message });
+    return "Sem permissao para esta operacao. Entre em contato com o suporte.";
+  }
+
+  if (code === "23505") {
+    return "Ja existe um produto com este nome.";
+  }
+
+  // Regra do trigger de saldo: so extrai o saldo disponivel, nunca repassa a mensagem crua.
+  if (error.message.includes("Estoque insuficiente")) {
+    const available = error.message.match(/Disponivel:\s*([\d.,-]+)/);
 
     return available
       ? `Estoque insuficiente para esta saida. Saldo disponivel: ${available[1]}.`
       : "Estoque insuficiente para esta saida.";
   }
 
-  if (message.includes("idx_products_company_nome_unique") || message.includes("duplicate key")) {
-    return "Ja existe um produto com este nome.";
-  }
+  console.error("Erro no estoque:", { code, message: error.message });
 
-  if (message.includes("products") || message.includes("stock_movements")) {
-    return "Seu banco ainda nao foi atualizado para o estoque. Execute o script docs/database/014_etapa_almoxarifado_estoque.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  return message;
+  return "Nao foi possivel salvar. Tente novamente.";
 }
 
 async function writeAuditLog(params: {
@@ -85,8 +100,8 @@ async function writeAuditLog(params: {
     metadata: params.metadata ?? {},
   });
 
-  if (error && !error.message.includes("audit_logs")) {
-    // Evita quebrar fluxo principal caso o log falhe por motivo secundario.
+  if (error) {
+    console.error("Falha ao registrar auditoria do estoque:", { code: error.code, message: error.message });
   }
 }
 
@@ -135,7 +150,7 @@ export async function createProductAction(_prevState: ActionState, formData: For
     .maybeSingle();
 
   if (error) {
-    return { success: false, message: `Nao foi possivel criar produto: ${mapStockDatabaseError(error.message)}` };
+    return { success: false, message: mapStockDatabaseError(error) };
   }
 
   await writeAuditLog({
@@ -201,7 +216,7 @@ export async function updateProductAction(_prevState: ActionState, formData: For
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar produto: ${mapStockDatabaseError(error.message)}` };
+    return { success: false, message: mapStockDatabaseError(error) };
   }
 
   await writeAuditLog({
@@ -299,7 +314,7 @@ export async function registerStockMovementAction(_prevState: ActionState, formD
     .maybeSingle();
 
   if (error) {
-    return { success: false, message: mapStockDatabaseError(error.message) };
+    return { success: false, message: mapStockDatabaseError(error) };
   }
 
   await writeAuditLog({

@@ -7,7 +7,11 @@ import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-import { endOfDayIso, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
+import { endOfDayIso, formatDateBR, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
+import { CashEntryDialog } from "@/components/painel/financeiro/caixa/cash-entry-dialog";
+import { CashEntryItem } from "@/components/painel/financeiro/caixa/cash-entry-item";
+import { OpeningBalanceCard } from "@/components/painel/financeiro/caixa/opening-balance-card";
+import type { CashEntry, FinanceSummary } from "@/types/cash";
 
 type AppointmentRow = {
   id: string;
@@ -266,26 +270,79 @@ export default async function FinanceiroPage({
     ),
   );
 
-  const { data: periodMovements } = await supabase
-    .from("stock_movements")
-    .select("tipo, motivo, custo_total")
-    .eq("company_id", companyId)
-    .gte("data_movimento", startDate.toISOString())
-    .lte("data_movimento", endDate.toISOString());
+  const [summaryResponse, entriesResponse, openingResponse] = await Promise.all([
+    supabase.rpc("finance_summary", { p_company_id: companyId, p_start: start, p_end: end }),
+    supabase
+      .from("cash_entries")
+      .select("id, tipo, valor, categoria, descricao, data_lancamento")
+      .eq("company_id", companyId)
+      .in("tipo", ["entrada", "despesa"])
+      .gte("data_lancamento", start)
+      .lte("data_lancamento", end)
+      .order("data_lancamento", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("cash_entries")
+      .select("id, valor, data_lancamento")
+      .eq("company_id", companyId)
+      .eq("tipo", "saldo_inicial")
+      .maybeSingle(),
+  ]);
 
-  const stockRows = (periodMovements ?? []) as { tipo: string; motivo: string; custo_total: number }[];
-  const totalReceitas = roundToTwo(
-    filteredPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0),
-  );
-  const totalComprasEstoque = roundToTwo(
-    stockRows
-      .filter((row) => row.tipo === "entrada" && row.motivo === "compra")
-      .reduce((sum, row) => sum + Number(row.custo_total ?? 0), 0),
-  );
-  const totalConsumoEstoque = roundToTwo(
-    stockRows.filter((row) => row.tipo === "saida").reduce((sum, row) => sum + Number(row.custo_total ?? 0), 0),
-  );
-  const saldoPeriodo = roundToTwo(totalReceitas - totalComissao - totalComprasEstoque);
+  const summaryRows = (summaryResponse.data ?? []) as FinanceSummary[];
+  const summary: FinanceSummary | null = summaryResponse.error ? null : (summaryRows[0] ?? null);
+  const cashEntries = (entriesResponse.data ?? []) as Pick<
+    CashEntry,
+    "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
+  >[];
+  const openingRow = openingResponse.data as { id: string; valor: number; data_lancamento: string } | null;
+  const openingEntry = openingRow
+    ? { id: openingRow.id, valor: Number(openingRow.valor), data: openingRow.data_lancamento }
+    : null;
+  const cashItems = cashEntries.map((entry) => ({
+    id: entry.id,
+    tipo: entry.tipo === "entrada" ? ("entrada" as const) : ("despesa" as const),
+    valor: Number(entry.valor),
+    categoria: entry.categoria,
+    descricao: entry.descricao,
+    data: entry.data_lancamento,
+  }));
+  const openingDate = summary?.saldo_inicial_data ?? openingEntry?.data ?? null;
+  let movimentosAnteriores = 0;
+
+  if (openingDate) {
+    const cutoffIso = `${openingDate}T00:00:00-03:00`;
+    const [paymentsBefore, purchasesBefore, entriesBefore] = await Promise.all([
+      supabase
+        .from("payments")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .lt("created_at", cutoffIso),
+      supabase
+        .from("stock_movements")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .eq("tipo", "entrada")
+        .eq("motivo", "compra")
+        .lt("data_movimento", cutoffIso),
+      supabase
+        .from("cash_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("company_id", companyId)
+        .in("tipo", ["entrada", "despesa"])
+        .lt("data_lancamento", openingDate),
+    ]);
+
+    movimentosAnteriores = [paymentsBefore, purchasesBefore, entriesBefore].reduce(
+      (sum, response) => sum + (response.error ? 0 : (response.count ?? 0)),
+      0,
+    );
+  }
+
+  const openingAfterEnd = openingDate !== null && openingDate > end;
+  const saldoInicialNoPeriodo = Number(summary?.saldo_inicial_no_periodo ?? 0);
+  const saldoFinal = Number(summary?.saldo_final ?? 0);
 
   const availableAppointments: AppointmentOption[] = appointments
     .filter((appointment) => !paidAppointmentIds.has(appointment.id))
@@ -407,17 +464,92 @@ export default async function FinanceiroPage({
         </article>
       </div>
 
-      <Panel title="Resumo do periodo" description="Receitas - Comissoes - Compras de estoque = Saldo, conforme o filtro acima.">
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-          <StatCard label="Receitas" value={formatCurrency(totalReceitas)} tone="success" />
-          <StatCard label="Comissoes" value={formatCurrency(totalComissao)} tone="warning" />
-          <StatCard label="Compras de estoque" value={formatCurrency(totalComprasEstoque)} tone="warning" />
-          <StatCard label="Saldo" value={formatCurrency(saldoPeriodo)} tone={saldoPeriodo < 0 ? "danger" : "success"} />
+      <Panel title="Resumo do periodo" description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final">
+        {summary ? (
+          <>
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+              <StatCard label="Saldo anterior" value={formatCurrency(Number(summary.saldo_anterior))} />
+              {saldoInicialNoPeriodo !== 0 ? (
+                <StatCard label="Saldo inicial" value={formatCurrency(saldoInicialNoPeriodo)} />
+              ) : null}
+              <StatCard label="Receitas" value={formatCurrency(Number(summary.receitas))} tone="success" />
+              <StatCard label="Entradas avulsas" value={formatCurrency(Number(summary.entradas_avulsas))} tone="success" />
+              <StatCard label="Comissoes" value={formatCurrency(Number(summary.comissoes))} tone="warning" />
+              <StatCard label="Compras de estoque" value={formatCurrency(Number(summary.compras_estoque))} tone="warning" />
+              <StatCard label="Despesas" value={formatCurrency(Number(summary.despesas))} tone="warning" />
+              <StatCard
+                className="col-span-2 xl:col-span-1"
+                label="Saldo final"
+                value={formatCurrency(saldoFinal)}
+                tone={saldoFinal < 0 ? "danger" : "success"}
+              />
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Consumo de estoque no periodo (nao entra no saldo):{" "}
+              <span className="font-medium text-foreground">{formatCurrency(Number(summary.consumo_estoque))}</span>
+            </p>
+            {openingAfterEnd && openingDate ? (
+              <p className="mt-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
+                O caixa comeca em {formatDateBR(openingDate)}; periodos anteriores aparecem zerados.
+              </p>
+            ) : null}
+            {openingDate === null ? (
+              <div className="mt-2 flex flex-col gap-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+                <p>Sem saldo inicial: o saldo considera apenas o historico do app.</p>
+                <OpeningBalanceCard entry={null} />
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
+            Nao foi possivel calcular o resumo. Verifique se o script 016 foi executado.
+          </p>
+        )}
+      </Panel>
+
+      <Panel title="Caixa" description="Saldo inicial e lancamentos avulsos de entrada e despesa no periodo.">
+        <div className="space-y-4">
+          <OpeningBalanceCard entry={openingEntry} movimentosAnteriores={movimentosAnteriores} />
+
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">Lancamentos do periodo</h3>
+            <CashEntryDialog />
+          </div>
+
+          {cashItems.length === 0 ? (
+            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+              Nenhum lancamento avulso neste periodo. Use o botao Novo lancamento para registrar entradas e despesas como aluguel ou energia.
+            </p>
+          ) : (
+            <>
+              <div className="space-y-2 md:hidden">
+                {cashItems.map((entry) => (
+                  <CashEntryItem key={entry.id} entry={entry} layout="card" />
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="text-xs text-muted-foreground">
+                      <th className="px-3 py-2 font-medium">Data</th>
+                      <th className="px-3 py-2 font-medium">Tipo</th>
+                      <th className="px-3 py-2 font-medium">Categoria</th>
+                      <th className="px-3 py-2 font-medium">Descricao</th>
+                      <th className="px-3 py-2 text-right font-medium">Valor</th>
+                      <th className="px-3 py-2 font-medium">Acoes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cashItems.map((entry) => (
+                      <CashEntryItem key={entry.id} entry={entry} layout="row" />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          Consumo de estoque no periodo (nao entra no saldo):{" "}
-          <span className="font-medium text-foreground">{formatCurrency(totalConsumoEstoque)}</span>
-        </p>
       </Panel>
 
       <div className="space-y-3 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
