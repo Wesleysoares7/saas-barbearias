@@ -87,10 +87,12 @@ export function CompleteAppointmentModal({
       <DialogTrigger asChild>
         <Button
           type="button"
-          className="h-9 bg-emerald-500 text-zinc-950 hover:bg-emerald-400"
+          className="size-11 bg-emerald-500 px-0 text-zinc-950 hover:bg-emerald-400 md:h-9 md:w-auto md:px-3"
+          aria-label="Concluir e cobrar"
+          title="Concluir e cobrar"
         >
           <CheckCircle2 className="size-4" />
-          Concluir &amp; Cobrar
+          <span className="hidden md:inline">Concluir &amp; Cobrar</span>
         </Button>
       </DialogTrigger>
 

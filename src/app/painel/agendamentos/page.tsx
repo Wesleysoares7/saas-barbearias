@@ -19,7 +19,55 @@ import {
   getAccessContext,
 } from "@/lib/auth/access";
 import type { AppointmentStatus } from "@/types";
-import { formatDateTimeBR } from "@/lib/datetime";
+import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
+import { isoToLocalInputValue, todayInputValue } from "@/lib/datetime";
+
+function addDays(dayKey: string, amount: number): string {
+  const date = new Date(`${dayKey}T12:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + amount);
+
+  return date.toISOString().slice(0, 10);
+}
+
+function formatDayHeading(dayKey: string, today: string): string {
+  const [year, month, day] = dayKey.split("-");
+  const date = new Date(`${dayKey}T12:00:00Z`);
+  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone: "UTC" })
+    .format(date)
+    .replace(".", "");
+  const base = `${weekday}, ${day}/${month}`;
+
+  if (!year) {
+    return base;
+  }
+
+  if (dayKey === today) {
+    return `Hoje - ${base}`;
+  }
+
+  if (dayKey === addDays(today, 1)) {
+    return `Amanha - ${base}`;
+  }
+
+  return base;
+}
+
+function groupByDay<T extends { data_hora: string }>(rows: T[]): Array<{ day: string; rows: T[] }> {
+  const groups: Array<{ day: string; rows: T[] }> = [];
+
+  for (const row of rows) {
+    const day = isoToLocalInputValue(row.data_hora).slice(0, 10);
+    const last = groups[groups.length - 1];
+
+    if (last && last.day === day) {
+      last.rows.push(row);
+    } else {
+      groups.push({ day, rows: [row] });
+    }
+  }
+
+  return groups;
+}
 
 type OptionItem = {
   id: string;
@@ -125,32 +173,9 @@ export default async function AgendamentosPage() {
     (appointment) => appointment.status === "concluido",
   );
 
-  const formatDate = (dateString: string) => formatDateTimeBR(dateString);
-
-  // Componente para agendamentos concluídos reduzidos
-  function CompletedAppointmentItem({
-    appointment,
-  }: {
-    appointment: AppointmentRow;
-  }) {
-    return (
-      <div className="rounded-lg border border-emerald-500/20 bg-emerald-600/10 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h4 className="truncate text-sm font-medium text-emerald-200">
-              {appointment.cliente_nome}
-            </h4>
-            <p className="text-xs text-emerald-400/80">
-              {formatDate(appointment.data_hora)}
-            </p>
-          </div>
-          <span className="flex-shrink-0 rounded-full bg-emerald-600/20 px-2 py-1 text-xs font-medium text-emerald-300">
-            Concluído
-          </span>
-        </div>
-      </div>
-    );
-  }
+  const today = todayInputValue();
+  const pendingGroups = groupByDay(pendingAppointments);
+  const completedGroups = groupByDay(completedAppointments);
 
   return (
     <div className="space-y-5">
@@ -237,36 +262,46 @@ export default async function AgendamentosPage() {
             Nenhum agendamento cadastrado ainda.
           </p>
         ) : (
-          <div className="space-y-3">
-            {/* Agendamentos pendentes (agendados/cancelados) */}
-            {pendingAppointments.map((appointment) => (
-              <AppointmentItemForm
-                key={appointment.id}
-                appointment={appointment}
-                employees={employees}
-                services={services}
-                customers={customers}
-                appointmentSlots={appointmentSlots}
-                canUpdate={canUpdateAppointment}
-                canDelete={canDeleteAppointment}
-                canCompleteAndCharge={canCompleteAndCharge}
-              />
+          <div className="space-y-5">
+            {pendingGroups.map((group) => (
+              <section key={group.day} className="space-y-2">
+                <h3 className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  {formatDayHeading(group.day, today)}
+                </h3>
+                {group.rows.map((appointment) => (
+                  <AppointmentItemForm
+                    key={appointment.id}
+                    appointment={appointment}
+                    employees={employees}
+                    services={services}
+                    customers={customers}
+                    appointmentSlots={appointmentSlots}
+                    canUpdate={canUpdateAppointment}
+                    canDelete={canDeleteAppointment}
+                    canCompleteAndCharge={canCompleteAndCharge}
+                  />
+                ))}
+              </section>
             ))}
 
-            {/* Agendamentos concluídos - versão reduzida */}
             {completedAppointments.length > 0 && (
-              <div className="pt-6 border-t border-border">
-                <h3 className="text-lg font-semibold text-zinc-300 mb-4">
-                  Agendamentos Concluídos
-                </h3>
-                <div className="space-y-2">
-                  {completedAppointments.map((appointment) => (
-                    <CompletedAppointmentItem
-                      key={appointment.id}
-                      appointment={appointment}
-                    />
-                  ))}
-                </div>
+              <div className="space-y-4 border-t border-border pt-6">
+                <h3 className="text-lg font-semibold text-foreground">Agendamentos Concluidos</h3>
+                {completedGroups.map((group) => (
+                  <section key={group.day} className="space-y-2">
+                    <h4 className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {formatDayHeading(group.day, today)}
+                    </h4>
+                    {group.rows.map((appointment) => (
+                      <CompletedAppointmentItem
+                        key={appointment.id}
+                        appointment={appointment}
+                        servicoNome={services.find((service) => service.id === appointment.service_id)?.nome}
+                        funcionarioNome={employees.find((employee) => employee.id === appointment.employee_id)?.nome}
+                      />
+                    ))}
+                  </section>
+                ))}
               </div>
             )}
           </div>

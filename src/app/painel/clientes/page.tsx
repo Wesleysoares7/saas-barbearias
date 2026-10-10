@@ -13,9 +13,13 @@ import {
 import { CreateCustomerForm } from "@/components/painel/clientes/create-customer-form";
 import { CustomerItemForm } from "@/components/painel/clientes/customer-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-import type { CustomerRow } from "@/types";
+import { ListToolbar } from "@/components/painel/ui/list-toolbar";
+import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
+import { Panel } from "@/components/painel/ui/panel";import type { CustomerRow } from "@/types";
 
-export default async function ClientesPage() {
+const PAGE_SIZE = 20;
+
+export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string; pagina?: string }> }) {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();
 
   if (!companyId || !role) {
@@ -26,11 +30,24 @@ export default async function ClientesPage() {
     redirect("/painel");
   }
 
-  const customersResponse = await supabase
+  const query = await searchParams;
+  const term = sanitizeSearchTerm(query.q);
+  const page = parsePageParam(query.pagina);
+  const from = (page - 1) * PAGE_SIZE;
+
+  let customersQuery = supabase
     .from("customers")
-    .select("id, nome, telefone, email, observacoes, ativo")
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .select("id, nome, telefone, email, observacoes, ativo", { count: "exact" })
+    .eq("company_id", companyId);
+
+  if (term) {
+    customersQuery = customersQuery.or(`nome.ilike.%${term}%,telefone.ilike.%${term}%`);
+  }
+
+  const customersResponse = await customersQuery
+    .order("created_at", { ascending: false })
+    .range(from, from + PAGE_SIZE - 1);
+  const total = customersResponse.count ?? 0;
 
   const hasCustomerTableIssue = Boolean(customersResponse.error?.message.includes("customers"));
   const customerRows: CustomerRow[] = (customersResponse.data ?? []) as CustomerRow[];
@@ -64,23 +81,24 @@ export default async function ClientesPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-zinc-100">Lista de clientes</h2>
-            </div>
+          <Panel title="Lista de clientes" description={`${total} cadastrado(s)`}>
+            <div className="space-y-3">
+              <ListToolbar placeholder="Buscar por nome ou telefone" defaultValue={term} />
 
-            {customerRows.length === 0 ? (
-              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
-                Nenhum cliente cadastrado ainda.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {customerRows.map((customer) => (
-                  <CustomerItemForm key={customer.id} customer={customer} />
-                ))}
-              </div>
-            )}
-          </div>
+              {customerRows.length === 0 ? (
+                <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+                  {term ? "Nenhum cliente encontrado para essa busca." : "Nenhum cliente cadastrado ainda."}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {customerRows.map((customer) => (
+                    <CustomerItemForm key={customer.id} customer={customer} />
+                  ))}
+                </div>
+              )}
+            </div>
+            <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/painel/clientes" params={{ q: term }} />
+          </Panel>
         </>
       )}
     </div>
