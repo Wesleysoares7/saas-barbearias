@@ -144,6 +144,7 @@ Checklist:
 - [x] Script SQL `014_etapa_almoxarifado_estoque.sql` (`products` e `stock_movements`, saldo e custo medio por trigger)
 - [x] Modulo `/painel/estoque` (somente admin) com produtos, entradas e saidas
 - [x] Resumo do periodo no financeiro (receitas, comissoes, compras de estoque e saldo)
+- [x] Caixa (saldo inicial e lancamentos)
 - [x] Atualizar documentacao de encerramento da etapa
 
 ## Proximas etapas (aguardando autorizacao)

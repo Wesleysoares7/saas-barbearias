@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 - Caixa no Financeiro (saldo inicial e lancamentos)
+
+### Adicionado
+
+- Financeiro: saldo inicial, lancamentos avulsos de entrada/despesa (criar, editar, excluir, com auditoria) e Resumo do periodo via funcao `finance_summary` (script `016_etapa_caixa_saldo_lancamentos.sql`).
+- Estoque: dica na entrada sobre usar o motivo Ajuste para estoque pre-existente.
+
 ## 2026-10-09 - Etapa 14: modulo de Estoque (almoxarifado)
 
 ### Adicionado

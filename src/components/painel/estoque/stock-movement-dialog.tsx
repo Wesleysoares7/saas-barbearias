@@ -150,6 +150,12 @@ export function StockMovementDialog({
             ) : null}
           </div>
 
+          {isEntrada ? (
+            <p className="text-xs text-muted-foreground">
+              Estoque que voce ja tinha antes de usar o app? Use o motivo Ajuste: nao conta como gasto no Financeiro.
+            </p>
+          ) : null}
+
           <div className="space-y-1">
             <label htmlFor={`mov-data-${productId}-${tipo}`} className="text-sm text-foreground">
               Data
