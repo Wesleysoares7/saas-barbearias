@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { signOutAction } from "@/app/painel/actions";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 
 export type SidebarNavItem = {
   href: string;
@@ -147,12 +148,13 @@ export function SidebarNav({ items, companyName }: SidebarNavProps) {
                       title={item.label}
                       aria-label={item.label}
                       aria-current={active ? "page" : undefined}
-                      className={`flex h-10 items-center gap-3 rounded-xl text-sm font-medium transition ${
+                      className={`relative flex h-10 items-center gap-3 rounded-xl text-sm font-medium transition ${
                         expanded ? "w-full px-3" : "mx-auto w-10 justify-center"
                       } ${active ? "bg-brand/15 text-brand" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}
                     >
                       <Icon className="size-5 shrink-0" />
                       {expanded ? <span className="truncate">{item.label}</span> : null}
+                      <NavLinkPending />
                     </Link>
                   );
                 })}
@@ -166,7 +168,7 @@ export function SidebarNav({ items, companyName }: SidebarNavProps) {
               type="submit"
               title="Sair"
               aria-label="Sair"
-              className={`flex h-10 items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground transition hover:bg-surface-2 hover:text-rose-300 ${
+              className={`relative flex h-10 items-center gap-3 rounded-xl text-sm font-medium text-muted-foreground transition hover:bg-surface-2 hover:text-rose-300 ${
                 expanded ? "w-full px-3" : "mx-auto w-10 justify-center"
               }`}
             >
