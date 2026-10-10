@@ -7,6 +7,7 @@ import { LogOut, Menu } from "lucide-react";
 
 import { signOutAction } from "@/app/painel/actions";
 import { getIcon, isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type MobileSidebarMenuProps = {
@@ -44,12 +45,13 @@ export function MobileSidebarMenu({ companyName, roleLabel, userEmail, items }: 
             <Link
               key={item.href}
               href={item.href}
-              className={`flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 ${
+              className={`relative flex min-w-0 flex-col items-center justify-center gap-0.5 px-1 ${
                 active ? "text-brand" : "text-muted-foreground"
               }`}
             >
               <Icon className="size-5" />
               <span className="w-full truncate text-center text-[10px] font-medium">{item.label}</span>
+              <NavLinkPending />
             </Link>
           );
         })}
@@ -82,12 +84,13 @@ export function MobileSidebarMenu({ companyName, roleLabel, userEmail, items }: 
                   key={item.href}
                   href={item.href}
                   onClick={() => setOpen(false)}
-                  className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium ${
+                  className={`relative flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium ${
                     active ? "bg-brand/15 text-brand" : "text-foreground hover:bg-surface-2"
                   }`}
                 >
                   <Icon className="size-5" />
                   {item.label}
+                  <NavLinkPending />
                 </Link>
               );
             })}
