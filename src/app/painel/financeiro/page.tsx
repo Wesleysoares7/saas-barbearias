@@ -1,8 +1,11 @@
 import { Wallet } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
+import { ListRow } from "@/components/painel/ui/list-row";
+import { PeriodPicker } from "@/components/painel/financeiro/period-picker";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
@@ -72,7 +75,10 @@ type EmployeeFinancialSummary = {
   comissaoTotal: number;
 };
 
+type Tab = "resumo" | "caixa" | "funcionarios" | "pagamentos";
+
 type SearchParams = {
+  aba?: string;
   start?: string;
   end?: string;
 };
@@ -136,6 +142,9 @@ export default async function FinanceiroPage({
   const defaultStart = monthStartInputValue();
   const defaultEnd = todayInputValue();
 
+  const tab: Tab = ["caixa", "funcionarios", "pagamentos"].includes(resolvedSearchParams.aba ?? "")
+    ? (resolvedSearchParams.aba as Tab)
+    : "resumo";
   const start = normalizeDateInput(resolvedSearchParams.start, defaultStart);
   const end = normalizeDateInput(resolvedSearchParams.end, defaultEnd);
 
@@ -379,253 +388,184 @@ export default async function FinanceiroPage({
     };
   });
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: "resumo", label: "Resumo" },
+    { id: "caixa", label: "Caixa" },
+    { id: "funcionarios", label: "Funcionarios" },
+    { id: "pagamentos", label: "Pagamentos" },
+  ];
+  const tabHref = (id: Tab) => `/painel/financeiro?${new URLSearchParams({ aba: id, start, end }).toString()}`;
+  const tabClass = (active: boolean) =>
+    `flex min-h-11 shrink-0 items-center justify-center border-b-2 px-4 text-sm font-medium transition ${
+      active ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:text-foreground"
+    }`;
+  const sellersCount = employeeFinancialSummaries.filter((item) => item.quantidadePagamentos > 0).length;
+  const indicators = [
+    { label: "Faturamento", value: formatCurrency(totalFaturamento) },
+    { label: "Comissao total", value: formatCurrency(totalComissao) },
+    { label: "Pagamentos", value: String(paymentItems.length) },
+    { label: "Funcionarios com vendas", value: String(sellersCount) },
+  ];
+  const statementLines: { label: string; value: string }[] = summary
+    ? [
+        { label: "Saldo anterior", value: formatCurrency(Number(summary.saldo_anterior)) },
+        ...(saldoInicialNoPeriodo !== 0
+          ? [{ label: "Saldo inicial", value: formatCurrency(saldoInicialNoPeriodo) }]
+          : []),
+        { label: "Receitas (+)", value: formatCurrency(Number(summary.receitas)) },
+        { label: "Entradas avulsas (+)", value: formatCurrency(Number(summary.entradas_avulsas)) },
+        { label: "Comissoes (-)", value: formatCurrency(Number(summary.comissoes)) },
+        { label: "Compras de estoque (-)", value: formatCurrency(Number(summary.compras_estoque)) },
+        { label: "Despesas (-)", value: formatCurrency(Number(summary.despesas)) },
+      ]
+    : [];
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 pb-24">
       <PageHeader icon={Wallet} title="Financeiro" description="Registre pagamentos, acompanhe o faturamento total e veja a comissao por funcionario." />
 
-      <form className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-3">
-        <div className="space-y-1">
-          <label htmlFor="financeiro-start" className="text-sm text-zinc-200">
-            Data inicial
-          </label>
-          <input
-            id="financeiro-start"
-            name="start"
-            type="date"
-            defaultValue={start}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            required
-          />
-        </div>
+      <PeriodPicker start={start} end={end} aba={tab} />
 
-        <div className="space-y-1">
-          <label htmlFor="financeiro-end" className="text-sm text-zinc-200">
-            Data final
-          </label>
-          <input
-            id="financeiro-end"
-            name="end"
-            type="date"
-            defaultValue={end}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            required
-          />
-        </div>
+      <nav aria-label="Abas do financeiro" className="flex overflow-x-auto border-b border-border">
+        {tabs.map((item) => (
+          <Link key={item.id} href={tabHref(item.id)} className={tabClass(tab === item.id)}>
+            {item.label}
+          </Link>
+        ))}
+      </nav>
 
-        <div className="flex items-end">
-          <button
-            type="submit"
-            className="h-10 rounded-lg border border-border bg-surface px-4 text-sm font-medium text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
-          >
-            Atualizar periodo
-          </button>
-        </div>
-      </form>
-
-      {availableAppointments.length === 0 ? (
-        <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
-          Nao ha agendamentos concluidos disponiveis para novo pagamento.
-        </p>
-      ) : (
-        <CreatePaymentForm appointments={availableAppointments} />
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <article className="min-h-28 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
-          <p className="text-xs text-zinc-400">Faturamento total</p>
-          <p className="mt-2 text-3xl font-semibold text-zinc-100">
-            {formatCurrency(totalFaturamento)}
-          </p>
-        </article>
-
-        <article className="min-h-28 rounded-2xl border border-emerald-500/35 bg-emerald-600/10 p-5 shadow-lg shadow-emerald-950/20">
-          <p className="text-xs text-emerald-200/80">Comissao total</p>
-          <p className="mt-2 text-3xl font-semibold text-emerald-100">
-            {formatCurrency(totalComissao)}
-          </p>
-        </article>
-
-        <article className="min-h-28 rounded-2xl border border-amber-500/35 bg-amber-600/10 p-5 shadow-lg shadow-amber-950/20">
-          <p className="text-xs text-amber-200/80">Pagamentos registrados</p>
-          <p className="mt-2 text-3xl font-semibold text-amber-100">
-            {paymentItems.length}
-          </p>
-        </article>
-
-        <article className="min-h-28 rounded-2xl border border-brand/35 bg-brand/10 p-5 ">
-          <p className="text-xs text-brand/80">Funcionarios com vendas</p>
-          <p className="mt-2 text-3xl font-semibold text-brand">
-            {
-              employeeFinancialSummaries.filter(
-                (summary) => summary.quantidadePagamentos > 0,
-              ).length
-            }
-          </p>
-        </article>
-      </div>
-
-      <Panel title="Resumo do periodo" description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final">
-        {summary ? (
-          <>
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              <StatCard label="Saldo anterior" value={formatCurrency(Number(summary.saldo_anterior))} />
-              {saldoInicialNoPeriodo !== 0 ? (
-                <StatCard label="Saldo inicial" value={formatCurrency(saldoInicialNoPeriodo)} />
-              ) : null}
-              <StatCard label="Receitas" value={formatCurrency(Number(summary.receitas))} tone="success" />
-              <StatCard label="Entradas avulsas" value={formatCurrency(Number(summary.entradas_avulsas))} tone="success" />
-              <StatCard label="Comissoes" value={formatCurrency(Number(summary.comissoes))} tone="warning" />
-              <StatCard label="Compras de estoque" value={formatCurrency(Number(summary.compras_estoque))} tone="warning" />
-              <StatCard label="Despesas" value={formatCurrency(Number(summary.despesas))} tone="warning" />
-              <StatCard
-                className="col-span-2 xl:col-span-1"
-                label="Saldo final"
-                value={formatCurrency(saldoFinal)}
-                tone={saldoFinal < 0 ? "danger" : "success"}
-              />
-            </div>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Consumo de estoque no periodo (nao entra no saldo):{" "}
-              <span className="font-medium text-foreground">{formatCurrency(Number(summary.consumo_estoque))}</span>
-            </p>
-            {openingAfterEnd && openingDate ? (
-              <p className="mt-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
-                O caixa comeca em {formatDateBR(openingDate)}; periodos anteriores aparecem zerados.
-              </p>
-            ) : null}
-            {openingDate === null ? (
-              <div className="mt-2 flex flex-col gap-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200 sm:flex-row sm:items-center sm:justify-between">
-                <p>Sem saldo inicial: o saldo considera apenas o historico do app.</p>
-                <OpeningBalanceCard entry={null} />
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
-            Nao foi possivel calcular o resumo. Verifique se o script 016 foi executado.
-          </p>
-        )}
-      </Panel>
-
-      <Panel title="Caixa" description="Saldo inicial e lancamentos avulsos de entrada e despesa no periodo.">
+      {tab === "resumo" ? (
         <div className="space-y-4">
-          <OpeningBalanceCard entry={openingEntry} movimentosAnteriores={movimentosAnteriores} />
-
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-foreground">Lancamentos do periodo</h3>
-            <CashEntryDialog />
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            {indicators.map((item) => (
+              <div key={item.label} className="min-h-14 min-w-0 rounded-xl border border-border bg-surface px-3 py-2">
+                <p className="truncate text-xs text-muted-foreground">{item.label}</p>
+                <p className="text-base font-semibold break-words tabular-nums text-foreground">{item.value}</p>
+              </div>
+            ))}
           </div>
 
-          {cashItems.length === 0 ? (
-            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
-              Nenhum lancamento avulso neste periodo. Use o botao Novo lancamento para registrar entradas e despesas como aluguel ou energia.
-            </p>
-          ) : (
-            <>
-              <div className="space-y-2 md:hidden">
+          <Panel title="Resumo do periodo" description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final">
+            {summary ? (
+              <>
+                <StatCard
+                  label="Saldo final"
+                  value={formatCurrency(saldoFinal)}
+                  tone={saldoFinal < 0 ? "danger" : "success"}
+                />
+                <ul className="mt-3 divide-y divide-border">
+                  {statementLines.map((line) => (
+                    <li key={line.label} className="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span className="min-w-0 text-muted-foreground">{line.label}</span>
+                      <span className="shrink-0 font-medium tabular-nums text-foreground">{line.value}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Consumo de estoque no periodo (nao entra no saldo):{" "}
+                  <span className="font-medium text-foreground">{formatCurrency(Number(summary.consumo_estoque))}</span>
+                </p>
+                {openingAfterEnd && openingDate ? (
+                  <p className="mt-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
+                    O caixa comeca em {formatDateBR(openingDate)}; periodos anteriores aparecem zerados.
+                  </p>
+                ) : null}
+                {openingDate === null ? (
+                  <div className="mt-2 flex flex-col gap-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200 sm:flex-row sm:items-center sm:justify-between">
+                    <p>Sem saldo inicial: o saldo considera apenas o historico do app.</p>
+                    <OpeningBalanceCard entry={null} />
+                  </div>
+                ) : null}
+              </>
+            ) : (
+              <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
+                Nao foi possivel calcular o resumo. Verifique se o script 016 foi executado.
+              </p>
+            )}
+          </Panel>
+        </div>
+      ) : null}
+
+      {tab === "caixa" ? (
+        <Panel
+          title="Caixa"
+          description="Saldo inicial e lancamentos avulsos de entrada e despesa no periodo."
+          actions={<CashEntryDialog />}
+        >
+          <div className="space-y-4">
+            <OpeningBalanceCard entry={openingEntry} movimentosAnteriores={movimentosAnteriores} />
+
+            <h3 className="text-sm font-semibold text-foreground">Lancamentos do periodo</h3>
+
+            {cashItems.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+                Nenhum lancamento avulso neste periodo. Use o botao Novo lancamento para registrar entradas e despesas como aluguel ou energia.
+              </p>
+            ) : (
+              <div className="space-y-2">
                 {cashItems.map((entry) => (
-                  <CashEntryItem key={entry.id} entry={entry} layout="card" />
+                  <CashEntryItem key={entry.id} entry={entry} />
                 ))}
               </div>
+            )}
+          </div>
+        </Panel>
+      ) : null}
 
-              <div className="hidden overflow-x-auto md:block">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-xs text-muted-foreground">
-                      <th className="px-3 py-2 font-medium">Data</th>
-                      <th className="px-3 py-2 font-medium">Tipo</th>
-                      <th className="px-3 py-2 font-medium">Categoria</th>
-                      <th className="px-3 py-2 font-medium">Descricao</th>
-                      <th className="px-3 py-2 text-right font-medium">Valor</th>
-                      <th className="px-3 py-2 font-medium">Acoes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cashItems.map((entry) => (
-                      <CashEntryItem key={entry.id} entry={entry} layout="row" />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      </Panel>
-
-      <div className="space-y-3 rounded-2xl border border-border bg-surface-2 p-5 shadow-lg shadow-black/10">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-medium text-zinc-100">
-              Faturamento por funcionario
-            </h2>
-            <p className="text-sm text-zinc-400">
-              Valores calculados com base nos pagamentos concluidos.
+      {tab === "funcionarios" ? (
+        <Panel title="Faturamento por funcionario" description="Valores calculados com base nos pagamentos concluidos.">
+          {employeeFinancialSummaries.length === 0 ? (
+            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+              Nenhum funcionario cadastrado ainda.
             </p>
+          ) : (
+            <div className="space-y-2">
+              {employeeFinancialSummaries.map((item) => (
+                <ListRow
+                  key={item.id}
+                  title={item.nome}
+                  subtitle={`Comissao ${formatCurrency(item.comissaoTotal)} - ${item.quantidadePagamentos} pagamento(s)`}
+                  columns={[
+                    { label: "Comissao", value: formatCurrency(item.comissaoTotal) },
+                    { label: "Pagamentos", value: `${item.quantidadePagamentos} | ${item.percentualComissao.toFixed(2)}%` },
+                  ]}
+                  status={<span className="text-sm font-semibold whitespace-nowrap tabular-nums text-foreground">{formatCurrency(item.faturamento)}</span>}
+                  hideSubtitleOnDesktop
+                  actions={null}
+                />
+              ))}
+            </div>
+          )}
+        </Panel>
+      ) : null}
+
+      {tab === "pagamentos" ? (
+        <div className="space-y-4">
+          {availableAppointments.length === 0 ? (
+            <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
+              Nao ha agendamentos concluidos disponiveis para novo pagamento.
+            </p>
+          ) : (
+            <CreatePaymentForm appointments={availableAppointments} />
+          )}
+
+          <div className="space-y-3">
+            <h2 className="text-lg font-medium text-zinc-100">Lista de pagamentos</h2>
+
+            {paymentItems.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
+                Nenhum pagamento registrado ainda.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {paymentItems.map((payment) => (
+                  <PaymentItemForm key={payment.id} payment={payment} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-        {employeeFinancialSummaries.length === 0 ? (
-          <p className="rounded-lg border border-border bg-surface p-4 text-sm text-zinc-300">
-            Nenhum funcionario cadastrado ainda.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {employeeFinancialSummaries.map((summary) => (
-              <article
-                key={summary.id}
-                className="grid gap-3 rounded-xl border border-border bg-surface p-5 md:grid-cols-4"
-              >
-                <div>
-                  <p className="text-xs text-zinc-400">Funcionario</p>
-                  <p className="text-sm font-medium text-zinc-100">
-                    {summary.nome}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-zinc-400">Faturamento</p>
-                  <p className="text-sm text-zinc-100">
-                    {formatCurrency(summary.faturamento)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-zinc-400">Comissao</p>
-                  <p className="text-sm text-zinc-100">
-                    {formatCurrency(summary.comissaoTotal)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-zinc-400">Pagamentos</p>
-                  <p className="text-sm text-zinc-100">
-                    {summary.quantidadePagamentos} |{" "}
-                    {summary.percentualComissao.toFixed(2)}%
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-3">
-        <h2 className="text-lg font-medium text-zinc-100">
-          Lista de pagamentos
-        </h2>
-
-        {paymentItems.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
-            Nenhum pagamento registrado ainda.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {paymentItems.map((payment) => (
-              <PaymentItemForm key={payment.id} payment={payment} />
-            ))}
-          </div>
-        )}
-      </div>
+      ) : null}
     </div>
   );
 }

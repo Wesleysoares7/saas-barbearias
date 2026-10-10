@@ -8,7 +8,7 @@ export type ListRowColumn = {
 type ListRowProps = {
   leading?: string;
   title: string;
-  subtitle?: string;
+  subtitle?: ReactNode;
   columns?: ListRowColumn[];
   status?: ReactNode;
   actions: ReactNode;
@@ -64,7 +64,7 @@ export function ListRow({ leading, title, subtitle, columns, status, actions, hi
           {status ? <span className="shrink-0 md:hidden">{status}</span> : null}
         </div>
         {subtitle ? (
-          <p className={`truncate text-xs text-muted-foreground ${hideSubtitleOnDesktop ? "md:hidden" : ""}`}>{subtitle}</p>
+          <div className={`truncate text-xs text-muted-foreground ${hideSubtitleOnDesktop ? "md:hidden" : ""}`}>{subtitle}</div>
         ) : null}
       </div>
 
