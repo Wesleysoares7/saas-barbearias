@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
+import { normalizePhone } from "@/lib/customers/find-or-create";
 
 type ActionState = {
   success: boolean;
@@ -44,7 +45,8 @@ async function getCompanyScope() {
 
 export async function createCustomerAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const nome = sanitizeText(formData.get("nome"));
-  const telefone = normalizeNullableText(formData.get("telefone"));
+  const telefoneRaw = normalizeNullableText(formData.get("telefone"));
+  const telefone = telefoneRaw ? normalizePhone(telefoneRaw) || null : null;
   const emailRaw = normalizeNullableText(formData.get("email"));
   const email = emailRaw ? emailRaw.toLowerCase() : null;
   const observacoes = normalizeNullableText(formData.get("observacoes"));
@@ -88,7 +90,8 @@ export async function createCustomerAction(_prevState: ActionState, formData: Fo
 export async function updateCustomerAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const id = sanitizeText(formData.get("id"));
   const nome = sanitizeText(formData.get("nome"));
-  const telefone = normalizeNullableText(formData.get("telefone"));
+  const telefoneRaw = normalizeNullableText(formData.get("telefone"));
+  const telefone = telefoneRaw ? normalizePhone(telefoneRaw) || null : null;
   const emailRaw = normalizeNullableText(formData.get("email"));
   const email = emailRaw ? emailRaw.toLowerCase() : null;
   const observacoes = normalizeNullableText(formData.get("observacoes"));

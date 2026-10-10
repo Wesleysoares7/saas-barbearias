@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { calculateEndDateIso } from "@/lib/appointments/conflict";
 import { canPerformAction, getAccessContext, isAdmin } from "@/lib/auth/access";
+import { findOrCreateCustomer } from "@/lib/customers/find-or-create";
 import { localDateTimeToIso } from "@/lib/datetime";
 
 type ActionState = {
@@ -159,11 +160,8 @@ export async function createAppointmentAction(
   const dataHoraInput = sanitizeText(formData.get("data_hora"));
   const statusInput = sanitizeText(formData.get("status"));
   const observacoes = sanitizeText(formData.get("observacoes"));
-  // Novos campos para criação de cliente no agendamento
-  const novoClienteNome = sanitizeText(formData.get("novo_cliente_nome"));
-  const novoClienteTelefone = sanitizeText(formData.get("novo_cliente_telefone"));
-  const novoClienteEmail = sanitizeText(formData.get("novo_cliente_email"));
-  const novoClienteObservacoes = sanitizeText(formData.get("novo_cliente_observacoes"));
+  const clienteEmail = sanitizeText(formData.get("cliente_email"));
+  const clienteObservacoes = sanitizeText(formData.get("cliente_observacoes"));
 
   if (!employeeId) {
     return { success: false, message: "Selecione um funcionario." };
@@ -203,42 +201,27 @@ export async function createAppointmentAction(
   let clienteNome = clienteNomeInput;
   let clienteTelefone = clienteTelefoneInput;
 
-  // Se não há customerId selecionado mas há dados de novo cliente, criar o cliente
-  console.log("Tentando criar cliente:", {
-    nome: novoClienteNome.trim(),
-    telefone: novoClienteTelefone.trim() || null,
-    email: novoClienteEmail.trim() || null,
-    observacoes: novoClienteObservacoes.trim() || null,
-    companyId
-  });
-  
+  let customerLinkFailed = false;
   let newCustomerCreated = false;
-  
-  if (!customerId && novoClienteNome.trim()) {
-    const { data: newCustomer, error: customerError } = await supabase
-      .from("customers")
-      .insert({
-        company_id: companyId,
-        nome: novoClienteNome.trim(),
-        telefone: novoClienteTelefone.trim() || null,
-        email: novoClienteEmail.trim() || null,
-        observacoes: novoClienteObservacoes.trim() || null,
-        ativo: true,
-      })
-      .select("id, nome, telefone")
-      .single();
 
-    if (customerError) {
-      console.error("Erro ao criar cliente:", customerError);
-      // Continua sem cliente, mas usa os dados informados
-    } else if (newCustomer) {
-      console.log("Cliente criado com sucesso:", newCustomer);
-      customerId = newCustomer.id;
-      clienteNome = String(newCustomer.nome ?? "").trim();
-      clienteTelefone = String(newCustomer.telefone ?? "").trim();
-      newCustomerCreated = true;
+  if (!customerId && clienteNome.length >= 2) {
+    const result = await findOrCreateCustomer(supabase, companyId, {
+      nome: clienteNome,
+      telefone: clienteTelefone,
+      email: clienteEmail,
+      observacoes: clienteObservacoes,
+    });
+
+    if (result.ok) {
+      customerId = result.id;
+      clienteNome = result.nome.trim();
+      clienteTelefone = (result.telefone ?? "").trim();
+      newCustomerCreated = result.created;
+    } else {
+      customerLinkFailed = true;
     }
   }
+
   if (customerId) {
     const { data: customer } = await supabase
       .from("customers")
@@ -343,7 +326,12 @@ export async function createAppointmentAction(
   if (newCustomerCreated) {
     revalidatePath("/painel/clientes");
   }
-  return { success: true, message: "Agendamento criado com sucesso." };
+  return {
+    success: true,
+    message: customerLinkFailed
+      ? "Agendamento criado, mas nao foi possivel cadastrar o cliente automaticamente."
+      : "Agendamento criado com sucesso.",
+  };
 }
 
 export async function updateAppointmentAction(

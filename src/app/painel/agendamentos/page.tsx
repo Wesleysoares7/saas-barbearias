@@ -137,7 +137,8 @@ export default async function AgendamentosPage() {
       .select("id, nome, telefone")
       .eq("company_id", companyId)
       .eq("ativo", true)
-      .order("nome", { ascending: true }),
+      .order("nome", { ascending: true })
+      .limit(1000),
     supabase
       .from("appointments")
       .select(

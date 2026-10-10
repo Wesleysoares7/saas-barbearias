@@ -3,6 +3,7 @@
 import { type FormEvent, useActionState, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 
+import { CustomerCombobox } from "@/components/painel/agendamentos/customer-combobox";
 import { Button } from "@/components/ui/button";
 import { createAppointmentAction } from "@/app/painel/agendamentos/actions";
 import { calculateEndDateIso, hasEmployeeConflict, type AppointmentSlot } from "@/lib/appointments/conflict";
@@ -48,51 +49,9 @@ export function CreateAppointmentForm({
 }) {
   const [clientError, setClientError] = useState<string | null>(null);
   const [state, formAction] = useActionState<ActionState, FormData>(createAppointmentAction, INITIAL_STATE);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
-  const [customerName, setCustomerName] = useState<string>("");
-  const [customerPhone, setCustomerPhone] = useState<string>("");
-  const [customerEmail, setCustomerEmail] = useState<string>("");
-  const [customerObservations, setCustomerObservations] = useState<string>("");
-  const [isNewCustomer, setIsNewCustomer] = useState<boolean>(false);
-
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
   }, [services]);
-
-  function handleCustomerSelection(customerId: string) {
-    setSelectedCustomerId(customerId);
-    
-    if (customerId) {
-      const selectedCustomer = customers.find(customer => customer.id === customerId);
-      if (selectedCustomer) {
-        setCustomerName(selectedCustomer.nome);
-        setCustomerPhone(selectedCustomer.telefone || "");
-        setCustomerEmail("");
-        setCustomerObservations("");
-        setIsNewCustomer(false);
-        // Focar automaticamente no campo de data e horário
-        const dataHoraInput = document.getElementById("novo-agendamento-data-hora");
-        if (dataHoraInput) {
-          setTimeout(() => dataHoraInput.focus(), 100);
-        }
-      }
-    } else {
-      // Limpar campos se nenhum cliente for selecionado
-      setCustomerName("");
-      setCustomerPhone("");
-      setCustomerEmail("");
-      setCustomerObservations("");
-      setIsNewCustomer(false);
-    }
-  }
-
-  function handleNewCustomerInput() {
-    if (customerName.trim() && !selectedCustomerId) {
-      setIsNewCustomer(true);
-    } else {
-      setIsNewCustomer(false);
-    }
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     const formData = new FormData(event.currentTarget);
@@ -129,14 +88,6 @@ export function CreateAppointmentForm({
       return;
     }
 
-    // Se for um novo cliente, adicionar os dados ao FormData
-    if (isNewCustomer && customerName.trim()) {
-      formData.append("novo_cliente_nome", customerName.trim());
-      formData.append("novo_cliente_telefone", customerPhone.trim());
-      formData.append("novo_cliente_email", customerEmail.trim());
-      formData.append("novo_cliente_observacoes", customerObservations.trim());
-    }
-
     setClientError(null);
   }
 
@@ -170,95 +121,7 @@ export function CreateAppointmentForm({
         onSubmit={handleSubmit}
         className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2"
       >
-        <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-agendamento-cliente-cadastrado" className="text-sm text-zinc-200">
-            Cliente cadastrado (opcional)
-          </label>
-          <select
-            id="novo-agendamento-cliente-cadastrado"
-            name="customer_id"
-            value={selectedCustomerId}
-            onChange={(e) => handleCustomerSelection(e.target.value)}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-          >
-            <option value="">Selecionar depois / nao vincular</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-agendamento-cliente" className="text-sm text-zinc-200">
-            Nome do cliente
-          </label>
-          <input
-            id="novo-agendamento-cliente"
-            name="cliente_nome"
-            type="text"
-            value={customerName}
-            onChange={(e) => {
-              setCustomerName(e.target.value);
-              handleNewCustomerInput();
-            }}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            placeholder="Ex.: Carlos"
-            required
-          />
-        </div>
-
-        <div className="space-y-1">
-          <label htmlFor="novo-agendamento-telefone" className="text-sm text-zinc-200">
-            Telefone do cliente (manual)
-          </label>
-          <input
-            id="novo-agendamento-telefone"
-            name="cliente_telefone"
-            type="tel"
-            value={customerPhone}
-            onChange={(e) => {
-              setCustomerPhone(e.target.value);
-              handleNewCustomerInput();
-            }}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            placeholder="(11) 99999-9999"
-          />
-        </div>
-
-        {/* Campos para novo cliente (apenas visíveis quando não está selecionando um cliente existente) */}
-        {isNewCustomer && (
-          <>
-            <div className="space-y-1">
-              <label htmlFor="novo-agendamento-cliente-email" className="text-sm text-zinc-200">
-                E-mail do cliente (opcional)
-              </label>
-              <input
-                id="novo-agendamento-cliente-email"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-                placeholder="cliente@email.com"
-              />
-            </div>
-
-            <div className="space-y-1 md:col-span-2">
-              <label htmlFor="novo-agendamento-cliente-observacoes" className="text-sm text-zinc-200">
-                Observações do cliente (opcional)
-              </label>
-              <textarea
-                id="novo-agendamento-cliente-observacoes"
-                value={customerObservations}
-                onChange={(e) => setCustomerObservations(e.target.value)}
-                rows={2}
-                className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
-                placeholder="Preferências, alergias, anotações importantes..."
-              />
-            </div>
-          </>
-        )}
+        <CustomerCombobox customers={customers} />
 
         <div className="space-y-1">
           <label htmlFor="novo-agendamento-data-hora" className="text-sm text-zinc-200">
