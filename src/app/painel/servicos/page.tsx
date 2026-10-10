@@ -13,6 +13,10 @@ import {
 import { CreateServiceForm } from "@/components/painel/servicos/create-service-form";
 import { ServiceItemForm } from "@/components/painel/servicos/service-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { ListToolbar } from "@/components/painel/ui/list-toolbar";
+import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
+import { Panel } from "@/components/painel/ui/panel";
+const PAGE_SIZE = 20;
 
 type ServiceRow = {
   id: string;
@@ -22,7 +26,7 @@ type ServiceRow = {
   ativo: boolean;
 };
 
-export default async function ServicosPage() {
+export default async function ServicosPage({ searchParams }: { searchParams: Promise<{ q?: string; pagina?: string }> }) {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();
 
   if (!companyId || !role) {
@@ -33,11 +37,24 @@ export default async function ServicosPage() {
     redirect("/painel");
   }
 
-  const { data: services } = await supabase
+  const query = await searchParams;
+  const term = sanitizeSearchTerm(query.q);
+  const page = parsePageParam(query.pagina);
+  const from = (page - 1) * PAGE_SIZE;
+
+  let servicesQuery = supabase
     .from("services")
-    .select("id, nome, duracao, valor, ativo")
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    .select("id, nome, duracao, valor, ativo", { count: "exact" })
+    .eq("company_id", companyId);
+
+  if (term) {
+    servicesQuery = servicesQuery.ilike("nome", `%${term}%`);
+  }
+
+  const { data: services, count } = await servicesQuery
+    .order("created_at", { ascending: false })
+    .range(from, from + PAGE_SIZE - 1);
+  const total = count ?? 0;
 
   const serviceRows: ServiceRow[] = (services ?? []) as ServiceRow[];
 
@@ -64,23 +81,24 @@ export default async function ServicosPage() {
         }
       />
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-zinc-100">Lista de servicos</h2>
-        </div>
+      <Panel title="Lista de servicos" description={`${total} cadastrado(s)`}>
+        <div className="space-y-3">
+          <ListToolbar placeholder="Buscar por nome" defaultValue={term} />
 
-        {serviceRows.length === 0 ? (
-          <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
-            Nenhum servico cadastrado ainda.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {serviceRows.map((service) => (
-              <ServiceItemForm key={service.id} service={service} />
-            ))}
-          </div>
-        )}
-      </div>
+          {serviceRows.length === 0 ? (
+            <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+              {term ? "Nenhum servico encontrado para essa busca." : "Nenhum servico cadastrado ainda."}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {serviceRows.map((service) => (
+                <ServiceItemForm key={service.id} service={service} />
+              ))}
+            </div>
+          )}
+        </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/painel/servicos" params={{ q: term }} />
+      </Panel>
     </div>
   );
 }

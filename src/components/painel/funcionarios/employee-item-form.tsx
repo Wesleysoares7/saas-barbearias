@@ -1,13 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
+import { deleteEmployeeAction, updateEmployeeAction } from "@/app/painel/funcionarios/actions";
+import { ConfirmDelete } from "@/components/painel/ui/confirm-delete";
+import { EditDialog, FIELD_CLASS, useEditDialogState } from "@/components/painel/ui/edit-dialog";
+import { getInitials, ListRow } from "@/components/painel/ui/list-row";
+import { StatusPill } from "@/components/painel/ui/status-pill";
 import { Button } from "@/components/ui/button";
-import {
-  deleteEmployeeAction,
-  updateEmployeeAction,
-} from "@/app/painel/funcionarios/actions";
 
 type EmployeeItem = {
   id: string;
@@ -32,243 +33,114 @@ function UpdateButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button
-      type="submit"
-      className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300"
-      disabled={pending}
-    >
+    <Button type="submit" className="min-h-11 bg-brand text-brand-foreground hover:bg-brand/90" disabled={pending}>
       {pending ? "Salvando..." : "Salvar"}
     </Button>
   );
 }
 
-function DeleteButton() {
-  const { pending } = useFormStatus();
-
-  return (
-    <Button
-      type="submit"
-      variant="outline"
-      className="h-9 border-border text-zinc-100"
-      disabled={pending}
-    >
-      {pending ? "Excluindo..." : "Excluir"}
-    </Button>
-  );
-}
-
 export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
-  const [updateState, updateAction] = useActionState<ActionState, FormData>(
-    updateEmployeeAction,
-    INITIAL_STATE,
-  );
-  const [deleteState, deleteAction] = useActionState<ActionState, FormData>(
-    deleteEmployeeAction,
-    INITIAL_STATE,
-  );
-  const [isEditing, setIsEditing] = useState(false);
-  const shouldShowEditForm =
-    isEditing || (!updateState.success && Boolean(updateState.message));
+  const { open, setOpen, message, setMessage } = useEditDialogState();
+  const [, updateAction] = useActionState<ActionState, FormData>(async (previous, formData) => {
+    const result = await updateEmployeeAction(previous, formData);
+
+    setMessage(result.success ? "" : result.message);
+
+    if (result.success) {
+      setOpen(false);
+    }
+
+    return result;
+  }, INITIAL_STATE);
+  const [deleteState, deleteAction] = useActionState<ActionState, FormData>(deleteEmployeeAction, INITIAL_STATE);
 
   return (
-    <article className="rounded-xl border border-border bg-surface-2 p-4">
-      {updateState.message ? (
-        <div
-          className="sticky top-3 z-20 mb-3 flex justify-center"
-          aria-live="polite"
-        >
-          <div
-            className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
-              updateState.success
-                ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
-                : "border-amber-500/50 bg-amber-600/15 text-amber-200"
-            }`}
-            style={
-              updateState.success
-                ? { animation: "employee-item-toast-fade 3.5s ease forwards" }
-                : undefined
-            }
+    <ListRow
+      leading={getInitials(employee.nome)}
+      title={employee.nome}
+      subtitle={employee.telefone?.trim() || "Sem telefone"}
+      columns={[
+        { label: "E-mail", value: employee.email?.trim() || "-" },
+        {
+          label: "Comissao (%)",
+          value: employee.percentual_comissao === null || employee.percentual_comissao === undefined ? "-" : String(employee.percentual_comissao),
+        },
+      ]}
+      status={<StatusPill tone={employee.ativo ? "success" : "neutral"}>{employee.ativo ? "Ativo" : "Inativo"}</StatusPill>}
+      actions={
+        <>
+          <EditDialog
+            title="Editar funcionario"
+            label={`Editar ${employee.nome}`}
+            open={open}
+            onOpenChange={(next) => {
+              setOpen(next);
+              if (next) setMessage("");
+            }}
           >
-            {updateState.message}
-          </div>
-        </div>
-      ) : null}
+            <form action={updateAction} className="grid gap-3 md:grid-cols-2">
+              <input type="hidden" name="id" value={employee.id} />
 
-      {deleteState.message ? (
-        <div
-          className="sticky top-3 z-20 mb-3 flex justify-center"
-          aria-live="polite"
-        >
-          <div
-            className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
-              deleteState.success
-                ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
-                : "border-amber-500/50 bg-amber-600/15 text-amber-200"
-            }`}
-            style={
-              deleteState.success
-                ? { animation: "employee-item-toast-fade 3.5s ease forwards" }
-                : undefined
-            }
-          >
-            {deleteState.message}
-          </div>
-        </div>
-      ) : null}
+              <div className="space-y-1 md:col-span-2">
+                <label htmlFor={`funcionario-nome-${employee.id}`} className="text-sm text-foreground">
+                  Nome
+                </label>
+                <input id={`funcionario-nome-${employee.id}`} name="nome" type="text" defaultValue={employee.nome} className={FIELD_CLASS} required />
+              </div>
 
-      {shouldShowEditForm ? (
-        <form
-          action={updateAction}
-          onSubmit={() => setIsEditing(false)}
-          className="grid gap-3 md:grid-cols-2"
-        >
-          <input type="hidden" name="id" value={employee.id} />
+              <div className="space-y-1">
+                <label htmlFor={`funcionario-telefone-${employee.id}`} className="text-sm text-foreground">
+                  Telefone
+                </label>
+                <input
+                  id={`funcionario-telefone-${employee.id}`}
+                  name="telefone"
+                  type="tel"
+                  defaultValue={employee.telefone ?? ""}
+                  className={FIELD_CLASS}
+                />
+              </div>
 
-          <div className="space-y-1 md:col-span-2">
-            <label
-              htmlFor={`funcionario-nome-${employee.id}`}
-              className="text-sm text-zinc-200"
-            >
-              Nome
-            </label>
-            <input
-              id={`funcionario-nome-${employee.id}`}
-              name="nome"
-              type="text"
-              defaultValue={employee.nome}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-              required
-            />
-          </div>
+              <div className="space-y-1">
+                <label htmlFor={`funcionario-comissao-${employee.id}`} className="text-sm text-foreground">
+                  Comissao (%) (opcional)
+                </label>
+                <input
+                  id={`funcionario-comissao-${employee.id}`}
+                  name="percentual_comissao"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step="0.01"
+                  defaultValue={employee.percentual_comissao ?? ""}
+                  className={FIELD_CLASS}
+                />
+              </div>
 
-          <div className="space-y-1">
-            <label
-              htmlFor={`funcionario-telefone-${employee.id}`}
-              className="text-sm text-zinc-200"
-            >
-              Telefone
-            </label>
-            <input
-              id={`funcionario-telefone-${employee.id}`}
-              name="telefone"
-              type="tel"
-              defaultValue={employee.telefone ?? ""}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            />
-          </div>
+              <label className="flex min-h-11 items-center gap-2 text-sm text-foreground md:col-span-2">
+                <input name="ativo" type="checkbox" defaultChecked={employee.ativo} className="h-4 w-4 accent-brand" />
+                Funcionario ativo
+              </label>
 
-          <div className="space-y-1">
-            <label
-              htmlFor={`funcionario-comissao-${employee.id}`}
-              className="text-sm text-zinc-200"
-            >
-              Comissao (%) (opcional)
-            </label>
-            <input
-              id={`funcionario-comissao-${employee.id}`}
-              name="percentual_comissao"
-              type="number"
-              min={0}
-              max={100}
-              step="0.01"
-              defaultValue={employee.percentual_comissao ?? ""}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            />
-          </div>
+              {message ? (
+                <p className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 md:col-span-2" aria-live="polite">
+                  {message}
+                </p>
+              ) : null}
 
-          <label className="flex items-center gap-2 text-sm text-zinc-200 md:col-span-2">
-            <input
-              name="ativo"
-              type="checkbox"
-              defaultChecked={employee.ativo}
-              className="h-4 w-4 accent-amber-400"
-            />
-            Funcionario ativo
-          </label>
-
-          <div className="md:col-span-2 flex items-center justify-start gap-3">
-            <UpdateButton />
-            <Button
-              type="button"
-              variant="outline"
-              className="h-9 border-border text-zinc-100"
-              onClick={() => setIsEditing(false)}
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1 md:col-span-2">
-            <p className="text-xs text-zinc-400">Nome</p>
-            <p className="text-sm text-zinc-100">{employee.nome}</p>
-          </div>
-
-          {employee.email ? (
-            <div className="space-y-1">
-              <p className="text-xs text-zinc-400">E-mail</p>
-              <p className="text-sm text-zinc-100">{employee.email}</p>
-            </div>
-          ) : null}
-
-          <div className="space-y-1">
-            <p className="text-xs text-zinc-400">Telefone</p>
-            <p className="text-sm text-zinc-100">
-              {employee.telefone?.trim() || "Nao informado"}
-            </p>
-          </div>
-
-          <div className="space-y-1">
-            <p className="text-xs text-zinc-400">Comissao (%)</p>
-            <p className="text-sm text-zinc-100">
-              {employee.percentual_comissao ?? "Nao informado"}
-            </p>
-          </div>
-
-          <div className="space-y-1 md:col-span-2">
-            <p className="text-xs text-zinc-400">Status</p>
-            <p className="text-sm text-zinc-100">
-              {employee.ativo ? "Ativo" : "Inativo"}
-            </p>
-          </div>
-
-          <div className="md:col-span-2 flex items-center justify-start gap-3">
-            <Button
-              type="button"
-              className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300"
-              onClick={() => setIsEditing(true)}
-            >
-              Editar
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <form
-        action={deleteAction}
-        className="mt-3 flex items-center justify-end gap-3"
-      >
-        <input type="hidden" name="id" value={employee.id} />
-        <DeleteButton />
-      </form>
-
-      <style jsx>{`
-        @keyframes employee-item-toast-fade {
-          0% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          80% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-8px);
-          }
-        }
-      `}</style>
-    </article>
+              <div className="flex gap-3 md:col-span-2">
+                <UpdateButton />
+                <Button type="button" variant="outline" className="min-h-11 border-border" onClick={() => setOpen(false)}>
+                  Cancelar
+                </Button>
+              </div>
+            </form>
+          </EditDialog>
+          <ConfirmDelete title={employee.nome} action={deleteAction} message={deleteState.success ? "" : deleteState.message}>
+            <input type="hidden" name="id" value={employee.id} />
+          </ConfirmDelete>
+        </>
+      }
+    />
   );
 }
