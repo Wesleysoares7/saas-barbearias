@@ -133,7 +133,7 @@ export default async function NotificacoesPage({
 
         {hasTableIssue ? (
           <div className="mt-4 rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
-            Seu banco ainda nao foi atualizado para notificacoes. Execute o script docs/database/004_etapa12_notificacoes.sql no Supabase SQL Editor.
+            Este recurso está temporariamente indisponível. Tente novamente em instantes.
           </div>
         ) : null}
 

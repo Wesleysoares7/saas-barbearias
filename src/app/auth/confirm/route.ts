@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { safeNextPath } from "@/lib/safe-redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-function getSafeNextPath(rawNext: string | null) {
-  if (!rawNext) {
-    return "/login";
-  }
-
-  return rawNext.startsWith("/") ? rawNext : "/login";
-}
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const safeNext = getSafeNextPath(requestUrl.searchParams.get("next"));
+  const safeNext = safeNextPath(requestUrl.searchParams.get("next"), "/login");
   const redirectUrl = new URL(safeNext, requestUrl.origin);
 
   if (!code) {

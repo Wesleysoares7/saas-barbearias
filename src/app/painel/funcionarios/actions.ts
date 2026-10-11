@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
@@ -121,7 +122,7 @@ export async function createEmployeeAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel criar funcionario: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel criar funcionario. Tente novamente."),
     };
   }
 
@@ -192,7 +193,7 @@ export async function updateEmployeeAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel atualizar funcionario: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel atualizar funcionario. Tente novamente."),
     };
   }
 
@@ -235,7 +236,7 @@ export async function deleteEmployeeAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel excluir funcionario: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel excluir funcionario. Tente novamente."),
     };
   }
 
@@ -355,7 +356,7 @@ export async function registerMyselfAsEmployeeAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel cadastrar voce como funcionario: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel cadastrar voce como funcionario. Tente novamente."),
     };
   }
 

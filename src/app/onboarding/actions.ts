@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
@@ -84,7 +85,7 @@ export async function completeOnboardingAction(
   if (companyError) {
     return {
       success: false,
-      message: `Nao foi possivel criar a empresa: ${companyError?.message ?? "erro desconhecido"}`,
+      message: friendlyDbError(companyError, "Nao foi possivel criar a empresa. Tente novamente."),
     };
   }
 
@@ -99,7 +100,7 @@ export async function completeOnboardingAction(
   if (profileError) {
     return {
       success: false,
-      message: `Empresa criada, mas houve erro ao criar o perfil admin: ${profileError.message}`,
+      message: friendlyDbError(profileError, "Empresa criada, mas houve erro ao criar o perfil admin. Tente novamente."),
     };
   }
 
@@ -117,7 +118,7 @@ export async function completeOnboardingAction(
     if (employeeError) {
       return {
         success: false,
-        message: `Empresa criada, mas houve erro ao cadastrar o atendente: ${employeeError.message}`,
+        message: friendlyDbError(employeeError, "Empresa criada, mas houve erro ao cadastrar o atendente. Tente novamente."),
       };
     }
   }

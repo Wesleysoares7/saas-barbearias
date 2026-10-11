@@ -4,6 +4,7 @@ import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { friendlyAuthError } from "@/lib/errors";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type PasswordFormErrors = {
@@ -17,8 +18,8 @@ function validatePassword(password: string, confirmPassword: string): PasswordFo
 
   if (!password.trim()) {
     errors.password = "Informe a nova senha.";
-  } else if (password.length < 6) {
-    errors.password = "A senha deve ter pelo menos 6 caracteres.";
+  } else if (password.length < 8) {
+    errors.password = "A senha deve ter pelo menos 8 caracteres.";
   }
 
   if (!confirmPassword.trim()) {
@@ -60,7 +61,7 @@ export default function AtualizarSenhaPage() {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (error) {
-        setErrors({ form: `Nao foi possivel atualizar a senha: ${error.message}` });
+        setErrors({ form: friendlyAuthError(error, "Nao foi possivel atualizar a senha. Tente novamente.") });
         return;
       }
 

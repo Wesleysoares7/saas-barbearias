@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -29,14 +30,6 @@ function sanitizeText(value: FormDataEntryValue | null): string {
   }
 
   return value.trim();
-}
-
-function mapInviteDatabaseError(message: string): string {
-  if (message.includes("team_invites")) {
-    return "Seu banco ainda nao foi atualizado para aceite de convites. Reexecute o script docs/database/003_etapa11_convites_auditoria.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  return message;
 }
 
 function deriveUserName(user: { email?: string | null; user_metadata?: Record<string, unknown> }): string {
@@ -93,7 +86,7 @@ export async function acceptTeamInviteAction(_prevState: ActionState, formData: 
     .maybeSingle();
 
   if (inviteError) {
-    return { success: false, message: `Nao foi possivel validar convite: ${mapInviteDatabaseError(inviteError.message)}` };
+    return { success: false, message: friendlyDbError(inviteError, "Nao foi possivel validar convite. Tente novamente.") };
   }
 
   if (!invite) {
@@ -142,7 +135,7 @@ export async function acceptTeamInviteAction(_prevState: ActionState, formData: 
     if (createProfileError) {
       return {
         success: false,
-        message: `Nao foi possivel criar seu perfil na empresa: ${createProfileError.message}`,
+        message: friendlyDbError(createProfileError, "Nao foi possivel criar seu perfil na empresa. Tente novamente."),
       };
     }
   } else {
@@ -153,7 +146,7 @@ export async function acceptTeamInviteAction(_prevState: ActionState, formData: 
       .eq("company_id", inviteRow.company_id);
 
     if (updateRoleError) {
-      return { success: false, message: `Nao foi possivel atualizar seu papel: ${updateRoleError.message}` };
+      return { success: false, message: friendlyDbError(updateRoleError, "Nao foi possivel atualizar seu papel. Tente novamente.") };
     }
   }
 
@@ -170,7 +163,7 @@ export async function acceptTeamInviteAction(_prevState: ActionState, formData: 
   if (acceptError) {
     return {
       success: false,
-      message: `Nao foi possivel concluir aceite do convite: ${mapInviteDatabaseError(acceptError.message)}`,
+      message: friendlyDbError(acceptError, "Nao foi possivel concluir aceite do convite. Tente novamente."),
     };
   }
 

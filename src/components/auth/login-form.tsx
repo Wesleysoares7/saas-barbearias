@@ -1,5 +1,7 @@
 "use client";
 
+import { friendlyAuthError } from "@/lib/errors";
+import { safeNextPath } from "@/lib/safe-redirect";
 import { type FormEvent, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -37,7 +39,7 @@ function getPublicAppUrl() {
   return DEFAULT_PUBLIC_APP_URL;
 }
 
-function validateLoginForm(values: LoginFormState): LoginFormErrors {
+function validateLoginForm(values: LoginFormState, mode: AuthMode = "login"): LoginFormErrors {
   const errors: LoginFormErrors = {};
 
   if (!values.email.trim()) {
@@ -48,8 +50,8 @@ function validateLoginForm(values: LoginFormState): LoginFormErrors {
 
   if (!values.password.trim()) {
     errors.password = "Informe sua senha.";
-  } else if (values.password.length < 6) {
-    errors.password = "A senha deve ter pelo menos 6 caracteres.";
+  } else if (mode === "signup" && values.password.length < 8) {
+    errors.password = "A senha deve ter pelo menos 8 caracteres.";
   }
 
   return errors;
@@ -80,8 +82,8 @@ export function LoginForm() {
 
     const validationErrors =
       mode === "recover"
-        ? validateLoginForm({ email: form.email, password: "123456" })
-        : validateLoginForm(form);
+        ? validateLoginForm({ email: form.email, password: "x" }, "recover")
+        : validateLoginForm(form, mode);
 
     if (mode === "recover") {
       delete validationErrors.password;
@@ -101,7 +103,7 @@ export function LoginForm() {
 
       if (mode === "login") {
         const nextPath = searchParams.get("next");
-        const safeNextPath = nextPath?.startsWith("/") ? nextPath : null;
+        const safeNext = safeNextPath(nextPath, "") || null;
 
         const { error } = await supabase.auth.signInWithPassword({
           email: form.email.trim(),
@@ -109,13 +111,13 @@ export function LoginForm() {
         });
 
         if (error) {
-          setErrors({ form: `Nao foi possivel entrar: ${error.message}` });
+          setErrors({ form: friendlyAuthError(error, "Nao foi possivel entrar. Tente novamente.") });
           return;
         }
 
-        let destinationPath = safeNextPath ?? "/painel";
+        let destinationPath = safeNext ?? "/painel";
 
-        if (!safeNextPath) {
+        if (!safeNext) {
           const { data: isPlatformAdmin } = await supabase.rpc("is_platform_admin");
 
           if (isPlatformAdmin) {
@@ -139,7 +141,7 @@ export function LoginForm() {
         });
 
         if (error) {
-          setErrors({ form: `Nao foi possivel criar a conta: ${error.message}` });
+          setErrors({ form: friendlyAuthError(error, "Nao foi possivel criar a conta. Tente novamente.") });
           return;
         }
 
@@ -159,17 +161,14 @@ export function LoginForm() {
       });
 
       if (error) {
-        setErrors({ form: `Nao foi possivel enviar o e-mail de recuperacao: ${error.message}` });
+        setErrors({ form: friendlyAuthError(error, "Nao foi possivel enviar o e-mail de recuperacao. Tente novamente.") });
         return;
       }
 
       setSuccessMessage("Enviamos um link de recuperacao para o seu e-mail.");
-    } catch (error) {
+    } catch {
       setErrors({
-        form:
-          error instanceof Error
-            ? `Nao foi possivel processar sua solicitacao: ${error.message}`
-            : "Nao foi possivel processar sua solicitacao. Tente novamente.",
+        form: "Nao foi possivel processar sua solicitacao. Tente novamente.",
       });
     } finally {
       setIsSubmitting(false);

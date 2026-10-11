@@ -65,7 +65,8 @@ export async function GET(request: Request) {
     .order("data_hora", { ascending: true });
 
   if (appointmentsError) {
-    return Response.json({ error: `Erro ao gerar relatorio: ${appointmentsError.message}` }, { status: 500 });
+    console.error("report_error", appointmentsError.code);
+    return Response.json({ error: "Nao foi possivel gerar o relatorio." }, { status: 500 });
   }
 
   const appointments = (appointmentsData ?? []) as AppointmentRow[];

@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
 
@@ -19,14 +20,6 @@ function sanitizeEmail(value: FormDataEntryValue | null): string {
 
 function isValidEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function mapInviteDatabaseError(message: string): string {
-  if (message.includes("team_invites")) {
-    return "Seu banco ainda nao foi atualizado para convites da equipe. Execute o script docs/database/003_etapa11_convites_auditoria.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  return message;
 }
 
 async function writeAuditLog(params: {
@@ -128,7 +121,7 @@ export async function updateMemberRoleAction(_prevState: ActionState, formData: 
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar o papel: ${error.message}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel atualizar o papel. Tente novamente.") };
   }
 
   await writeAuditLog({
@@ -216,7 +209,7 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
     if (updateInviteError) {
       return {
         success: false,
-        message: `Nao foi possivel atualizar convite existente: ${mapInviteDatabaseError(updateInviteError.message)}`,
+        message: friendlyDbError(updateInviteError, "Nao foi possivel atualizar convite existente. Tente novamente."),
       };
     }
 
@@ -258,7 +251,7 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel criar convite: ${mapInviteDatabaseError(error.message)}`,
+      message: friendlyDbError(error, "Nao foi possivel criar convite. Tente novamente."),
     };
   }
 
@@ -314,7 +307,7 @@ export async function revokeTeamInviteAction(_prevState: ActionState, formData: 
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel revogar convite: ${mapInviteDatabaseError(error.message)}`,
+      message: friendlyDbError(error, "Nao foi possivel revogar convite. Tente novamente."),
     };
   }
 

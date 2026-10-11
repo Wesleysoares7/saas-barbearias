@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -223,7 +224,7 @@ export async function createPaymentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel registrar pagamento: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel registrar pagamento. Tente novamente."),
     };
   }
 
@@ -314,7 +315,7 @@ export async function updatePaymentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel atualizar pagamento: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel atualizar pagamento. Tente novamente."),
     };
   }
 
@@ -357,7 +358,7 @@ export async function deletePaymentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel excluir pagamento: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel excluir pagamento. Tente novamente."),
     };
   }
 

@@ -151,7 +151,7 @@ export default async function CustomerHistoryPage({ params }: { params: Promise<
 
         {hasCustomerTableIssue ? (
           <div className="rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
-            Seu banco ainda nao foi atualizado para clientes. Execute os scripts docs/database/005_etapa13_clientes.sql e docs/database/006_etapa13_agendamentos_clientes.sql no Supabase SQL Editor.
+            Este recurso está temporariamente indisponível. Tente novamente em instantes.
           </div>
         ) : null}
 

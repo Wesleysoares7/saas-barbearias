@@ -275,7 +275,7 @@ export default async function AuditoriaPage({
 
         {hasAuditTableIssue ? (
           <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
-            Para habilitar auditoria, execute o script docs/database/003_etapa11_convites_auditoria.sql no Supabase SQL Editor.
+            Este recurso está temporariamente indisponível. Tente novamente em instantes.
           </p>
         ) : filteredLogs.length === 0 ? (
           <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
