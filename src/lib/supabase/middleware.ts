@@ -26,7 +26,9 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value),
+        );
 
         response = NextResponse.next({
           request,
@@ -44,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isAuthPage = request.nextUrl.pathname === "/login" || request.nextUrl.pathname.startsWith("/auth/");
+  const isAuthPage = request.nextUrl.pathname === "/login";
   const isProtectedPath =
     request.nextUrl.pathname.startsWith("/painel") ||
     request.nextUrl.pathname.startsWith("/master") ||
@@ -60,9 +62,11 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthPage) {
     const redirectUrl = request.nextUrl.clone();
-    const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
+    const { data: isPlatformAdmin, error: platformAdminError } =
+      await supabase.rpc("is_platform_admin");
 
-    redirectUrl.pathname = !platformAdminError && isPlatformAdmin ? "/master/empresas" : "/painel";
+    redirectUrl.pathname =
+      !platformAdminError && isPlatformAdmin ? "/master/empresas" : "/painel";
     return NextResponse.redirect(redirectUrl);
   }
 

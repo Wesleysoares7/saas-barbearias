@@ -20,3 +20,7 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `013_etapa_funcionario_admin.sql`: adiciona `user_id` (vinculo com `auth.users`) e `email` em `employees`, permitindo detectar se o administrador logado ja possui registro de funcionario e copiar seus dados com um clique.
 - `014_etapa_almoxarifado_estoque.sql`: cria `products` e `stock_movements` (estoque do salao). Saldo (`quantidade_atual`) e `custo_medio` sao mantidos apenas por trigger; movimentacoes sao imutaveis e o acesso e restrito a admin via RLS.
 - `016_etapa_caixa_saldo_lancamentos.sql`: cria `cash_entries` (saldo inicial e lancamentos avulsos de entrada/despesa, restrito a admin via RLS) e a funcao `finance_summary` usada no Resumo do periodo do Financeiro.
+- `015_etapa_hardening_permissoes.sql`: triggers e policies que impedem funcionario de virar admin, criacao de perfil em empresa alheia e escrita de funcionarios/servicos por nao-admin.
+- `017_etapa_clientes_vinculo_agendamentos.sql`: vinculo de clientes com agendamentos.
+- `018_etapa_onboarding_atomico.sql`: funcao `create_company_with_admin` (empresa + perfil admin + atendente numa transacao).
+- `019_etapa_fechar_criacao_direta.sql`: remove INSERT direto em `companies` e a criacao de admin sem convite.
