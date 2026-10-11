@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
@@ -95,13 +96,10 @@ async function writeAuditLog(
   });
 
   if (error) {
-    console.error("Falha ao registrar auditoria do caixa:", error.message);
+    console.error("Falha ao registrar auditoria do caixa:", error.code);
   }
 }
 
-// A mensagem de "banco nao atualizado" so aparece quando o erro realmente indica
-// tabela/funcao inexistente. Qualquer outro erro vira mensagem generica e o detalhe
-// vai apenas para o log do servidor (nunca para o usuario).
 function mapCashError(
   error: DbError,
   fallback = "Nao foi possivel salvar. Tente novamente.",
@@ -109,22 +107,12 @@ function mapCashError(
   const code = error.code ?? "";
 
   if (code === "42P01" || code === "PGRST205" || code === "PGRST202") {
-    return "Seu banco ainda nao foi atualizado para o caixa. Execute o script docs/database/016_etapa_caixa_saldo_lancamentos.sql no Supabase SQL Editor e tente novamente.";
+    console.error("db_error", code);
+    return "Este recurso esta temporariamente indisponivel. Tente novamente em instantes.";
   }
 
-  if (code === "42501") {
-    console.error("Permissao negada no caixa:", {
-      code,
-      message: error.message,
-    });
-    return "Sem permissao para esta operacao. Entre em contato com o suporte.";
-  }
-
-  console.error("Erro no caixa:", { code, message: error.message });
-
-  return fallback;
+  return friendlyDbError(error, fallback);
 }
-
 function validateEntryFields(formData: FormData):
   | {
       ok: true;

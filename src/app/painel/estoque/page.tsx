@@ -307,8 +307,7 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
 
       {hasTableIssue ? (
         <p className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
-          Seu banco ainda nao foi atualizado para o estoque. Execute o script docs/database/014_etapa_almoxarifado_estoque.sql
-          no Supabase SQL Editor.
+          Este recurso está temporariamente indisponível. Tente novamente em instantes.
         </p>
       ) : null}
 

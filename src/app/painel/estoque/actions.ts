@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
@@ -56,16 +57,8 @@ function mapStockDatabaseError(error: DbError): string {
   const code = error.code ?? "";
 
   if (code === "42P01" || code === "PGRST205" || code === "PGRST202") {
-    return "Seu banco ainda nao foi atualizado para o estoque. Execute o script docs/database/014_etapa_almoxarifado_estoque.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  if (code === "42501") {
-    console.error("Permissao negada no estoque:", { code, message: error.message });
-    return "Sem permissao para esta operacao. Entre em contato com o suporte.";
-  }
-
-  if (code === "23505") {
-    return "Ja existe um produto com este nome.";
+    console.error("db_error", code);
+    return "Este recurso esta temporariamente indisponivel. Tente novamente em instantes.";
   }
 
   // Regra do trigger de saldo: so extrai o saldo disponivel, nunca repassa a mensagem crua.
@@ -77,11 +70,8 @@ function mapStockDatabaseError(error: DbError): string {
       : "Estoque insuficiente para esta saida.";
   }
 
-  console.error("Erro no estoque:", { code, message: error.message });
-
-  return "Nao foi possivel salvar. Tente novamente.";
+  return friendlyDbError(error, "Nao foi possivel salvar. Tente novamente.");
 }
-
 async function writeAuditLog(params: {
   supabase: Awaited<ReturnType<typeof getAccessContext>>["supabase"];
   companyId: string;
@@ -101,7 +91,7 @@ async function writeAuditLog(params: {
   });
 
   if (error) {
-    console.error("Falha ao registrar auditoria do estoque:", { code: error.code, message: error.message });
+    console.error("Falha ao registrar auditoria do estoque:", error.code);
   }
 }
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
@@ -79,7 +80,7 @@ export async function createServiceAction(_prevState: ActionState, formData: For
   });
 
   if (error) {
-    return { success: false, message: `Nao foi possivel criar servico: ${error.message}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel criar servico. Tente novamente.") };
   }
 
   revalidatePath("/painel/servicos");
@@ -131,7 +132,7 @@ export async function updateServiceAction(_prevState: ActionState, formData: For
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar servico: ${error.message}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel atualizar servico. Tente novamente.") };
   }
 
   revalidatePath("/painel/servicos");
@@ -158,7 +159,7 @@ export async function deleteServiceAction(_prevState: ActionState, formData: For
   const { error } = await supabase.from("services").delete().eq("id", id).eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel excluir servico: ${error.message}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel excluir servico. Tente novamente.") };
   }
 
   revalidatePath("/painel/servicos");

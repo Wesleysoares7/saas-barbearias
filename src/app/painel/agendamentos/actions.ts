@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { calculateEndDateIso } from "@/lib/appointments/conflict";
@@ -19,21 +20,6 @@ const APPOINTMENT_STATUS: AppointmentStatus[] = [
   "concluido",
   "cancelado",
 ];
-
-function mapAppointmentDatabaseError(message: string): string {
-  if (message.includes("data_hora_fim")) {
-    return "Seu banco ainda nao foi atualizado para conflitos de horario. Execute o script docs/database/002_etapa6_conflito_agendamentos.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  if (
-    message.includes("customer_id") ||
-    message.includes("appointments_customer_company_fk")
-  ) {
-    return "Seu banco ainda nao foi atualizado para clientes em agendamentos. Execute o script docs/database/006_etapa13_agendamentos_clientes.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  return message;
-}
 
 function sanitizeText(value: FormDataEntryValue | null): string {
   if (typeof value !== "string") {
@@ -141,7 +127,7 @@ async function hasConflictForEmployee(
   if (error) {
     return {
       hasConflict: false,
-      errorMessage: mapAppointmentDatabaseError(error.message),
+      errorMessage: friendlyDbError(error, "Nao foi possivel verificar conflito de horario. Tente novamente."),
     };
   }
 
@@ -318,7 +304,7 @@ export async function createAppointmentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel criar agendamento: ${mapAppointmentDatabaseError(error.message)}`,
+      message: friendlyDbError(error, "Nao foi possivel criar agendamento. Tente novamente."),
     };
   }
 
@@ -494,7 +480,7 @@ export async function updateAppointmentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel atualizar agendamento: ${mapAppointmentDatabaseError(error.message)}`,
+      message: friendlyDbError(error, "Nao foi possivel atualizar agendamento. Tente novamente."),
     };
   }
 
@@ -537,7 +523,7 @@ export async function deleteAppointmentAction(
   if (error) {
     return {
       success: false,
-      message: `Nao foi possivel excluir agendamento: ${error.message}`,
+      message: friendlyDbError(error, "Nao foi possivel excluir agendamento. Tente novamente."),
     };
   }
 
@@ -675,7 +661,7 @@ export async function completeAppointmentAndRegisterPaymentAction(
   if (updateError) {
     return {
       success: false,
-      message: `Nao foi possivel concluir o agendamento: ${mapAppointmentDatabaseError(updateError.message)}`,
+      message: friendlyDbError(updateError, "Nao foi possivel concluir o agendamento. Tente novamente."),
     };
   }
 
@@ -697,7 +683,7 @@ export async function completeAppointmentAndRegisterPaymentAction(
 
     return {
       success: false,
-      message: `Nao foi possivel registrar o pagamento: ${paymentError.message}`,
+      message: friendlyDbError(paymentError, "Nao foi possivel registrar o pagamento. Tente novamente."),
     };
   }
 

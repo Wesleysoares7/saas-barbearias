@@ -82,7 +82,8 @@ export async function GET(request: Request) {
   const logsResponse = await logsQuery;
 
   if (logsResponse.error) {
-    return Response.json({ error: `Nao foi possivel exportar auditoria: ${logsResponse.error.message}` }, { status: 500 });
+    console.error("report_error", logsResponse.error.code);
+    return Response.json({ error: "Nao foi possivel gerar o relatorio." }, { status: 500 });
   }
 
   const logs = (logsResponse.data ?? []) as AuditRow[];

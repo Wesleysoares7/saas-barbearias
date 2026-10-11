@@ -1,5 +1,6 @@
 "use server";
 
+import { friendlyDbError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
@@ -29,14 +30,6 @@ function isValidEmail(value: string | null): boolean {
   }
 
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function mapDatabaseError(message: string): string {
-  if (message.includes("customers")) {
-    return "Seu banco ainda nao foi atualizado para clientes. Execute docs/database/005_etapa13_clientes.sql no Supabase SQL Editor e tente novamente.";
-  }
-
-  return message;
 }
 
 async function getCompanyScope() {
@@ -80,7 +73,7 @@ export async function createCustomerAction(_prevState: ActionState, formData: Fo
   });
 
   if (error) {
-    return { success: false, message: `Nao foi possivel criar cliente: ${mapDatabaseError(error.message)}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel criar cliente. Tente novamente.") };
   }
 
   revalidatePath("/painel/clientes");
@@ -132,7 +125,7 @@ export async function updateCustomerAction(_prevState: ActionState, formData: Fo
     .eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel atualizar cliente: ${mapDatabaseError(error.message)}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel atualizar cliente. Tente novamente.") };
   }
 
   revalidatePath("/painel/clientes");
@@ -159,7 +152,7 @@ export async function deleteCustomerAction(_prevState: ActionState, formData: Fo
   const { error } = await supabase.from("customers").delete().eq("id", id).eq("company_id", companyId);
 
   if (error) {
-    return { success: false, message: `Nao foi possivel excluir cliente: ${mapDatabaseError(error.message)}` };
+    return { success: false, message: friendlyDbError(error, "Nao foi possivel excluir cliente. Tente novamente.") };
   }
 
   revalidatePath("/painel/clientes");

@@ -56,7 +56,8 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: true });
 
   if (paymentsError) {
-    return Response.json({ error: `Erro ao gerar relatorio: ${paymentsError.message}` }, { status: 500 });
+    console.error("report_error", paymentsError.code);
+    return Response.json({ error: "Nao foi possivel gerar o relatorio." }, { status: 500 });
   }
 
   const payments = (paymentsData ?? []) as PaymentRow[];

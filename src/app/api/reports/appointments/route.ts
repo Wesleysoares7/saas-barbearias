@@ -1,3 +1,4 @@
+import { toCsv } from "@/lib/reports/csv";
 import { getAccessContext } from "@/lib/auth/access";
 import { endOfDayIso, isDateInputValue, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
@@ -41,20 +42,6 @@ function buildDateRange(url: URL) {
   };
 }
 
-function csvCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) {
-    return "\"\"";
-  }
-
-  const text = String(value).replaceAll("\"", "\"\"");
-  return `\"${text}\"`;
-}
-
-function toCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>): string {
-  const headerLine = headers.map((header) => csvCell(header)).join(",");
-  const bodyLines = rows.map((row) => row.map((cell) => csvCell(cell)).join(","));
-  return `\uFEFF${[headerLine, ...bodyLines].join("\n")}`;
-}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -79,7 +66,8 @@ export async function GET(request: Request) {
     .order("data_hora", { ascending: true });
 
   if (appointmentsError) {
-    return Response.json({ error: `Erro ao gerar relatorio: ${appointmentsError.message}` }, { status: 500 });
+    console.error("report_error", appointmentsError.code);
+    return Response.json({ error: "Nao foi possivel gerar o relatorio." }, { status: 500 });
   }
 
   const appointments = (appointmentsData ?? []) as AppointmentRow[];

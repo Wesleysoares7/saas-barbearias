@@ -1,3 +1,4 @@
+import { toCsv } from "@/lib/reports/csv";
 import { canPerformAction, getAccessContext } from "@/lib/auth/access";
 import { addDaysToInput, endOfDayIso, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
@@ -37,20 +38,6 @@ function formatMetadata(metadata: Record<string, unknown>): string {
   }
 }
 
-function csvCell(value: string | number | null | undefined): string {
-  if (value === null || value === undefined) {
-    return "\"\"";
-  }
-
-  const text = String(value).replaceAll("\"", "\"\"");
-  return `\"${text}\"`;
-}
-
-function toCsv(headers: string[], rows: Array<Array<string | number | null | undefined>>): string {
-  const headerLine = headers.map((header) => csvCell(header)).join(",");
-  const bodyLines = rows.map((row) => row.map((cell) => csvCell(cell)).join(","));
-  return `\uFEFF${[headerLine, ...bodyLines].join("\n")}`;
-}
 
 export async function GET(request: Request) {
   const { supabase, companyId, role, errorMessage } = await getAccessContext();
@@ -96,7 +83,8 @@ export async function GET(request: Request) {
   const logsResponse = await logsQuery;
 
   if (logsResponse.error) {
-    return Response.json({ error: `Nao foi possivel exportar auditoria: ${logsResponse.error.message}` }, { status: 500 });
+    console.error("report_error", logsResponse.error.code);
+    return Response.json({ error: "Nao foi possivel gerar o relatorio." }, { status: 500 });
   }
 
   const logs = (logsResponse.data ?? []) as AuditRow[];

@@ -52,7 +52,7 @@ export default async function InviteTokenPage({ params }: { params: Promise<{ to
 
         {hasInviteTableIssue ? (
           <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
-            Convites ainda nao estao habilitados neste banco. Reexecute o script docs/database/003_etapa11_convites_auditoria.sql no Supabase SQL Editor.
+            Este recurso está temporariamente indisponível. Tente novamente em instantes.
           </p>
         ) : null}
 
