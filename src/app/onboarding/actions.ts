@@ -3,7 +3,6 @@
 import { friendlyDbError } from "@/lib/errors";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { randomUUID } from "node:crypto";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -73,56 +72,20 @@ export async function completeOnboardingAction(
     redirect("/painel");
   }
 
-  const companyId = randomUUID();
-
-  const { error: companyError } = await supabase.from("companies").insert({
-    id: companyId,
-    nome: nomeEmpresa,
-    telefone: telefone || null,
-    endereco: endereco || null,
+  const { error: createError } = await supabase.rpc("create_company_with_admin", {
+    p_nome_responsavel: nomeResponsavel,
+    p_nome_empresa: nomeEmpresa,
+    p_telefone: telefone || null,
+    p_endereco: endereco || null,
+    p_unico_atendente: unicoAtendente,
   });
 
-  if (companyError) {
+  if (createError) {
     return {
       success: false,
-      message: friendlyDbError(companyError, "Nao foi possivel criar a empresa. Tente novamente."),
+      message: friendlyDbError(createError, "Nao foi possivel concluir o cadastro. Tente novamente."),
     };
   }
-
-  const { error: profileError } = await supabase.from("profiles").insert({
-    id: user.id,
-    company_id: companyId,
-    nome: nomeResponsavel,
-    email: (user.email ?? "").toLowerCase(),
-    role: "admin",
-  });
-
-  if (profileError) {
-    return {
-      success: false,
-      message: friendlyDbError(profileError, "Empresa criada, mas houve erro ao criar o perfil admin. Tente novamente."),
-    };
-  }
-
-  if (unicoAtendente) {
-    const { error: employeeError } = await supabase.from("employees").insert({
-      company_id: companyId,
-      user_id: user.id,
-      nome: nomeResponsavel,
-      email: (user.email ?? "").toLowerCase() || null,
-      telefone: telefone || null,
-      percentual_comissao: null,
-      ativo: true,
-    });
-
-    if (employeeError) {
-      return {
-        success: false,
-        message: friendlyDbError(employeeError, "Empresa criada, mas houve erro ao cadastrar o atendente. Tente novamente."),
-      };
-    }
-  }
-
   revalidatePath("/painel");
   redirect("/painel");
 }
