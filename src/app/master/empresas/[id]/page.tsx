@@ -2,14 +2,22 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Building2, CalendarDays, DollarSign, Package, Scissors, UserCog, Users } from "lucide-react";
 
-import { startSupportSessionAction, updateMasterCompanyAction } from "@/app/master/actions";
+import {
+  extendTrialAction,
+  setBillingExemptAction,
+  startSupportSessionAction,
+  updateMasterCompanyAction,
+} from "@/app/master/actions";
+import { CompanyStatusForm } from "@/components/master/company-status-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { DeleteCompanyForm } from "@/components/master/delete-company-form";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import { getPlatformAccessContext } from "@/lib/auth/access";
-import { formatDateTimeBR } from "@/lib/datetime";
+import { billingPill } from "@/lib/billing/labels";
+import { resolveBillingState, type BillingRow } from "@/lib/billing/state";
+import { formatDateBR, formatDateTimeBR } from "@/lib/datetime";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -22,6 +30,11 @@ type CompanyRow = {
   nome: string;
   telefone: string | null;
   endereco: string | null;
+  status: string | null;
+  plan: string | null;
+  trial_ends_at: string | null;
+  suspended_at: string | null;
+  billing_exempt: boolean | null;
 };
 
 type MemberRow = {
@@ -60,7 +73,7 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
 
   const [companyResponse, memberCount, employees, services, customers, appointments, products, payments, membersResponse, logs] =
     await Promise.all([
-      admin.from("companies").select("id, nome, telefone, endereco").eq("id", id).maybeSingle(),
+      admin.from("companies").select("id, nome, telefone, endereco, status, plan, trial_ends_at, suspended_at, billing_exempt").eq("id", id).maybeSingle(),
       countOf("profiles"),
       countOf("employees"),
       countOf("services"),
@@ -87,6 +100,9 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
     (sum, item) => sum + Number(item.valor),
     0,
   );
+  const billing = resolveBillingState(company as BillingRow);
+  const pill = billingPill(billing);
+  const canExtend = company.status === "trial" || company.status === "suspended";
   const memberList = (membersResponse.data ?? []) as MemberRow[];
   const logList = (logs.data ?? []) as AuditRow[];
 
@@ -112,6 +128,51 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
           </form>
         }
       />
+
+      <Panel title="Plano e acesso">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
+            {billing.billingExempt ? <StatusPill tone="brand">Cortesia</StatusPill> : null}
+            {company.plan ? <span className="text-sm text-muted-foreground">Plano: {company.plan}</span> : null}
+          </div>
+
+          {company.status === "trial" && company.trial_ends_at ? (
+            <p className="text-sm text-muted-foreground">
+              Teste ate {formatDateBR(company.trial_ends_at)} (restam {billing.trialDaysLeft ?? 0} dias)
+            </p>
+          ) : null}
+
+          <CompanyStatusForm key={`${company.status}-${company.plan ?? ""}`} companyId={company.id} status={company.status ?? "active"} plan={company.plan} />
+
+          <div className="flex flex-wrap gap-2">
+            {canExtend
+              ? [7, 14, 30].map((days) => (
+                  <form key={days} action={extendTrialAction}>
+                    <input type="hidden" name="companyId" value={company.id} />
+                    <input type="hidden" name="days" value={days} />
+                    <button
+                      type="submit"
+                      className="min-h-11 rounded-xl border border-border bg-surface-2 px-4 text-sm font-medium text-foreground hover:border-brand hover:text-brand"
+                    >
+                      +{days} dias
+                    </button>
+                  </form>
+                ))
+              : null}
+            <form action={setBillingExemptAction}>
+              <input type="hidden" name="companyId" value={company.id} />
+              <input type="hidden" name="exempt" value={billing.billingExempt ? "false" : "true"} />
+              <button
+                type="submit"
+                className="min-h-11 rounded-xl border border-border bg-surface-2 px-4 text-sm font-medium text-foreground hover:border-brand hover:text-brand"
+              >
+                {billing.billingExempt ? "Remover cortesia" : "Marcar como cortesia"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </Panel>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Membros" value={memberCount.count ?? 0} icon={Users} />

@@ -1,12 +1,21 @@
 import { cookies } from "next/headers";
 
 import { SUPPORT_COOKIE } from "@/lib/auth/support";
+import {
+  BILLING_SELECT,
+  type BillingRow,
+  type BillingState,
+  resolveBillingState,
+} from "@/lib/billing/state";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type AppSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+export type AppSupabaseClient = Awaited<
+  ReturnType<typeof createSupabaseServerClient>
+>;
 
 export type UserRole = "admin" | "employee";
 
@@ -21,16 +30,29 @@ type ModuleKey =
   | "notificacoes"
   | "clientes"
   | "estoque";
-type ModuleAction = "read" | "create" | "update" | "delete" | "export" | "manage";
+type ModuleAction =
+  | "read"
+  | "create"
+  | "update"
+  | "delete"
+  | "export"
+  | "manage";
 
-type AccessContext = {
+export type AccessContext = {
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
   userId: string | null;
   companyId: string | null;
   role: UserRole | null;
   isPlatformAdmin: boolean;
   errorMessage: string | null;
-  redirectTo: "/login" | "/onboarding" | "/painel" | "/master/empresas" | null;
+  redirectTo:
+    | "/login"
+    | "/onboarding"
+    | "/painel"
+    | "/master/empresas"
+    | "/conta-suspensa"
+    | null;
+  billing: BillingState | null;
   supportMode: boolean;
   supportCompanyName: string | null;
   userEmail: string | null;
@@ -52,7 +74,11 @@ export function canAccessModule(role: UserRole, moduleKey: ModuleKey): boolean {
   return moduleKey === "agendamentos" || moduleKey === "relatorios";
 }
 
-export function canPerformAction(role: UserRole, moduleKey: ModuleKey, action: ModuleAction): boolean {
+export function canPerformAction(
+  role: UserRole,
+  moduleKey: ModuleKey,
+  action: ModuleAction,
+): boolean {
   if (role === "admin") {
     return true;
   }
@@ -89,7 +115,8 @@ export async function getPlatformAccessContext(): Promise<PlatformAccessContext>
     };
   }
 
-  const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
+  const { data: isPlatformAdmin, error: platformAdminError } =
+    await supabase.rpc("is_platform_admin");
 
   if (platformAdminError || !isPlatformAdmin) {
     return {
@@ -126,14 +153,17 @@ export async function getAccessContext(): Promise<AccessContext> {
       isPlatformAdmin: false,
       errorMessage: "Sua sessao expirou. Faca login novamente.",
       redirectTo: "/login",
+      billing: null,
       supportMode: false,
       supportCompanyName: null,
       userEmail: null,
     };
   }
 
-  const { data: isPlatformAdmin, error: platformAdminError } = await supabase.rpc("is_platform_admin");
-  const hasPlatformAdminAccess = !platformAdminError && Boolean(isPlatformAdmin);
+  const { data: isPlatformAdmin, error: platformAdminError } =
+    await supabase.rpc("is_platform_admin");
+  const hasPlatformAdminAccess =
+    !platformAdminError && Boolean(isPlatformAdmin);
 
   if (hasPlatformAdminAccess) {
     const cookieStore = await cookies();
@@ -143,7 +173,7 @@ export async function getAccessContext(): Promise<AccessContext> {
       const adminClient = createSupabaseAdminClient();
       const { data: supportCompany } = await adminClient
         .from("companies")
-        .select("id, nome")
+        .select(`id, nome, ${BILLING_SELECT}`)
         .eq("id", supportCompanyId)
         .maybeSingle();
 
@@ -156,6 +186,7 @@ export async function getAccessContext(): Promise<AccessContext> {
           isPlatformAdmin: true,
           errorMessage: null,
           redirectTo: null,
+          billing: resolveBillingState(supportCompany as unknown as BillingRow),
           supportMode: true,
           supportCompanyName: supportCompany.nome as string,
           userEmail: user.email ?? null,
@@ -164,7 +195,8 @@ export async function getAccessContext(): Promise<AccessContext> {
     }
   }
 
-  const { data: companyId, error: companyError } = await supabase.rpc("current_company_id");
+  const { data: companyId, error: companyError } =
+    await supabase.rpc("current_company_id");
 
   if (companyError || !companyId) {
     return {
@@ -173,20 +205,60 @@ export async function getAccessContext(): Promise<AccessContext> {
       companyId: null,
       role: null,
       isPlatformAdmin: hasPlatformAdminAccess,
-      errorMessage: hasPlatformAdminAccess ? null : "Empresa nao encontrada para este usuario. Finalize o onboarding.",
+      errorMessage: hasPlatformAdminAccess
+        ? null
+        : "Empresa nao encontrada para este usuario. Finalize o onboarding.",
       redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/onboarding",
+      billing: null,
       supportMode: false,
       supportCompanyName: null,
       userEmail: user.email ?? null,
     };
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .eq("company_id", companyId)
-    .maybeSingle();
+  const [{ data: profile, error: profileError }, companyBillingResponse] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .eq("company_id", companyId)
+        .maybeSingle(),
+      supabase
+        .from("companies")
+        .select(BILLING_SELECT)
+        .eq("id", companyId)
+        .maybeSingle(),
+    ]);
+
+  let billing: BillingState | null = null;
+
+  if (companyBillingResponse.error) {
+    console.error(
+      companyBillingResponse.error.code,
+      companyBillingResponse.error.message,
+    );
+  } else if (companyBillingResponse.data) {
+    billing = resolveBillingState(
+      companyBillingResponse.data as unknown as BillingRow,
+    );
+  }
+
+  if (billing?.blocked && !hasPlatformAdminAccess) {
+    return {
+      supabase,
+      userId: user.id,
+      companyId: null,
+      role: null,
+      isPlatformAdmin: false,
+      errorMessage: "Sua conta esta suspensa. Entre em contato com o suporte.",
+      redirectTo: "/conta-suspensa",
+      billing,
+      supportMode: false,
+      supportCompanyName: null,
+      userEmail: user.email ?? null,
+    };
+  }
 
   if (profileError || !profile?.role) {
     return {
@@ -195,8 +267,11 @@ export async function getAccessContext(): Promise<AccessContext> {
       companyId,
       role: null,
       isPlatformAdmin: hasPlatformAdminAccess,
-      errorMessage: hasPlatformAdminAccess ? null : "Perfil de acesso nao encontrado para este usuario.",
+      errorMessage: hasPlatformAdminAccess
+        ? null
+        : "Perfil de acesso nao encontrado para este usuario.",
       redirectTo: hasPlatformAdminAccess ? "/master/empresas" : "/painel",
+      billing: null,
       supportMode: false,
       supportCompanyName: null,
       userEmail: user.email ?? null,
@@ -211,8 +286,74 @@ export async function getAccessContext(): Promise<AccessContext> {
     isPlatformAdmin: hasPlatformAdminAccess,
     errorMessage: null,
     redirectTo: null,
+    billing,
     supportMode: false,
     supportCompanyName: null,
     userEmail: user.email ?? null,
+  };
+}
+
+export async function getAccountStatusContext() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return {
+      supabase,
+      userId: null,
+      userEmail: null,
+      companyId: null,
+      companyName: null,
+      role: null,
+      billing: null,
+      isPlatformAdmin: false,
+    };
+  }
+
+  const [
+    { data: platformAdmin, error: platformAdminError },
+    { data: profile },
+  ] = await Promise.all([
+    supabase.rpc("is_platform_admin"),
+    supabase
+      .from("profiles")
+      .select("role, company_id")
+      .eq("id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const isPlatformAdmin = !platformAdminError && Boolean(platformAdmin);
+  const companyId = (profile?.company_id as string | null | undefined) ?? null;
+  const role = (profile?.role as UserRole | null | undefined) ?? null;
+  let companyName: string | null = null;
+  let billing: BillingState | null = null;
+
+  if (companyId) {
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select(`nome, ${BILLING_SELECT}`)
+      .eq("id", companyId)
+      .maybeSingle();
+
+    if (companyError) {
+      console.error(companyError.code, companyError.message);
+    } else if (company) {
+      companyName = (company.nome as string | null) ?? null;
+      billing = resolveBillingState(company as unknown as BillingRow);
+    }
+  }
+
+  return {
+    supabase,
+    userId: user.id,
+    userEmail: user.email ?? null,
+    companyId,
+    companyName,
+    role,
+    billing,
+    isPlatformAdmin,
   };
 }
