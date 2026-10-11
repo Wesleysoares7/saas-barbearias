@@ -24,3 +24,4 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `017_etapa_clientes_vinculo_agendamentos.sql`: vinculo de clientes com agendamentos.
 - `018_etapa_onboarding_atomico.sql`: funcao `create_company_with_admin` (empresa + perfil admin + atendente numa transacao).
 - `019_etapa_fechar_criacao_direta.sql`: remove INSERT direto em `companies` e a criacao de admin sem convite.
+- `020_etapa_status_conta.sql`: status da conta (trial, active, past_due, suspended, canceled), plano, fim do teste e cortesia.

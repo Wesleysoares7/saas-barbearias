@@ -163,3 +163,194 @@ export async function endSupportSessionAction() {
   await clearSupportCookie();
   redirect("/master/empresas");
 }
+
+const COMPANY_STATUSES = ["trial", "active", "past_due", "suspended", "canceled"] as const;
+type CompanyStatusValue = (typeof COMPANY_STATUSES)[number];
+const TRIAL_DAYS = 14;
+const DAY_MS = 86400000;
+
+function isCompanyStatus(value: string): value is CompanyStatusValue {
+  return (COMPANY_STATUSES as readonly string[]).includes(value);
+}
+
+async function writeMasterAudit(
+  adminClient: ReturnType<typeof createSupabaseAdminClient>,
+  params: { companyId: string; actorId: string; action: string; metadata: Record<string, unknown> },
+) {
+  const { error } = await adminClient.from("audit_logs").insert({
+    company_id: params.companyId,
+    actor_id: params.actorId,
+    action: params.action,
+    entity: "companies",
+    entity_id: params.companyId,
+    metadata: params.metadata,
+  });
+
+  if (error) {
+    console.error("master_audit_error", error.code);
+  }
+}
+
+function revalidateCompany(companyId: string) {
+  revalidatePath("/master/empresas");
+  revalidatePath(`/master/empresas/${companyId}`);
+}
+
+export async function setCompanyStatusAction(formData: FormData) {
+  const companyId = sanitizeText(formData.get("companyId"));
+  const status = sanitizeText(formData.get("status"));
+  const plan = sanitizeText(formData.get("plan")).replace(/\s+/g, " ");
+
+  if (!UUID_PATTERN.test(companyId) || !isCompanyStatus(status) || plan.length > 40) {
+    return;
+  }
+
+  const { isPlatformAdmin, userId } = await getPlatformAccessContext();
+
+  if (!isPlatformAdmin || !userId) {
+    return;
+  }
+
+  const adminClient = createSupabaseAdminClient();
+  const { data: company } = await adminClient
+    .from("companies")
+    .select("status, plan, trial_ends_at")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (!company) {
+    return;
+  }
+
+  const now = new Date();
+  const previous = (company.status as string | null) ?? "active";
+  const update: Record<string, unknown> = { status, plan: plan || null };
+
+  if (status === "suspended") {
+    if (previous !== "suspended") {
+      update.suspended_at = now.toISOString();
+    }
+  } else {
+    update.suspended_at = null;
+  }
+
+  if (status === "trial") {
+    const currentEnd = company.trial_ends_at ? new Date(company.trial_ends_at as string).getTime() : 0;
+
+    if (!(currentEnd > now.getTime())) {
+      update.trial_ends_at = new Date(now.getTime() + TRIAL_DAYS * DAY_MS).toISOString();
+    }
+  }
+
+  const { error } = await adminClient.from("companies").update(update).eq("id", companyId);
+
+  if (error) {
+    console.error("master_status_error", error.code);
+    return;
+  }
+
+  await writeMasterAudit(adminClient, {
+    companyId,
+    actorId: userId,
+    action: "company_status_changed",
+    metadata: { de: previous, para: status },
+  });
+  revalidateCompany(companyId);
+}
+
+export async function extendTrialAction(formData: FormData) {
+  const companyId = sanitizeText(formData.get("companyId"));
+  const days = Number(sanitizeText(formData.get("days")));
+
+  if (!UUID_PATTERN.test(companyId) || ![7, 14, 30].includes(days)) {
+    return;
+  }
+
+  const { isPlatformAdmin, userId } = await getPlatformAccessContext();
+
+  if (!isPlatformAdmin || !userId) {
+    return;
+  }
+
+  const adminClient = createSupabaseAdminClient();
+  const { data: company } = await adminClient
+    .from("companies")
+    .select("status, trial_ends_at")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (!company) {
+    return;
+  }
+
+  const previous = (company.status as string | null) ?? "active";
+
+  if (previous !== "trial" && previous !== "suspended") {
+    return;
+  }
+
+  const nowMs = Date.now();
+  const currentEnd = company.trial_ends_at ? new Date(company.trial_ends_at as string).getTime() : 0;
+  const base = Math.max(nowMs, Number.isNaN(currentEnd) ? 0 : currentEnd);
+  const newEnd = new Date(base + days * DAY_MS).toISOString();
+
+  const { error } = await adminClient
+    .from("companies")
+    .update({ status: "trial", suspended_at: null, trial_ends_at: newEnd })
+    .eq("id", companyId);
+
+  if (error) {
+    console.error("master_trial_error", error.code);
+    return;
+  }
+
+  await writeMasterAudit(adminClient, {
+    companyId,
+    actorId: userId,
+    action: "company_trial_extended",
+    metadata: { de: previous, para: "trial", dias: days },
+  });
+  revalidateCompany(companyId);
+}
+
+export async function setBillingExemptAction(formData: FormData) {
+  const companyId = sanitizeText(formData.get("companyId"));
+  const exemptRaw = sanitizeText(formData.get("exempt"));
+
+  if (!UUID_PATTERN.test(companyId) || (exemptRaw !== "true" && exemptRaw !== "false")) {
+    return;
+  }
+
+  const { isPlatformAdmin, userId } = await getPlatformAccessContext();
+
+  if (!isPlatformAdmin || !userId) {
+    return;
+  }
+
+  const exempt = exemptRaw === "true";
+  const adminClient = createSupabaseAdminClient();
+  const { data: company } = await adminClient
+    .from("companies")
+    .select("billing_exempt")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (!company) {
+    return;
+  }
+
+  const { error } = await adminClient.from("companies").update({ billing_exempt: exempt }).eq("id", companyId);
+
+  if (error) {
+    console.error("master_exempt_error", error.code);
+    return;
+  }
+
+  await writeMasterAudit(adminClient, {
+    companyId,
+    actorId: userId,
+    action: "company_billing_exempt_changed",
+    metadata: { de: Boolean(company.billing_exempt), para: exempt },
+  });
+  revalidateCompany(companyId);
+}
