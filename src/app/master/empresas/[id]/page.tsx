@@ -6,6 +6,7 @@ import { startSupportSessionAction, updateMasterCompanyAction } from "@/app/mast
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
+import { DeleteCompanyForm } from "@/components/master/delete-company-form";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import { getPlatformAccessContext } from "@/lib/auth/access";
 import { formatDateTimeBR } from "@/lib/datetime";
@@ -90,7 +91,7 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
   const logList = (logs.data ?? []) as AuditRow[];
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-5 px-4 py-6 pb-24 sm:px-6">
+    <div className="space-y-5">
       <Link href="/master/empresas" className="inline-flex min-h-11 items-center text-sm text-brand">
         Voltar para empresas
       </Link>
@@ -198,6 +199,14 @@ export default async function MasterCompanyDetailPage({ params }: { params: Prom
           </ul>
         )}
       </Panel>
+
+      <section className="rounded-2xl border border-rose-500/40 bg-surface p-5">
+        <h2 className="text-lg font-semibold text-rose-300">Zona de perigo</h2>
+        <p className="mt-1 mb-4 text-sm text-muted-foreground">
+          Excluir a empresa remove todos os dados dela. Esta acao nao pode ser desfeita.
+        </p>
+        <DeleteCompanyForm companyId={company.id} companyName={company.nome} />
+      </section>
     </div>
   );
 }
