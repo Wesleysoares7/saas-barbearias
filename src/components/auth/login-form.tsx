@@ -3,6 +3,7 @@
 import { friendlyAuthError } from "@/lib/errors";
 import { safeNextPath } from "@/lib/safe-redirect";
 import { type FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ export function LoginForm() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [form, setForm] = useState<LoginFormState>(INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +93,11 @@ export function LoginForm() {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      return;
+    }
+
+    if (mode === "signup" && !acceptedTerms) {
+      setErrors({ form: "Para criar a conta, aceite os Termos de Uso e a Política de Privacidade." });
       return;
     }
 
@@ -137,6 +144,7 @@ export function LoginForm() {
           password: form.password,
           options: {
             emailRedirectTo,
+            data: { terms_accepted_at: new Date().toISOString(), terms_version: "2026-10-11" },
           },
         });
 
@@ -184,6 +192,7 @@ export function LoginForm() {
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setShowPassword(false);
+    setAcceptedTerms(false);
     setErrors({});
     setSuccessMessage(null);
   }
@@ -278,6 +287,29 @@ export function LoginForm() {
         </div>
       ) : null}
 
+      {mode === "signup" ? (
+        <div className="flex items-start gap-2">
+          <input
+            id="accept-terms"
+            type="checkbox"
+            checked={acceptedTerms}
+            onChange={(event) => setAcceptedTerms(event.target.checked)}
+            className="mt-1 size-4 shrink-0 accent-amber-400"
+          />
+          <label htmlFor="accept-terms" className="text-sm text-zinc-300">
+            Li e concordo com os{" "}
+            <Link href="/termos" target="_blank" className="text-amber-300 underline hover:text-amber-200">
+              Termos de Uso
+            </Link>{" "}
+            e a{" "}
+            <Link href="/privacidade" target="_blank" className="text-amber-300 underline hover:text-amber-200">
+              Política de Privacidade
+            </Link>
+            .
+          </label>
+        </div>
+      ) : null}
+
       <Button
         type="submit"
         className="h-11 w-full bg-amber-400 text-zinc-950 hover:bg-amber-300"
@@ -308,6 +340,15 @@ export function LoginForm() {
             ? "Crie sua conta para acessar o sistema."
             : "Informe o e-mail para receber o link de recuperacao."}
       </p>
+
+      <div className="flex justify-center gap-4 text-xs text-zinc-400">
+        <Link href="/termos" className="hover:text-zinc-200">
+          Termos de Uso
+        </Link>
+        <Link href="/privacidade" className="hover:text-zinc-200">
+          Política de Privacidade
+        </Link>
+      </div>
     </form>
   );
 }
