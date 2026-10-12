@@ -167,7 +167,7 @@ export async function createAppointmentAction(
     return { success: false, message: "Status de agendamento invalido." };
   }
 
-  const { supabase, companyId, role, errorMessage } = await getCompanyScope();
+  const { supabase, companyId, role, errorMessage, employeeId: ownEmployeeId } = await getCompanyScope();
 
   if (!companyId || !role) {
     return {
@@ -181,6 +181,10 @@ export async function createAppointmentAction(
       success: false,
       message: "Seu perfil nao tem permissao para criar agendamentos.",
     };
+  }
+
+  if (role === "employee" && ownEmployeeId && employeeId !== ownEmployeeId) {
+    return { success: false, message: "Voce so pode gerenciar seus proprios atendimentos." };
   }
 
   let customerId: string | null = customerIdInput || null;
@@ -359,7 +363,7 @@ export async function updateAppointmentAction(
     return { success: false, message: "Status de agendamento invalido." };
   }
 
-  const { supabase, companyId, role, errorMessage } = await getCompanyScope();
+  const { supabase, companyId, role, errorMessage, employeeId: ownEmployeeId } = await getCompanyScope();
 
   if (!companyId || !role) {
     return {
@@ -373,6 +377,19 @@ export async function updateAppointmentAction(
       success: false,
       message: "Seu perfil nao tem permissao para atualizar agendamentos.",
     };
+  }
+
+  if (role === "employee" && ownEmployeeId) {
+    const { data: existing } = await supabase
+      .from("appointments")
+      .select("employee_id")
+      .eq("id", id)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (employeeId !== ownEmployeeId || !existing || existing.employee_id !== ownEmployeeId) {
+      return { success: false, message: "Voce so pode gerenciar seus proprios atendimentos." };
+    }
   }
 
   let customerId: string | null = customerIdInput || null;

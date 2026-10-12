@@ -1,4 +1,6 @@
 import { FileBarChart2 } from "lucide-react";
+import { redirect } from "next/navigation";
+import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { monthStartInputValue, todayInputValue } from "@/lib/datetime";
 type SearchParams = {
@@ -23,6 +25,16 @@ export default async function RelatoriosPage({
 }: {
   searchParams?: Promise<SearchParams>;
 }) {
+  const { companyId, role, redirectTo } = await getAccessContext();
+
+  if (!companyId || !role) {
+    redirect(redirectTo ?? "/login");
+  }
+
+  if (!isAdmin(role)) {
+    redirect("/painel");
+  }
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const defaultStart = monthStartInputValue();
   const defaultEnd = todayInputValue();

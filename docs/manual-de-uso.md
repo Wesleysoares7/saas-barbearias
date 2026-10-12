@@ -17,7 +17,9 @@ Principais recursos:
 Existem tres papeis:
 - master: acesso global da plataforma para visao de todas as empresas
 - admin: acesso completo aos modulos
-- employee: acesso limitado (agendamentos e relatorios)
+- admin (Administrador): acesso completo, incluindo financeiro e relatorios
+- employee com cadastro de funcionario (Funcionario): ve so os proprios atendimentos no Dashboard e em Agendamentos, cria e edita apenas agendamentos proprios e acompanha a propria comissao em Minha comissao. Nao acessa financeiro nem relatorios da empresa
+- employee sem cadastro de funcionario (Recepcao): agenda geral da empresa, sem nenhum valor financeiro
 
 ## 3. Requisitos para rodar
 - Node.js 22+ (recomendado)

@@ -99,7 +99,7 @@ type AppointmentSlot = {
 };
 
 export default async function AgendamentosPage() {
-  const { supabase, companyId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, employeeId } = await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -114,18 +114,32 @@ export default async function AgendamentosPage() {
   const canDeleteAppointment = canPerformAction(role, "agendamentos", "delete");
   const canCompleteAndCharge = canPerformAction(role, "financeiro", "create");
 
+  const ownEmployeeId = role === "employee" ? employeeId : null;
+
+  let employeesQuery = supabase
+    .from("employees")
+    .select("id, nome")
+    .eq("company_id", companyId)
+    .eq("ativo", true);
+  let appointmentsQuery = supabase
+    .from("appointments")
+    .select(
+      "id, customer_id, cliente_nome, cliente_telefone, employee_id, service_id, data_hora, data_hora_fim, status, observacoes",
+    )
+    .eq("company_id", companyId);
+
+  if (ownEmployeeId) {
+    employeesQuery = employeesQuery.eq("id", ownEmployeeId);
+    appointmentsQuery = appointmentsQuery.eq("employee_id", ownEmployeeId);
+  }
+
   const [
     employeesResponse,
     servicesResponse,
     customersResponse,
     appointmentsResponse,
   ] = await Promise.all([
-    supabase
-      .from("employees")
-      .select("id, nome")
-      .eq("company_id", companyId)
-      .eq("ativo", true)
-      .order("nome", { ascending: true }),
+    employeesQuery.order("nome", { ascending: true }),
     supabase
       .from("services")
       .select("id, nome, duracao, valor")
@@ -139,13 +153,7 @@ export default async function AgendamentosPage() {
       .eq("ativo", true)
       .order("nome", { ascending: true })
       .limit(1000),
-    supabase
-      .from("appointments")
-      .select(
-        "id, customer_id, cliente_nome, cliente_telefone, employee_id, service_id, data_hora, data_hora_fim, status, observacoes",
-      )
-      .eq("company_id", companyId)
-      .order("data_hora", { ascending: true }),
+    appointmentsQuery.order("data_hora", { ascending: true }),
   ]);
 
   const employees: OptionItem[] = (employeesResponse.data ??

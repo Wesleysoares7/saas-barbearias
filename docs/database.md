@@ -29,6 +29,7 @@ Banco PostgreSQL no Supabase com arquitetura multi-tenant por empresa.
 - `docs/database/018_etapa_onboarding_atomico.sql` (funcao `create_company_with_admin`)
 - `docs/database/019_etapa_fechar_criacao_direta.sql` (remove criacao direta de empresa/admin)
 - `docs/database/020_etapa_status_conta.sql` (status da conta: trial, active, past_due, suspended, canceled)
+- `docs/database/021_etapa_convite_funcionario.sql` (convite com dados de funcionario e funcao accept_team_invite)
 
 ## Estrategia multi-tenant
 - Todas as tabelas de dominio terao company_id.

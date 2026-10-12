@@ -29,7 +29,8 @@ type ModuleKey =
   | "auditoria"
   | "notificacoes"
   | "clientes"
-  | "estoque";
+  | "estoque"
+  | "minha_comissao";
 type ModuleAction =
   | "read"
   | "create"
@@ -55,6 +56,8 @@ export type AccessContext = {
   billing: BillingState | null;
   supportMode: boolean;
   supportCompanyName: string | null;
+  employeeId: string | null;
+  employeeCommissionPercent: number | null;
   userEmail: string | null;
 };
 
@@ -66,12 +69,20 @@ type PlatformAccessContext = {
   redirectTo: "/login" | "/painel" | null;
 };
 
-export function canAccessModule(role: UserRole, moduleKey: ModuleKey): boolean {
+export function canAccessModule(
+  role: UserRole,
+  moduleKey: ModuleKey,
+  employeeId: string | null = null,
+): boolean {
   if (role === "admin") {
-    return true;
+    return moduleKey !== "minha_comissao";
   }
 
-  return moduleKey === "agendamentos" || moduleKey === "relatorios";
+  if (moduleKey === "minha_comissao") {
+    return Boolean(employeeId);
+  }
+
+  return moduleKey === "agendamentos";
 }
 
 export function canPerformAction(
@@ -85,10 +96,6 @@ export function canPerformAction(
 
   if (moduleKey === "agendamentos") {
     return action === "read" || action === "create" || action === "update";
-  }
-
-  if (moduleKey === "relatorios") {
-    return action === "read" || action === "export";
   }
 
   return false;
@@ -156,6 +163,8 @@ export async function getAccessContext(): Promise<AccessContext> {
       billing: null,
       supportMode: false,
       supportCompanyName: null,
+      employeeId: null,
+      employeeCommissionPercent: null,
       userEmail: null,
     };
   }
@@ -189,6 +198,8 @@ export async function getAccessContext(): Promise<AccessContext> {
           billing: resolveBillingState(supportCompany as unknown as BillingRow),
           supportMode: true,
           supportCompanyName: supportCompany.nome as string,
+          employeeId: null,
+          employeeCommissionPercent: null,
           userEmail: user.email ?? null,
         };
       }
@@ -212,11 +223,13 @@ export async function getAccessContext(): Promise<AccessContext> {
       billing: null,
       supportMode: false,
       supportCompanyName: null,
+      employeeId: null,
+      employeeCommissionPercent: null,
       userEmail: user.email ?? null,
     };
   }
 
-  const [{ data: profile, error: profileError }, companyBillingResponse] =
+  const [{ data: profile, error: profileError }, companyBillingResponse, employeeResponse] =
     await Promise.all([
       supabase
         .from("profiles")
@@ -228,6 +241,14 @@ export async function getAccessContext(): Promise<AccessContext> {
         .from("companies")
         .select(BILLING_SELECT)
         .eq("id", companyId)
+        .maybeSingle(),
+      supabase
+        .from("employees")
+        .select("id, percentual_comissao")
+        .eq("company_id", companyId)
+        .eq("user_id", user.id)
+        .eq("ativo", true)
+        .limit(1)
         .maybeSingle(),
     ]);
 
@@ -256,6 +277,8 @@ export async function getAccessContext(): Promise<AccessContext> {
       billing,
       supportMode: false,
       supportCompanyName: null,
+      employeeId: null,
+      employeeCommissionPercent: null,
       userEmail: user.email ?? null,
     };
   }
@@ -274,6 +297,8 @@ export async function getAccessContext(): Promise<AccessContext> {
       billing: null,
       supportMode: false,
       supportCompanyName: null,
+      employeeId: null,
+      employeeCommissionPercent: null,
       userEmail: user.email ?? null,
     };
   }
@@ -289,6 +314,11 @@ export async function getAccessContext(): Promise<AccessContext> {
     billing,
     supportMode: false,
     supportCompanyName: null,
+    employeeId: (employeeResponse.data?.id as string | undefined) ?? null,
+    employeeCommissionPercent:
+      employeeResponse.data?.percentual_comissao === null || employeeResponse.data?.percentual_comissao === undefined
+        ? null
+        : Number(employeeResponse.data.percentual_comissao),
     userEmail: user.email ?? null,
   };
 }

@@ -6,7 +6,8 @@ import { useState } from "react";
 type PeriodPickerProps = {
   start: string;
   end: string;
-  aba: string;
+  aba?: string;
+  basePath?: string;
 };
 
 function toInputValue(date: Date): string {
@@ -29,16 +30,20 @@ const CHIP_ACTIVE = `${CHIP_CLASS} border-brand bg-brand/15 text-brand`;
 const DATE_INPUT_CLASS =
   "min-h-11 w-full min-w-0 rounded-lg border border-border bg-surface px-3 text-base text-foreground outline-none focus:border-brand";
 
-export function PeriodPicker({ start, end, aba }: PeriodPickerProps) {
+export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" }: PeriodPickerProps) {
   const router = useRouter();
   const [custom, setCustom] = useState(false);
   const [customStart, setCustomStart] = useState(start);
   const [customEnd, setCustomEnd] = useState(end);
 
   function go(nextStart: string, nextEnd: string) {
-    const params = new URLSearchParams({ aba, start: nextStart, end: nextEnd });
+    const params = new URLSearchParams({ start: nextStart, end: nextEnd });
 
-    router.push(`/painel/financeiro?${params.toString()}`);
+    if (aba) {
+      params.set("aba", aba);
+    }
+
+    router.push(`${basePath}?${params.toString()}`);
   }
 
   function pick(kind: "hoje" | "7dias" | "mes" | "passado") {

@@ -38,7 +38,8 @@ export type SidebarNavItem = {
     | "estoque"
     | "equipe"
     | "auditoria"
-    | "notificacoes";
+    | "notificacoes"
+    | "minha_comissao";
 };
 
 type SidebarNavProps = {
@@ -69,6 +70,7 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
     equipe: Users,
     auditoria: Shield,
     notificacoes: BellRing,
+    minha_comissao: Wallet,
   };
 
   return icons[icon];
