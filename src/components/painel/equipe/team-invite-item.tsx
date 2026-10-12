@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 
-import { revokeTeamInviteAction } from "@/app/painel/equipe/actions";
+import { deleteTeamInviteAction, revokeTeamInviteAction } from "@/app/painel/equipe/actions";
 import { Button } from "@/components/ui/button";
 import { type UserRole } from "@/lib/auth/access";
 import { formatDateTimeBR } from "@/lib/datetime";
@@ -64,10 +64,23 @@ function formatDate(value: string): string {
 export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {
   const [state, revokeAction] = useActionState<ActionState, FormData>(revokeTeamInviteAction, INITIAL_STATE);
   const inviteLink = `/convites/${invite.token}`;
+  const [deleteState, setDeleteState] = useState<ActionState>(INITIAL_STATE);
+  const [isDeleting, startDelete] = useTransition();
+
+  function handleDelete() {
+    if (!window.confirm(`Excluir o convite de ${invite.email}? Esta acao nao pode ser desfeita.`)) {
+      return;
+    }
+
+    startDelete(async () => {
+      setDeleteState(await deleteTeamInviteAction(invite.id));
+    });
+  }
 
   async function handleCopyLink() {
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      const inviteUrl = `${window.location.origin}${inviteLink}`;
+      await navigator.clipboard.writeText(inviteUrl);
     } catch {
       // Sem bloqueio de UX; o link continua visivel para copia manual.
     }
@@ -75,16 +88,16 @@ export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {
 
   return (
     <article className="rounded-xl border border-border bg-surface-2 p-4">
-      {state.message ? (
+      {(deleteState.message || state.message) ? (
         <div className="mb-3" aria-live="polite">
           <div
             className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
-              state.success
+              (deleteState.message ? deleteState.success : state.success)
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
           >
-            {state.message}
+            {deleteState.message || state.message}
           </div>
         </div>
       ) : null}
@@ -108,10 +121,21 @@ export function TeamInviteItem({ invite }: { invite: TeamInviteItem }) {
           </Button>
 
           {invite.status === "pending" ? (
-            <form action={revokeAction}>
-              <input type="hidden" name="invite_id" value={invite.id} />
-              <RevokeButton />
-            </form>
+            <>
+              <form action={revokeAction}>
+                <input type="hidden" name="invite_id" value={invite.id} />
+                <RevokeButton />
+              </form>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-9 border-rose-500/50 text-rose-300"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Excluindo..." : "Excluir"}
+              </Button>
+            </>
           ) : null}
         </div>
       </div>

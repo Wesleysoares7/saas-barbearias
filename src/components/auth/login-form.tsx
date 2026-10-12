@@ -138,7 +138,8 @@ export function LoginForm() {
       }
 
       if (mode === "signup") {
-        const emailRedirectTo = `${getPublicAppUrl()}/auth/confirm?next=/login`;
+        const signupNext = safeNextPath(searchParams.get("next"), "/login");
+        const emailRedirectTo = `${getPublicAppUrl()}/auth/confirm?next=${encodeURIComponent(signupNext)}`;
         const { data, error } = await supabase.auth.signUp({
           email: form.email.trim(),
           password: form.password,
@@ -154,7 +155,7 @@ export function LoginForm() {
         }
 
         if (data.session) {
-          router.replace("/painel");
+          router.replace(signupNext === "/login" ? "/painel" : signupNext);
           router.refresh();
           return;
         }

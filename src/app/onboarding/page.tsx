@@ -25,6 +25,24 @@ export default async function OnboardingPage() {
     redirect("/master/empresas");
   }
 
+  const userEmail = (user.email ?? "").toLowerCase();
+
+  if (userEmail) {
+    const { data: pendingInvite } = await supabase
+      .from("team_invites")
+      .select("token")
+      .eq("email", userEmail)
+      .eq("status", "pending")
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (pendingInvite?.token) {
+      redirect(`/convites/${pendingInvite.token}`);
+    }
+  }
+
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 px-4 py-8">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.25),_transparent_45%),radial-gradient(circle_at_bottom,_rgba(255,255,255,0.08),_transparent_40%)]" />

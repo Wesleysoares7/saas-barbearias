@@ -334,3 +334,52 @@ export async function revokeTeamInviteAction(_prevState: ActionState, formData: 
   revalidatePath("/painel/equipe");
   return { success: true, message: "Convite revogado com sucesso." };
 }
+
+export async function deleteTeamInviteAction(inviteId: string): Promise<ActionState> {
+  const id = sanitizeText(inviteId);
+
+  if (!id) {
+    return { success: false, message: "Convite invalido para exclusao." };
+  }
+
+  const { supabase, userId, companyId, role, errorMessage } = await getAccessContext();
+
+  if (!companyId || !userId || !role) {
+    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(role)) {
+    return { success: false, message: "Apenas administradores podem excluir convites." };
+  }
+
+  const { data: deleted, error } = await supabase
+    .from("team_invites")
+    .delete()
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .eq("status", "pending")
+    .select("id");
+
+  if (error) {
+    return {
+      success: false,
+      message: friendlyDbError(error, "Nao foi possivel excluir convite. Tente novamente."),
+    };
+  }
+
+  if (!deleted || deleted.length === 0) {
+    return { success: false, message: "Convite nao encontrado ou nao esta mais pendente." };
+  }
+
+  await writeAuditLog({
+    supabase,
+    companyId,
+    actorId: userId,
+    action: "team_invite_deleted",
+    entity: "team_invites",
+    entityId: id,
+  });
+
+  revalidatePath("/painel/equipe");
+  return { success: true, message: "Convite excluido com sucesso." };
+}
