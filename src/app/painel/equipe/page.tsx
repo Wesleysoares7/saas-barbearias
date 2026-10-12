@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import { PageHeader } from "@/components/painel/ui/page-header";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { CreateTeamInviteForm } from "@/components/painel/equipe/create-team-invite-form";
@@ -23,6 +24,7 @@ type TeamInviteRow = {
   status: InviteStatus;
   token: string;
   expires_at: string;
+  atende_clientes: boolean | null;
 };
 
 export default async function EquipePage() {
@@ -44,9 +46,26 @@ export default async function EquipePage() {
 
   const invitesResponse = await supabase
     .from("team_invites")
-    .select("id, email, role, status, token, expires_at")
+    .select("id, email, role, status, token, expires_at, atende_clientes")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
+
+  const { data: company } = await supabase.from("companies").select("nome").eq("id", companyId).maybeSingle();
+  const companyName = (company?.nome as string | undefined) ?? "empresa";
+
+  const requestHeaders = await headers();
+  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const proto = requestHeaders.get("x-forwarded-proto") ?? "https";
+  const baseUrl = (host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL ?? "")).replace(/\/+$/, "");
+
+  const { data: employeeRows } = await supabase
+    .from("employees")
+    .select("user_id, email")
+    .eq("company_id", companyId);
+
+  const employeeUserIds = new Set(
+    ((employeeRows ?? []) as { user_id: string | null }[]).map((row) => row.user_id).filter((value): value is string => Boolean(value)),
+  );
 
   const members = (profiles ?? []) as TeamMemberRow[];
   const invites = (invitesResponse.data ?? []) as TeamInviteRow[];
@@ -66,7 +85,13 @@ export default async function EquipePage() {
           ) : (
             <div className="space-y-3">
               {members.map((member) => (
-                <TeamMemberRoleForm key={member.id} member={member} isCurrentUser={member.id === userId} />
+                <TeamMemberRoleForm
+                  key={member.id}
+                  member={member}
+                  isCurrentUser={member.id === userId}
+                  isEmployee={employeeUserIds.has(member.id)}
+                  canManage={role === "admin"}
+                />
               ))}
             </div>
           )}
@@ -92,6 +117,8 @@ export default async function EquipePage() {
                   {invites.map((invite) => (
                     <TeamInviteItem
                       key={invite.id}
+                      baseUrl={baseUrl}
+                      companyName={companyName}
                       invite={{
                         id: invite.id,
                         email: invite.email,
@@ -99,6 +126,7 @@ export default async function EquipePage() {
                         status: invite.status,
                         token: invite.token,
                         expiresAt: invite.expires_at,
+                        atendeClientes: Boolean(invite.atende_clientes),
                       }}
                     />
                   ))}

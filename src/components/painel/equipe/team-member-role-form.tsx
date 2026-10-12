@@ -1,9 +1,9 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 
-import { updateMemberRoleAction } from "@/app/painel/equipe/actions";
+import { addMemberAsEmployeeAction, updateMemberRoleAction } from "@/app/painel/equipe/actions";
 import { type UserRole } from "@/lib/auth/access";
 import { Button } from "@/components/ui/button";
 
@@ -37,26 +37,39 @@ function SubmitButton() {
 export function TeamMemberRoleForm({
   member,
   isCurrentUser,
+  isEmployee,
+  canManage,
 }: {
   member: TeamMember;
   isCurrentUser: boolean;
+  isEmployee: boolean;
+  canManage: boolean;
 }) {
+  const [addState, setAddState] = useState<ActionState>(INITIAL_STATE);
+  const [isAdding, startAdd] = useTransition();
+
+  function handleAddEmployee() {
+    startAdd(async () => {
+      setAddState(await addMemberAsEmployeeAction(member.id));
+    });
+  }
+
   const [state, formAction] = useActionState<ActionState, FormData>(updateMemberRoleAction, INITIAL_STATE);
   const [isEditing, setIsEditing] = useState(false);
   const shouldShowEditForm = isEditing || (!state.success && Boolean(state.message));
 
   return (
     <article className="rounded-xl border border-border bg-surface-2 p-4">
-      {state.message ? (
+      {(addState.message || state.message) ? (
         <div className="mb-3" aria-live="polite">
           <div
             className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
-              state.success
+              (addState.message ? addState.success : state.success)
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
           >
-            {state.message}
+            {addState.message || state.message}
           </div>
         </div>
       ) : null}
@@ -64,6 +77,26 @@ export function TeamMemberRoleForm({
       <div className="mb-3">
         <p className="text-sm font-semibold text-zinc-100">{member.nome}</p>
         <p className="text-xs text-zinc-400">{member.email}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span
+            className={`rounded-full border px-2 py-0.5 text-xs ${
+              isEmployee || addState.success ? "border-brand/40 bg-brand/15 text-brand" : "border-border text-zinc-400"
+            }`}
+          >
+            {isEmployee || addState.success ? "Funcionario" : "Sem cadastro de funcionario"}
+          </span>
+          {canManage && !isEmployee && !addState.success ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 border-border text-zinc-100 sm:min-h-9"
+              onClick={handleAddEmployee}
+              disabled={isAdding}
+            >
+              {isAdding ? "Adicionando..." : "Adicionar aos funcionarios"}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       {shouldShowEditForm ? (
@@ -97,8 +130,10 @@ export function TeamMemberRoleForm({
       ) : (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs text-zinc-400">Papel atual</p>
-            <p className="text-sm text-zinc-100">{member.role === "admin" ? "Administrador" : "Equipe"}</p>
+            <p className="text-xs text-zinc-400">Perfil atual</p>
+            <p className="text-sm text-zinc-100">
+              {member.role === "admin" ? "Administrador" : isEmployee || addState.success ? "Funcionario" : "Recepcao"}
+            </p>
           </div>
 
           {!isCurrentUser ? (

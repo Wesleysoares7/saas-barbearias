@@ -22,6 +22,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
     billing,
     userId: contextUserId,
     userEmail: contextUserEmail,
+    employeeId,
   } = await getAccessContext();
 
   if (!companyId || !role) {
@@ -46,12 +47,26 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
       section: "Operacao",
       icon: "agendamentos" as const,
     },
-    {
-      href: "/painel/relatorios",
-      label: "Relatorios",
-      section: "Operacao",
-      icon: "relatorios" as const,
-    },
+    ...(role === "admin"
+      ? [
+          {
+            href: "/painel/relatorios",
+            label: "Relatorios",
+            section: "Operacao",
+            icon: "relatorios" as const,
+          },
+        ]
+      : []),
+    ...(canAccessModule(role, "minha_comissao", employeeId)
+      ? [
+          {
+            href: "/painel/minha-comissao",
+            label: "Minha comissao",
+            section: "Operacao",
+            icon: "minha_comissao" as const,
+          },
+        ]
+      : []),
     ...(canAccessModule(role, "clientes")
       ? [
           {

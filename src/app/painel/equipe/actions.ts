@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { randomUUID } from "node:crypto";
 
 import { getAccessContext, isAdmin, type UserRole } from "@/lib/auth/access";
+import { parseMoneyBR } from "@/lib/money";
 import { notifySensitiveEvent } from "@/lib/notifications/sensitive-events";
 
 type ActionState = {
@@ -51,6 +52,43 @@ function sanitizeText(value: FormDataEntryValue | null): string {
   }
 
   return value.trim();
+}
+
+type InviteExtras = {
+  nome: string | null;
+  atendeClientes: boolean;
+  telefone: string | null;
+  comissao: number | null;
+};
+
+function parseInviteExtras(formData: FormData): { error: string } | { extras: InviteExtras } {
+  const nome = sanitizeText(formData.get("nome"));
+
+  if (nome.length > 120) {
+    return { error: "Nome do membro deve ter no maximo 120 caracteres." };
+  }
+
+  const atendeClientes = formData.get("atende_clientes") === "on";
+  const telefone = sanitizeText(formData.get("telefone")).replace(/\D/g, "").slice(0, 30);
+  const comissaoRaw = sanitizeText(formData.get("comissao"));
+  let comissao: number | null = null;
+
+  if (comissaoRaw) {
+    comissao = parseMoneyBR(comissaoRaw);
+
+    if (comissao === null || comissao < 0 || comissao > 100) {
+      return { error: "Comissao deve ficar entre 0 e 100." };
+    }
+  }
+
+  return {
+    extras: {
+      nome: nome || null,
+      atendeClientes,
+      telefone: atendeClientes ? telefone || null : null,
+      comissao: atendeClientes ? comissao : null,
+    },
+  };
 }
 
 function isRole(value: string): value is UserRole {
@@ -162,6 +200,14 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
     return { success: false, message: "Papel de acesso invalido para convite." };
   }
 
+  const parsedExtras = parseInviteExtras(formData);
+
+  if ("error" in parsedExtras) {
+    return { success: false, message: parsedExtras.error };
+  }
+
+  const { extras } = parsedExtras;
+
   const { supabase, userId, companyId, role, errorMessage } = await getAccessContext();
 
   if (!companyId || !userId || !role) {
@@ -202,6 +248,10 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
         token,
         expires_at: expiresAt,
         invited_by: userId,
+        nome: extras.nome,
+        telefone: extras.telefone,
+        percentual_comissao: extras.comissao,
+        atende_clientes: extras.atendeClientes,
       })
       .eq("id", pendingInvite.id)
       .eq("company_id", companyId);
@@ -238,15 +288,23 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
     return { success: true, message: "Convite pendente atualizado com sucesso." };
   }
 
-  const { error } = await supabase.from("team_invites").insert({
-    company_id: companyId,
-    email,
-    role: roleInput,
-    token,
-    invited_by: userId,
-    status: "pending",
-    expires_at: expiresAt,
-  });
+  const { data: createdInvite, error } = await supabase
+    .from("team_invites")
+    .insert({
+      company_id: companyId,
+      email,
+      role: roleInput,
+      token,
+      invited_by: userId,
+      status: "pending",
+      expires_at: expiresAt,
+      nome: extras.nome,
+      telefone: extras.telefone,
+      percentual_comissao: extras.comissao,
+      atende_clientes: extras.atendeClientes,
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return {
@@ -261,7 +319,7 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
     actorId: userId,
     action: "team_invite_created",
     entity: "team_invites",
-    entityId: token,
+    entityId: createdInvite.id as string,
     metadata: { email, role: roleInput },
   });
 
@@ -273,7 +331,7 @@ export async function createTeamInviteAction(_prevState: ActionState, formData: 
     title: "Novo convite de equipe criado",
     message: `Um novo convite foi gerado para ${email}.`,
     severity: "warning",
-    metadata: { email, role: roleInput, token },
+    metadata: { email, role: roleInput, inviteId: createdInvite.id },
   });
 
   revalidatePath("/painel/equipe");
@@ -382,4 +440,111 @@ export async function deleteTeamInviteAction(inviteId: string): Promise<ActionSt
 
   revalidatePath("/painel/equipe");
   return { success: true, message: "Convite excluido com sucesso." };
+}
+
+export async function addMemberAsEmployeeAction(memberId: string): Promise<ActionState> {
+  const id = sanitizeText(memberId);
+
+  if (!id) {
+    return { success: false, message: "Membro invalido." };
+  }
+
+  const { supabase, userId, companyId, role, errorMessage } = await getAccessContext();
+
+  if (!companyId || !userId || !role) {
+    return { success: false, message: errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(role)) {
+    return { success: false, message: "Apenas administradores podem adicionar funcionarios." };
+  }
+
+  const { data: member } = await supabase
+    .from("profiles")
+    .select("id, nome, email")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (!member) {
+    return { success: false, message: "Membro nao encontrado na sua empresa." };
+  }
+
+  const { data: linked } = await supabase
+    .from("employees")
+    .select("id")
+    .eq("company_id", companyId)
+    .eq("user_id", id)
+    .limit(1)
+    .maybeSingle();
+
+  if (linked) {
+    return { success: true, message: "Este membro ja esta cadastrado como funcionario." };
+  }
+
+  const memberEmail = ((member.email as string | null) ?? "").toLowerCase();
+  let employeeId: string | null = null;
+
+  if (memberEmail) {
+    const { data: unlinked } = await supabase
+      .from("employees")
+      .select("id")
+      .eq("company_id", companyId)
+      .is("user_id", null)
+      .ilike("email", memberEmail)
+      .limit(1)
+      .maybeSingle();
+
+    if (unlinked) {
+      const { error: linkError } = await supabase
+        .from("employees")
+        .update({ user_id: id })
+        .eq("id", unlinked.id)
+        .eq("company_id", companyId);
+
+      if (linkError) {
+        return { success: false, message: friendlyDbError(linkError, "Nao foi possivel vincular o funcionario. Tente novamente.") };
+      }
+
+      employeeId = unlinked.id as string;
+    }
+  }
+
+  if (!employeeId) {
+    const { data: created, error: insertError } = await supabase
+      .from("employees")
+      .insert({
+        company_id: companyId,
+        user_id: id,
+        nome: member.nome,
+        email: memberEmail || null,
+        percentual_comissao: null,
+        ativo: true,
+      })
+      .select("id")
+      .single();
+
+    if (insertError) {
+      return { success: false, message: friendlyDbError(insertError, "Nao foi possivel adicionar aos funcionarios. Tente novamente.") };
+    }
+
+    employeeId = created.id as string;
+  }
+
+  const { error: auditError } = await supabase.from("audit_logs").insert({
+    company_id: companyId,
+    actor_id: userId,
+    action: "member_added_as_employee",
+    entity: "employees",
+    entity_id: employeeId,
+    metadata: { memberId: id },
+  });
+
+  if (auditError) {
+    console.error("member_added_as_employee_audit", auditError.code);
+  }
+
+  revalidatePath("/painel/equipe");
+  revalidatePath("/painel/funcionarios");
+  return { success: true, message: "Membro adicionado aos funcionarios." };
 }

@@ -70,7 +70,7 @@ function getStatusLabel(status: AppointmentStatus): string {
 }
 
 export default async function PainelPage() {
-  const { supabase, companyId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, employeeId } = await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -83,6 +83,93 @@ export default async function PainelPage() {
   const startOfMonth = startOfDayIso(monthStartInputValue(now));
   const endOfMonth = endOfDayIso(monthEndInputValue(now));
 
+  if (role === "employee") {
+    let apptQuery = supabase
+      .from("appointments")
+      .select("id, cliente_nome, data_hora, status")
+      .eq("company_id", companyId)
+      .gte("data_hora", startOfDay)
+      .lte("data_hora", endOfDay)
+      .order("data_hora", { ascending: true });
+
+    if (employeeId) {
+      apptQuery = apptQuery.eq("employee_id", employeeId);
+    }
+
+    const sumCommission = async (from: string, to: string): Promise<number> => {
+      if (!employeeId) {
+        return 0;
+      }
+
+      const { data } = await supabase
+        .from("payments")
+        .select("valor_comissao, appointments!inner(employee_id)")
+        .eq("company_id", companyId)
+        .eq("appointments.employee_id", employeeId)
+        .gte("created_at", from)
+        .lte("created_at", to);
+
+      return roundToTwo(
+        ((data ?? []) as Array<{ valor_comissao: number | null }>).reduce(
+          (sum, row) => sum + Number(row.valor_comissao ?? 0),
+          0,
+        ),
+      );
+    };
+
+    const [apptResponse, commissionToday, commissionMonth] = await Promise.all([
+      apptQuery,
+      sumCommission(startOfDay, endOfDay),
+      sumCommission(startOfMonth, endOfMonth),
+    ]);
+
+    const mine = (apptResponse.data ?? []) as AppointmentRow[];
+    const scheduled = mine.filter((item) => item.status === "agendado");
+    const concluded = mine.filter((item) => item.status === "concluido").length;
+    const upcoming = scheduled.filter((item) => new Date(item.data_hora).getTime() >= now.getTime());
+
+    return (
+      <div className="space-y-5">
+        <PageHeader
+          icon={LayoutDashboard}
+          title="Dashboard"
+          description={employeeId ? "Seus atendimentos de hoje." : "Visao rapida da agenda do dia."}
+        />
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <StatCard label={employeeId ? "Meus atendimentos hoje" : "Agendamentos hoje"} value={mine.length} icon={CalendarClock} />
+          <StatCard label="Agendados" value={scheduled.length} icon={Clock} tone="warning" />
+          <StatCard label="Concluidos" value={concluded} icon={CheckCircle2} tone="success" />
+          {employeeId ? (
+            <>
+              <StatCard label="Minha comissao hoje" value={formatCurrency(commissionToday)} icon={Wallet} tone="success" />
+              <StatCard label="Minha comissao no mes" value={formatCurrency(commissionMonth)} icon={Wallet} tone="success" />
+            </>
+          ) : null}
+        </div>
+
+        <Panel title={employeeId ? "Meus proximos atendimentos de hoje" : "Proximos atendimentos de hoje"}>
+          {upcoming.length === 0 ? (
+            <p className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted-foreground">
+              Nenhum agendamento pendente para hoje.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {upcoming.slice(0, 6).map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
+                >
+                  <p className="min-w-0 truncate text-sm font-medium text-foreground">{appointment.cliente_nome}</p>
+                  <p className="shrink-0 text-xs text-muted-foreground">{formatDateTime(appointment.data_hora)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </Panel>
+      </div>
+    );
+  }
   const [todayAppointmentsResponse, paymentsTodayResponse, servicesResponse, concludedMonthResponse] = await Promise.all([
     supabase
       .from("appointments")

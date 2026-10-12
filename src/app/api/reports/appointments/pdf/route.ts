@@ -1,4 +1,4 @@
-import { getAccessContext } from "@/lib/auth/access";
+import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { endOfDayIso, isDateInputValue, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
 import { generateReportPdf } from "@/lib/reports/pdf";
 
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const range = buildDateRange(url);
 
-  const { supabase, userId, companyId } = await getAccessContext();
+  const { supabase, userId, companyId, role } = await getAccessContext();
 
   if (!userId) {
     return Response.json({ error: "Nao autenticado." }, { status: 401 });
@@ -54,6 +54,10 @@ export async function GET(request: Request) {
 
   if (!companyId) {
     return Response.json({ error: "Empresa nao encontrada para este usuario." }, { status: 400 });
+  }
+
+  if (!isAdmin(role)) {
+    return Response.json({ error: "Apenas administradores podem exportar relatorios." }, { status: 403 });
   }
 
   const { data: appointmentsData, error: appointmentsError } = await supabase

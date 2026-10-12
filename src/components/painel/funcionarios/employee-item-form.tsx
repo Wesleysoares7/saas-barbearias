@@ -17,6 +17,7 @@ type EmployeeItem = {
   percentual_comissao: number | null;
   ativo: boolean;
   email?: string | null;
+  user_id?: string | null;
 };
 
 type ActionState = {
@@ -66,7 +67,12 @@ export function EmployeeItemForm({ employee }: { employee: EmployeeItem }) {
           value: employee.percentual_comissao === null || employee.percentual_comissao === undefined ? "-" : String(employee.percentual_comissao),
         },
       ]}
-      status={<StatusPill tone={employee.ativo ? "success" : "neutral"}>{employee.ativo ? "Ativo" : "Inativo"}</StatusPill>}
+      status={
+        <span className="inline-flex flex-wrap gap-1">
+          <StatusPill tone={employee.ativo ? "success" : "neutral"}>{employee.ativo ? "Ativo" : "Inativo"}</StatusPill>
+          {employee.user_id ? <StatusPill tone="brand">Com acesso ao sistema</StatusPill> : null}
+        </span>
+      }
       actions={
         <>
           <EditDialog
