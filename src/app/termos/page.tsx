@@ -16,7 +16,7 @@ export default function TermosPage() {
           barbearias, salões e negócios de beleza, com agenda, clientes,
           serviços, equipe, financeiro, estoque e relatórios. Ele é operado por{" "}
           {LEGAL.razaoSocial}, inscrito(a) sob o documento {LEGAL.documento},
-          com endereço em {LEGAL.endereco} (“nós”).
+          com sede em {LEGAL.endereco}.
         </p>
         <p>
           Ao criar uma conta ou usar a Plataforma, você concorda com estes
