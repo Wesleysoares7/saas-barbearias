@@ -167,6 +167,12 @@ export async function createAppointmentAction(
     return { success: false, message: "Status de agendamento invalido." };
   }
 
+  const formaPagamento = sanitizeText(formData.get("forma_pagamento"));
+
+  if (statusInput === "concluido" && !formaPagamento) {
+    return { success: false, message: "Selecione a forma de pagamento." };
+  }
+
   const { supabase, companyId, role, errorMessage, employeeId: ownEmployeeId } = await getCompanyScope();
 
   if (!companyId || !role) {
@@ -180,6 +186,13 @@ export async function createAppointmentAction(
     return {
       success: false,
       message: "Seu perfil nao tem permissao para criar agendamentos.",
+    };
+  }
+
+  if (statusInput === "concluido" && !canPerformAction(role, "financeiro", "create")) {
+    return {
+      success: false,
+      message: "Seu perfil nao tem permissao para registrar pagamentos.",
     };
   }
 
@@ -292,24 +305,78 @@ export async function createAppointmentAction(
     }
   }
 
-  const { error } = await supabase.from("appointments").insert({
-    company_id: companyId,
-    customer_id: customerId,
-    cliente_nome: clienteNome,
-    cliente_telefone: clienteTelefone || null,
-    employee_id: employeeId,
-    service_id: serviceId,
-    data_hora: dataHora,
-    data_hora_fim: dataHoraFim,
-    status: statusInput,
-    observacoes: observacoes || null,
-  });
+  let paymentCalc: Extract<PaymentCalcResult, { ok: true }> = {
+    ok: true,
+    valor: 0,
+    percentualComissao: 0,
+    valorComissao: 0,
+  };
 
-  if (error) {
+  if (statusInput === "concluido") {
+    const calc = await calculatePaymentValues(
+      supabase,
+      companyId,
+      serviceId,
+      employeeId,
+      formData.get("valor_final"),
+    );
+
+    if (!calc.ok) {
+      return { success: false, message: calc.message };
+    }
+
+    paymentCalc = calc;
+  }
+
+  const { data: created, error } = await supabase
+    .from("appointments")
+    .insert({
+      company_id: companyId,
+      customer_id: customerId,
+      cliente_nome: clienteNome,
+      cliente_telefone: clienteTelefone || null,
+      employee_id: employeeId,
+      service_id: serviceId,
+      data_hora: dataHora,
+      data_hora_fim: dataHoraFim,
+      status: statusInput,
+      observacoes: observacoes || null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !created) {
     return {
       success: false,
       message: friendlyDbError(error, "Nao foi possivel criar agendamento. Tente novamente."),
     };
+  }
+
+  if (statusInput === "concluido") {
+    const { error: paymentError } = await supabase.from("payments").insert({
+      company_id: companyId,
+      appointment_id: created.id,
+      valor: paymentCalc.valor,
+      forma_pagamento: formaPagamento,
+      percentual_comissao: paymentCalc.percentualComissao,
+      valor_comissao: paymentCalc.valorComissao,
+    });
+
+    if (paymentError) {
+      await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", created.id)
+        .eq("company_id", companyId);
+
+      return {
+        success: false,
+        message: friendlyDbError(paymentError, "Nao foi possivel registrar o pagamento. Tente novamente."),
+      };
+    }
+
+    revalidatePath("/painel");
+    revalidatePath("/painel/financeiro");
   }
 
   revalidatePath("/painel/agendamentos");
@@ -555,6 +622,61 @@ function sanitizeMoney(value: FormDataEntryValue | null): number {
   return Number.isFinite(parsedValue) ? parsedValue : Number.NaN;
 }
 
+type PaymentCalcResult =
+  | {
+      ok: true;
+      valor: number;
+      percentualComissao: number;
+      valorComissao: number;
+    }
+  | { ok: false; message: string };
+
+async function calculatePaymentValues(
+  supabase: Awaited<ReturnType<typeof getAccessContext>>["supabase"],
+  companyId: string,
+  serviceId: string,
+  employeeId: string,
+  valorFinalRaw: FormDataEntryValue | null,
+): Promise<PaymentCalcResult> {
+  const [{ data: service }, { data: employee }] = await Promise.all([
+    supabase
+      .from("services")
+      .select("id, valor")
+      .eq("id", serviceId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("employees")
+      .select("id, percentual_comissao")
+      .eq("id", employeeId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+  ]);
+
+  if (!service) {
+    return {
+      ok: false,
+      message: "Nao foi possivel obter dados do servico deste agendamento.",
+    };
+  }
+
+  const valorFinalParsed = sanitizeMoney(valorFinalRaw);
+  const valor =
+    sanitizeText(valorFinalRaw) && Number.isFinite(valorFinalParsed)
+      ? valorFinalParsed
+      : Number(service.valor);
+
+  if (!Number.isFinite(valor) || valor < 0) {
+    return { ok: false, message: "Informe um valor valido para o pagamento." };
+  }
+
+  const percentualComissao = Number(employee?.percentual_comissao ?? 0);
+  const valorComissao =
+    Math.round(((valor * percentualComissao) / 100) * 100) / 100;
+
+  return { ok: true, valor, percentualComissao, valorComissao };
+}
+
 // Fluxo em etapa unica: concluir o atendimento e registrar o pagamento juntos.
 // Supabase-js nao suporta transacao multi-tabela no client; em caso de falha ao
 // inserir o pagamento, a atualizacao do status e revertida (melhor esforco).
@@ -627,44 +749,19 @@ export async function completeAppointmentAndRegisterPaymentAction(
     };
   }
 
-  const [{ data: service }, { data: employee }] = await Promise.all([
-    supabase
-      .from("services")
-      .select("id, valor")
-      .eq("id", appointment.service_id)
-      .eq("company_id", companyId)
-      .maybeSingle(),
-    supabase
-      .from("employees")
-      .select("id, percentual_comissao")
-      .eq("id", appointment.employee_id)
-      .eq("company_id", companyId)
-      .maybeSingle(),
-  ]);
+  const paymentCalc = await calculatePaymentValues(
+    supabase,
+    companyId,
+    appointment.service_id,
+    appointment.employee_id,
+    formData.get("valor_final"),
+  );
 
-  if (!service) {
-    return {
-      success: false,
-      message: "Nao foi possivel obter dados do servico deste agendamento.",
-    };
+  if (!paymentCalc.ok) {
+    return { success: false, message: paymentCalc.message };
   }
 
-  const valorFinalParsed = sanitizeMoney(formData.get("valor_final"));
-  const valor =
-    valorFinalInput && Number.isFinite(valorFinalParsed)
-      ? valorFinalParsed
-      : Number(service.valor);
-
-  if (!Number.isFinite(valor) || valor < 0) {
-    return {
-      success: false,
-      message: "Informe um valor valido para o pagamento.",
-    };
-  }
-
-  const percentualComissao = Number(employee?.percentual_comissao ?? 0);
-  const valorComissao =
-    Math.round(((valor * percentualComissao) / 100) * 100) / 100;
+  const { valor, percentualComissao, valorComissao } = paymentCalc;
 
   const { error: updateError } = await supabase
     .from("appointments")
