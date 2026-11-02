@@ -11,6 +11,7 @@ export type ComboboxCustomer = {
 type CustomerComboboxProps = {
   customers: ComboboxCustomer[];
   onSelectionChange?: (customerId: string) => void;
+  optional?: boolean;
 };
 
 const INPUT_CLASS =
@@ -20,7 +21,7 @@ function fold(value: string): string {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
-export function CustomerCombobox({ customers, onSelectionChange }: CustomerComboboxProps) {
+export function CustomerCombobox({ customers, onSelectionChange, optional = false }: CustomerComboboxProps) {
   const listId = useId();
   const [text, setText] = useState("");
   const [phone, setPhone] = useState("");
@@ -85,7 +86,7 @@ export function CustomerCombobox({ customers, onSelectionChange }: CustomerCombo
     <>
       <div className="space-y-1 md:col-span-2">
         <label htmlFor={`${listId}-input`} className="text-sm text-zinc-200">
-          Cliente (nome ou telefone)
+          Cliente (nome ou telefone){optional ? " - opcional" : ""}
         </label>
         <div className="relative flex gap-2">
           <input
@@ -109,7 +110,7 @@ export function CustomerCombobox({ customers, onSelectionChange }: CustomerCombo
             onKeyDown={handleKeyDown}
             className={INPUT_CLASS}
             placeholder="Digite para buscar ou cadastrar"
-            required
+            required={!optional}
           />
           {selected ? (
             <button

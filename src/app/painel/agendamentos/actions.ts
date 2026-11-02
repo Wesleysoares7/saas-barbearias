@@ -6,13 +6,16 @@ import { revalidatePath } from "next/cache";
 import { calculateEndDateIso } from "@/lib/appointments/conflict";
 import { canPerformAction, getAccessContext, isAdmin } from "@/lib/auth/access";
 import { findOrCreateCustomer } from "@/lib/customers/find-or-create";
-import { localDateTimeToIso } from "@/lib/datetime";
+import { isoToLocalInputValue, localDateTimeToIso } from "@/lib/datetime";
 import { isPaymentMethod } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
   message: string;
 };
+
+const CUSTOMER_LINK_FAILED_MESSAGE =
+  "Agendamento criado, mas nao foi possivel cadastrar o cliente automaticamente.";
 
 type AppointmentStatus = "agendado" | "concluido" | "cancelado";
 
@@ -391,9 +394,43 @@ export async function createAppointmentAction(
   return {
     success: true,
     message: customerLinkFailed
-      ? "Agendamento criado, mas nao foi possivel cadastrar o cliente automaticamente."
+      ? CUSTOMER_LINK_FAILED_MESSAGE
       : "Agendamento criado com sucesso.",
   };
+}
+
+export async function createQuickAppointmentAction(
+  prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const quickData = new FormData();
+
+  const quickKeys = [
+    "employee_id",
+    "service_id",
+    "forma_pagamento",
+    "valor_final",
+    "customer_id",
+    "cliente_telefone",
+    "cliente_email",
+    "cliente_observacoes",
+  ];
+
+  for (const key of quickKeys) {
+    quickData.set(key, sanitizeText(formData.get(key)));
+  }
+
+  quickData.set("cliente_nome", sanitizeText(formData.get("cliente_nome")) || "Cliente avulso");
+  quickData.set("status", "concluido");
+  quickData.set("data_hora", isoToLocalInputValue(new Date().toISOString()));
+
+  const result = await createAppointmentAction(prevState, quickData);
+
+  if (!result.success || result.message === CUSTOMER_LINK_FAILED_MESSAGE) {
+    return result;
+  }
+
+  return { success: true, message: "Atendimento rapido registrado com sucesso." };
 }
 
 export async function updateAppointmentAction(
