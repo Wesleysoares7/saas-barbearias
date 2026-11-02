@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
+import { QuickAppointmentDialog } from "@/components/painel/agendamentos/quick-appointment-dialog";
 import {
   canAccessModule,
   canPerformAction,
@@ -194,6 +195,12 @@ export default async function AgendamentosPage() {
         description="Gerencie os agendamentos vinculados aos funcionarios e servicos da sua empresa."
         actions={
           <>
+            {canCreateAppointment &&
+              canCompleteAndCharge &&
+              employees.length > 0 &&
+              services.length > 0 && (
+                <QuickAppointmentDialog employees={employees} services={services} customers={customers} />
+              )}
             {canCreateAppointment &&
               employees.length > 0 &&
               services.length > 0 && (
