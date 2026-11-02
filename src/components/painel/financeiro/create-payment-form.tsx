@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { createPaymentAction } from "@/app/painel/financeiro/actions";
 import { formatDateTimeBR } from "@/lib/datetime";
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -44,6 +45,7 @@ function formatDateTimeLabel(iso: string): string {
 export function CreatePaymentForm({ appointments }: { appointments: AppointmentOption[] }) {
   const [state, formAction] = useActionState<ActionState, FormData>(createPaymentAction, INITIAL_STATE);
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>("");
+  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
 
   const appointmentById = useMemo(() => {
     return new Map(appointments.map((item) => [item.id, item]));
@@ -126,17 +128,24 @@ export function CreatePaymentForm({ appointments }: { appointments: AppointmentO
         </div>
 
         <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-pagamento-forma" className="text-sm text-zinc-200">
-            Forma de pagamento
-          </label>
-          <input
-            id="novo-pagamento-forma"
-            name="forma_pagamento"
-            type="text"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-            placeholder="Ex.: Pix, Cartao, Dinheiro"
-            required
-          />
+          <p className="text-sm text-zinc-200">Forma de pagamento</p>
+          <input type="hidden" name="forma_pagamento" value={formaPagamento} />
+          <div className="flex flex-wrap gap-2">
+            {PAYMENT_METHODS.map((method) => (
+              <button
+                key={method.value}
+                type="button"
+                onClick={() => setFormaPagamento(method.value)}
+                className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
+                  formaPagamento === method.value
+                    ? "border-amber-400 bg-amber-400/15 text-amber-200"
+                    : "border-border bg-surface text-zinc-300 hover:border-border"
+                }`}
+              >
+                {method.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="md:col-span-2 flex items-center justify-start gap-3">

@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { deletePaymentAction, updatePaymentAction } from "@/app/painel/financeiro/actions";
 import { formatDateTimeBR } from "@/lib/datetime";
+import { getPaymentMethodLabel, isPaymentMethod, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type PaymentItem = {
   id: string;
@@ -58,6 +59,9 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
   const [updateState, updateAction] = useActionState<ActionState, FormData>(updatePaymentAction, INITIAL_STATE);
   const [deleteState, deleteAction] = useActionState<ActionState, FormData>(deletePaymentAction, INITIAL_STATE);
   const [isEditing, setIsEditing] = useState(false);
+  const isLegacyMethod = !isPaymentMethod(payment.formaPagamento);
+  // Valor antigo fora da lista comeca sem selecao, forcando a escolha de uma opcao.
+  const [formaPagamento, setFormaPagamento] = useState<string>(isLegacyMethod ? "" : payment.formaPagamento);
   const shouldShowEditForm = isEditing || (!updateState.success && Boolean(updateState.message));
 
   return (
@@ -139,17 +143,29 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
           </div>
 
           <div className="space-y-1 md:col-span-2">
-            <label htmlFor={`pagamento-forma-${payment.id}`} className="text-sm text-zinc-200">
-              Forma de pagamento
-            </label>
-            <input
-              id={`pagamento-forma-${payment.id}`}
-              name="forma_pagamento"
-              type="text"
-              defaultValue={payment.formaPagamento}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-              required
-            />
+            <p className="text-sm text-zinc-200">Forma de pagamento</p>
+            <input type="hidden" name="forma_pagamento" value={formaPagamento} />
+            {isLegacyMethod ? (
+              <p className="text-xs text-zinc-400">
+                Valor atual: {getPaymentMethodLabel(payment.formaPagamento)}. Escolha uma das opcoes abaixo.
+              </p>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method.value}
+                  type="button"
+                  onClick={() => setFormaPagamento(method.value)}
+                  className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
+                    formaPagamento === method.value
+                      ? "border-amber-400 bg-amber-400/15 text-amber-200"
+                      : "border-border bg-surface text-zinc-300 hover:border-border"
+                  }`}
+                >
+                  {method.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-1 md:col-span-2">
@@ -180,7 +196,7 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
 
           <div className="space-y-1 md:col-span-2">
             <p className="text-xs text-zinc-400">Forma de pagamento</p>
-            <p className="text-sm text-zinc-100">{payment.formaPagamento}</p>
+            <p className="text-sm text-zinc-100">{getPaymentMethodLabel(payment.formaPagamento)}</p>
           </div>
 
           <div className="space-y-1 md:col-span-2">

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
+import { isPaymentMethod } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -106,6 +107,10 @@ function validateFinancialInput(params: {
 }): string | null {
   if (!params.formaPagamento) {
     return "Informe a forma de pagamento.";
+  }
+
+  if (!isPaymentMethod(params.formaPagamento)) {
+    return "Forma de pagamento invalida. Escolha uma das opcoes disponiveis.";
   }
 
   if (!Number.isFinite(params.valor) || params.valor < 0) {
