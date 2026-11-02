@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { completeAppointmentAndRegisterPaymentAction } from "@/app/painel/agendamentos/actions";
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -24,13 +25,6 @@ const INITIAL_STATE: ActionState = {
   success: false,
   message: "",
 };
-
-const PAYMENT_METHODS = [
-  { value: "pix", label: "Pix" },
-  { value: "cartao_credito", label: "Cartao credito" },
-  { value: "cartao_debito", label: "Cartao debito" },
-  { value: "dinheiro", label: "Dinheiro" },
-];
 
 function ConfirmButton() {
   const { pending } = useFormStatus();
@@ -67,7 +61,7 @@ export function CompleteAppointmentModal({
   onCompleted?: (message: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState("pix");
+  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
   const [handledMessage, setHandledMessage] = useState<string | null>(null);
   const [state, formAction] = useActionState<ActionState, FormData>(
     completeAppointmentAndRegisterPaymentAction,

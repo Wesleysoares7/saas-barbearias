@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { createAppointmentAction } from "@/app/painel/agendamentos/actions";
 import { calculateEndDateIso, hasEmployeeConflict, type AppointmentSlot } from "@/lib/appointments/conflict";
 import { localDateTimeToIso } from "@/lib/datetime";
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -49,6 +50,7 @@ export function CreateAppointmentForm({
 }) {
   const [clientError, setClientError] = useState<string | null>(null);
   const [status, setStatus] = useState("agendado");
+  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
   const [state, formAction] = useActionState<ActionState, FormData>(createAppointmentAction, INITIAL_STATE);
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
@@ -195,17 +197,24 @@ export function CreateAppointmentForm({
 
         {status === "concluido" ? (
           <div className="space-y-1">
-            <label htmlFor="novo-agendamento-forma-pagamento" className="text-sm text-zinc-200">
-              Forma de pagamento
-            </label>
-            <input
-              id="novo-agendamento-forma-pagamento"
-              name="forma_pagamento"
-              type="text"
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
-              placeholder="Ex.: Pix, Cartao, Dinheiro"
-              required
-            />
+            <p className="text-sm text-zinc-200">Forma de pagamento</p>
+            <input type="hidden" name="forma_pagamento" value={formaPagamento} />
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_METHODS.map((method) => (
+                <button
+                  key={method.value}
+                  type="button"
+                  onClick={() => setFormaPagamento(method.value)}
+                  className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
+                    formaPagamento === method.value
+                      ? "border-amber-400 bg-amber-400/15 text-amber-200"
+                      : "border-border bg-surface text-zinc-300 hover:border-border"
+                  }`}
+                >
+                  {method.label}
+                </button>
+              ))}
+            </div>
           </div>
         ) : null}
 

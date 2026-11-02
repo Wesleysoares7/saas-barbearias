@@ -7,6 +7,7 @@ import { calculateEndDateIso } from "@/lib/appointments/conflict";
 import { canPerformAction, getAccessContext, isAdmin } from "@/lib/auth/access";
 import { findOrCreateCustomer } from "@/lib/customers/find-or-create";
 import { localDateTimeToIso } from "@/lib/datetime";
+import { isPaymentMethod } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -171,6 +172,10 @@ export async function createAppointmentAction(
 
   if (statusInput === "concluido" && !formaPagamento) {
     return { success: false, message: "Selecione a forma de pagamento." };
+  }
+
+  if (statusInput === "concluido" && !isPaymentMethod(formaPagamento)) {
+    return { success: false, message: "Forma de pagamento invalida. Escolha uma das opcoes disponiveis." };
   }
 
   const { supabase, companyId, role, errorMessage, employeeId: ownEmployeeId } = await getCompanyScope();
@@ -695,6 +700,10 @@ export async function completeAppointmentAndRegisterPaymentAction(
 
   if (!formaPagamento) {
     return { success: false, message: "Selecione a forma de pagamento." };
+  }
+
+  if (!isPaymentMethod(formaPagamento)) {
+    return { success: false, message: "Forma de pagamento invalida. Escolha uma das opcoes disponiveis." };
   }
 
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
