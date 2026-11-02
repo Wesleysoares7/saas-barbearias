@@ -48,6 +48,7 @@ export function CreateAppointmentForm({
   appointmentSlots: AppointmentSlot[];
 }) {
   const [clientError, setClientError] = useState<string | null>(null);
+  const [status, setStatus] = useState("agendado");
   const [state, formAction] = useActionState<ActionState, FormData>(createAppointmentAction, INITIAL_STATE);
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
@@ -182,6 +183,7 @@ export function CreateAppointmentForm({
             id="novo-agendamento-status"
             name="status"
             defaultValue="agendado"
+            onChange={(event) => setStatus(event.target.value)}
             className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
             required
           >
@@ -190,6 +192,22 @@ export function CreateAppointmentForm({
             <option value="cancelado">Cancelado</option>
           </select>
         </div>
+
+        {status === "concluido" ? (
+          <div className="space-y-1">
+            <label htmlFor="novo-agendamento-forma-pagamento" className="text-sm text-zinc-200">
+              Forma de pagamento
+            </label>
+            <input
+              id="novo-agendamento-forma-pagamento"
+              name="forma_pagamento"
+              type="text"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              placeholder="Ex.: Pix, Cartao, Dinheiro"
+              required
+            />
+          </div>
+        ) : null}
 
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-agendamento-observacoes" className="text-sm text-zinc-200">
