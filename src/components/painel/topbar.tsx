@@ -8,10 +8,11 @@ import { Bell, ChevronRight, LogOut } from "lucide-react";
 import { signOutAction } from "@/app/painel/actions";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
+import { CompanyLogo, isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
 
 type TopbarProps = {
   companyName: string;
+  logoUrl?: string | null;
   roleLabel: string;
   items: SidebarNavItem[];
   userEmail: string;
@@ -19,7 +20,7 @@ type TopbarProps = {
   showNotifications: boolean;
 };
 
-export function Topbar({ items, companyName, roleLabel, userEmail, unreadCount, showNotifications }: TopbarProps) {
+export function Topbar({ items, companyName, logoUrl, roleLabel, userEmail, unreadCount, showNotifications }: TopbarProps) {
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const current = items
@@ -30,7 +31,14 @@ export function Topbar({ items, companyName, roleLabel, userEmail, unreadCount, 
 
   return (
     <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface px-4 sm:px-6">
-      <div className="min-w-0">
+      <div className="flex min-w-0 items-center gap-3">
+        <div title={companyName} className="shrink-0 lg:hidden">
+          <CompanyLogo
+            logoUrl={logoUrl}
+            companyName={companyName}
+            className="flex size-9 items-center justify-center rounded-xl text-sm"
+          />
+        </div>
         <h1 className="truncate text-base font-semibold text-foreground lg:hidden">{label}</h1>
         <nav aria-label="Breadcrumb" className="hidden items-center gap-2 text-sm lg:flex">
           <span className="rounded-lg bg-surface-2 px-2.5 py-1 text-muted-foreground">Painel</span>

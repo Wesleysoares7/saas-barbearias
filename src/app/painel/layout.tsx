@@ -30,7 +30,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   }
 
   const [companyResponse, userResponse] = await Promise.all([
-    supabase.from("companies").select("nome").eq("id", companyId).maybeSingle(),
+    supabase.from("companies").select("nome, logo").eq("id", companyId).maybeSingle(),
     supportMode ? Promise.resolve(null) : supabase.auth.getUser(),
   ]);
 
@@ -176,6 +176,11 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   }
 
   const companyName = companyResponse.data?.nome ?? "Minha empresa";
+  const logoPath = companyResponse.data?.logo;
+  const logoUrl =
+    typeof logoPath === "string" && logoPath
+      ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data.publicUrl
+      : null;
   const contact = getSupportContact();
   const contactHref = contact.whatsapp
     ? whatsappLink(contact.whatsapp)
@@ -224,12 +229,13 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1">
-        <SidebarNav items={navItems} companyName={companyName} />
+        <SidebarNav items={navItems} companyName={companyName} logoUrl={logoUrl} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
             items={navItems}
             companyName={companyName}
+            logoUrl={logoUrl}
             roleLabel={isAdmin ? "Administrador" : "Equipe"}
             userEmail={userEmail}
             unreadCount={unreadCount}
@@ -261,6 +267,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
 
         <MobileSidebarMenu
           companyName={companyName}
+          logoUrl={logoUrl}
           roleLabel={isAdmin ? "Administrador" : "Equipe"}
           userEmail={userEmail}
           items={navItems}

@@ -47,9 +47,39 @@ export type SidebarNavItem = {
 type SidebarNavProps = {
   items: SidebarNavItem[];
   companyName: string;
+  logoUrl?: string | null;
 };
 
 const STORAGE_KEY = "painel-sidebar-expanded";
+
+function CompanyLogoImage({ logoUrl, companyName, className }: { logoUrl: string; companyName: string; className: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return <div className={`${className} bg-brand font-bold text-brand-foreground`}>{companyName.charAt(0).toUpperCase()}</div>;
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoUrl}
+      alt={companyName}
+      width={40}
+      height={40}
+      onError={() => setFailed(true)}
+      className={`${className} bg-surface-2 object-contain`}
+    />
+  );
+}
+
+// A key com a URL reinicia o estado de falha quando a logo muda.
+export function CompanyLogo({ logoUrl, companyName, className }: { logoUrl?: string | null; companyName: string; className: string }) {
+  if (!logoUrl) {
+    return <div className={`${className} bg-brand font-bold text-brand-foreground`}>{companyName.charAt(0).toUpperCase()}</div>;
+  }
+
+  return <CompanyLogoImage key={logoUrl} logoUrl={logoUrl} companyName={companyName} className={className} />;
+}
 
 export function isActivePath(pathname: string, href: string): boolean {
   if (href === "/painel") {
@@ -79,7 +109,7 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
   return icons[icon];
 }
 
-export function SidebarNav({ items, companyName }: SidebarNavProps) {
+export function SidebarNav({ items, companyName, logoUrl }: SidebarNavProps) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const sections = [...new Set(items.map((item) => item.section))];
@@ -124,11 +154,12 @@ export function SidebarNav({ items, companyName }: SidebarNavProps) {
 
       <div className="sticky top-0 flex h-screen flex-col py-3">
         <div className={`flex items-center gap-3 pb-3 ${expanded ? "px-3" : "justify-center"}`}>
-          <div
-            title={companyName}
-            className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand text-base font-bold text-brand-foreground"
-          >
-            {companyName.charAt(0).toUpperCase()}
+          <div title={companyName} className="shrink-0">
+            <CompanyLogo
+              logoUrl={logoUrl}
+              companyName={companyName}
+              className="flex size-10 items-center justify-center rounded-xl text-base"
+            />
           </div>
           {expanded ? <span className="truncate text-sm font-semibold text-foreground">{companyName}</span> : null}
         </div>

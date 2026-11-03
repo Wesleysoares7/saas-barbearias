@@ -6,18 +6,19 @@ import { useState } from "react";
 import { LogOut, Menu } from "lucide-react";
 
 import { signOutAction } from "@/app/painel/actions";
-import { getIcon, isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
+import { CompanyLogo, getIcon, isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
 import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type MobileSidebarMenuProps = {
   companyName: string;
+  logoUrl?: string | null;
   roleLabel: string;
   userEmail: string;
   items: SidebarNavItem[];
 };
 
-export function MobileSidebarMenu({ companyName, roleLabel, userEmail, items }: MobileSidebarMenuProps) {
+export function MobileSidebarMenu({ companyName, logoUrl, roleLabel, userEmail, items }: MobileSidebarMenuProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -100,7 +101,14 @@ export function MobileSidebarMenu({ companyName, roleLabel, userEmail, items }: 
             <dl className="mb-3 space-y-2 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Empresa</dt>
-                <dd className="truncate text-foreground">{companyName}</dd>
+                <dd className="flex items-center gap-2 text-foreground">
+                  <CompanyLogo
+                    logoUrl={logoUrl}
+                    companyName={companyName}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-lg text-xs"
+                  />
+                  <span className="truncate">{companyName}</span>
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Usuario</dt>
