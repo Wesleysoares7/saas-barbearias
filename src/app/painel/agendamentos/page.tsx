@@ -39,6 +39,10 @@ type VoidedAppointmentRow = {
   motivo_exclusao: string | null;
 };
 
+function isVoidedStatus(status: string): boolean {
+  return status === "excluido";
+}
+
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
 }
@@ -198,11 +202,11 @@ export default async function AgendamentosPage() {
 
   // Separar agendamentos concluídos dos pendentes
   const pendingAppointments = appointments.filter(
-    (appointment) => appointment.status !== "concluido",
+    (appointment) => appointment.status !== "concluido" && !isVoidedStatus(appointment.status),
   );
-  const completedAppointments = appointments.filter(
-    (appointment) => appointment.status === "concluido",
-  );
+  const completedAppointments = appointments
+    .filter((appointment) => appointment.status === "concluido")
+    .sort((a, b) => b.data_hora.localeCompare(a.data_hora));
 
   const today = todayInputValue();
   const pendingGroups = groupByDay(pendingAppointments);
