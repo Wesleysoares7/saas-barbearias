@@ -30,7 +30,8 @@ type ModuleKey =
   | "notificacoes"
   | "clientes"
   | "estoque"
-  | "minha_comissao";
+  | "minha_comissao"
+  | "configuracoes";
 type ModuleAction =
   | "read"
   | "create"

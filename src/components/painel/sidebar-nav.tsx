@@ -13,6 +13,7 @@ import {
   LogOut,
   Package,
   Scissors,
+  Settings,
   Shield,
   UserRound,
   Users,
@@ -39,7 +40,8 @@ export type SidebarNavItem = {
     | "equipe"
     | "auditoria"
     | "notificacoes"
-    | "minha_comissao";
+    | "minha_comissao"
+    | "configuracoes";
 };
 
 type SidebarNavProps = {
@@ -71,6 +73,7 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
     auditoria: Shield,
     notificacoes: BellRing,
     minha_comissao: Wallet,
+    configuracoes: Settings,
   };
 
   return icons[icon];
