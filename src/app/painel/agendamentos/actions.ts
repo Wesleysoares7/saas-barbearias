@@ -827,7 +827,6 @@ export async function completeAppointmentAndRegisterPaymentAction(
 ): Promise<ActionState> {
   const appointmentId = sanitizeText(formData.get("appointment_id"));
   const formaPagamento = sanitizeText(formData.get("forma_pagamento"));
-  const valorFinalInput = sanitizeText(formData.get("valor_final"));
   const observacoes = sanitizeText(formData.get("observacoes"));
 
   if (!appointmentId) {

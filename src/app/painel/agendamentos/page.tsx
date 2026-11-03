@@ -39,6 +39,10 @@ type VoidedAppointmentRow = {
   motivo_exclusao: string | null;
 };
 
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
 function addDays(dayKey: string, amount: number): string {
   const date = new Date(`${dayKey}T12:00:00Z`);
   date.setUTCDate(date.getUTCDate() + amount);
@@ -208,7 +212,7 @@ export default async function AgendamentosPage() {
   const excluidoPorNomes = new Map<string, string>();
 
   if (role === "admin") {
-    const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+    const since = daysAgoIso(90);
     const { data: voidedData } = await supabase
       .from("appointments")
       .select(
