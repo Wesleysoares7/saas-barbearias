@@ -57,7 +57,25 @@ const INITIAL_STATE: ActionState = {
   message: "",
 };
 
-function getStatusTone(status: AppointmentStatus): { label: string; tone: "success" | "danger" | "warning" } {
+function MotivoField() {
+  return (
+    <label className="block space-y-1 text-sm text-zinc-300">
+      Motivo (opcional)
+      <input
+        type="text"
+        name="motivo"
+        maxLength={200}
+        className="min-h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-sm text-zinc-100"
+      />
+    </label>
+  );
+}
+
+function getStatusTone(status: AppointmentStatus | "excluido"): { label: string; tone: "success" | "danger" | "warning" } {
+  if (status === "excluido") {
+    return { label: "Excluido", tone: "danger" };
+  }
+
   if (status === "concluido") {
     return { label: "Concluido", tone: "success" };
   }
@@ -109,6 +127,7 @@ export function AppointmentItemForm({
   const [completeMessage, setCompleteMessage] = useState<string | null>(null);
   const [view, setView] = useState<"closed" | "details" | "edit">("closed");
   const [updateMessage, setUpdateMessage] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<AppointmentStatus>(appointment.status);
   const [, updateAction] = useActionState<ActionState, FormData>(
     async (previous, formData) => {
       const result = await updateAppointmentAction(previous, formData);
@@ -116,6 +135,10 @@ export function AppointmentItemForm({
       setUpdateMessage(result.success ? "" : result.message);
 
       if (result.success) {
+        const reopened =
+          appointment.status === "concluido" &&
+          formData.get("status") !== "concluido";
+        setCompleteMessage(reopened ? result.message : null);
         setView("closed");
       }
 
@@ -193,6 +216,10 @@ export function AppointmentItemForm({
 
   const service = services.find((item) => item.id === appointment.service_id);
   const canComplete = canCompleteAndCharge && appointment.status === "agendado";
+  const showRefundWarning =
+    canCompleteAndCharge &&
+    appointment.status === "concluido" &&
+    (selectedStatus === "cancelado" || selectedStatus === "agendado");
   const time = toDateTimeLocal(appointment.data_hora).slice(11, 16);
 
   return (
@@ -231,6 +258,7 @@ export function AppointmentItemForm({
                   onClick={() => {
                     setUpdateMessage("");
                     setClientError(null);
+                    setSelectedStatus(appointment.status);
                     setView("edit");
                   }}
                 >
@@ -240,6 +268,7 @@ export function AppointmentItemForm({
               {canDelete ? (
                 <ConfirmDelete title={appointment.cliente_nome} action={deleteAction} message={deleteState.success ? "" : deleteState.message}>
                   <input type="hidden" name="id" value={appointment.id} />
+                  <MotivoField />
                 </ConfirmDelete>
               ) : null}
             </div>
@@ -282,6 +311,7 @@ export function AppointmentItemForm({
                 onClick={() => {
                   setUpdateMessage("");
                   setClientError(null);
+                  setSelectedStatus(appointment.status);
                   setView("edit");
                 }}
               >
@@ -297,6 +327,7 @@ export function AppointmentItemForm({
                 message={deleteState.success ? "" : deleteState.message}
               >
                 <input type="hidden" name="id" value={appointment.id} />
+                <MotivoField />
               </ConfirmDelete>
             ) : null}
           </>
@@ -444,6 +475,9 @@ export function AppointmentItemForm({
                   id={`agendamento-status-${appointment.id}`}
                   name="status"
                   defaultValue={appointment.status}
+                  onChange={(event) =>
+                    setSelectedStatus(event.target.value as AppointmentStatus)
+                  }
                   className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
                   required
                 >
@@ -469,6 +503,12 @@ export function AppointmentItemForm({
                 />
               </div>
 
+              {showRefundWarning ? (
+                <p className="md:col-span-2 rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+                  O pagamento sera removido do caixa.
+                </p>
+              ) : null}
+
               <div className="md:col-span-2 flex items-center justify-start gap-3">
                 {canUpdate ? (
                   <UpdateButton />
@@ -483,7 +523,7 @@ export function AppointmentItemForm({
                   className="min-h-11 border-border text-zinc-100"
                   onClick={() => setView("closed")}
                 >
-                  Cancelar
+                  Fechar
                 </Button>
               </div>
             </form>

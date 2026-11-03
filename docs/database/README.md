@@ -26,3 +26,5 @@ Esta pasta guarda materiais de banco de dados, incluindo scripts SQL e politicas
 - `019_etapa_fechar_criacao_direta.sql`: remove INSERT direto em `companies` e a criacao de admin sem convite.
 - `020_etapa_status_conta.sql`: status da conta (trial, active, past_due, suspended, canceled), plano, fim do teste e cortesia.
 - `021_etapa_convite_funcionario.sql`: convite de equipe com nome, telefone, comissao e atende_clientes; funcao accept_team_invite vincula o membro a Funcionarios.
+- `023a`: adiciona o status `excluido` ao enum appointment_status.
+- `023b`: colunas excluido_em, excluido_por, valor_estornado e motivo_exclusao em appointments; funcao `void_appointment(p_appointment_id, p_motivo)` (somente admin) que remove o pagamento, marca o atendimento como excluido, grava auditoria e retorna o valor estornado; remove DELETE em payments e restringe DELETE em appointments a admin sem pagamento.

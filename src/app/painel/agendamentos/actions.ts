@@ -501,6 +501,29 @@ export async function updateAppointmentAction(
     }
   }
 
+  const { data: currentAppointment, error: currentError } = await supabase
+    .from("appointments")
+    .select("status")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (currentError || !currentAppointment) {
+    return { success: false, message: "Agendamento invalido para sua empresa." };
+  }
+
+  const reopensCompleted =
+    currentAppointment.status === "concluido" &&
+    (statusInput === "cancelado" || statusInput === "agendado");
+
+  if (reopensCompleted && !isAdmin(role)) {
+    return {
+      success: false,
+      message:
+        "Somente o administrador pode reabrir ou cancelar um atendimento concluido.",
+    };
+  }
+
   let customerId: string | null = customerIdInput || null;
   let clienteNome = clienteNomeInput;
   let clienteTelefone = clienteTelefoneInput;
@@ -587,6 +610,41 @@ export async function updateAppointmentAction(
     }
   }
 
+  let removedPayment: Record<string, unknown> | null = null;
+
+  if (reopensCompleted) {
+    const { data: payment, error: paymentFetchError } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("appointment_id", id)
+      .eq("company_id", companyId)
+      .maybeSingle();
+
+    if (paymentFetchError) {
+      return {
+        success: false,
+        message: friendlyDbError(paymentFetchError, "Nao foi possivel estornar o pagamento. Tente novamente."),
+      };
+    }
+
+    if (payment) {
+      const { error: paymentDeleteError } = await supabase
+        .from("payments")
+        .delete()
+        .eq("appointment_id", id)
+        .eq("company_id", companyId);
+
+      if (paymentDeleteError) {
+        return {
+          success: false,
+          message: friendlyDbError(paymentDeleteError, "Nao foi possivel estornar o pagamento. Tente novamente."),
+        };
+      }
+
+      removedPayment = payment as Record<string, unknown>;
+    }
+  }
+
   const { error } = await supabase
     .from("appointments")
     .update({
@@ -604,13 +662,27 @@ export async function updateAppointmentAction(
     .eq("company_id", companyId);
 
   if (error) {
+    if (removedPayment) {
+      await supabase.from("payments").insert(removedPayment);
+    }
+
     return {
       success: false,
       message: friendlyDbError(error, "Nao foi possivel atualizar agendamento. Tente novamente."),
     };
   }
 
+  revalidatePath("/painel");
   revalidatePath("/painel/agendamentos");
+
+  if (reopensCompleted) {
+    revalidatePath("/painel/financeiro");
+    return {
+      success: true,
+      message: "Agendamento atualizado e pagamento estornado com sucesso.",
+    };
+  }
+
   return { success: true, message: "Agendamento atualizado com sucesso." };
 }
 
@@ -640,21 +712,48 @@ export async function deleteAppointmentAction(
     };
   }
 
-  const { error } = await supabase
-    .from("appointments")
-    .delete()
-    .eq("id", id)
-    .eq("company_id", companyId);
+  const motivo = sanitizeText(formData.get("motivo"));
+
+  const { data, error } = await supabase.rpc("void_appointment", {
+    p_appointment_id: id,
+    p_motivo: motivo,
+  });
 
   if (error) {
-    return {
-      success: false,
-      message: friendlyDbError(error, "Nao foi possivel excluir agendamento. Tente novamente."),
-    };
+    return { success: false, message: translateVoidError(error) };
   }
 
+  revalidatePath("/painel");
   revalidatePath("/painel/agendamentos");
-  return { success: true, message: "Agendamento excluido com sucesso." };
+  revalidatePath("/painel/financeiro");
+  revalidatePath("/painel/relatorios");
+
+  const refunded = data === null || data === undefined ? null : Number(data);
+
+  if (refunded === null || !Number.isFinite(refunded)) {
+    return { success: true, message: "Atendimento excluido." };
+  }
+
+  const formatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(refunded);
+  return { success: true, message: `Atendimento excluido. Pagamento de ${formatted} estornado.` };
+}
+
+function translateVoidError(error: { message: string; code?: string }): string {
+  const text = error.message.toLowerCase();
+
+  if (error.code === "42501" || text.includes("permission") || text.includes("admin") || text.includes("permiss")) {
+    return "Apenas administradores podem excluir atendimentos.";
+  }
+
+  if (text.includes("not found") || text.includes("nao encontrado") || text.includes("não encontrado")) {
+    return "Atendimento nao encontrado.";
+  }
+
+  if (text.includes("already") || text.includes("ja foi") || text.includes("já foi") || text.includes("excluido")) {
+    return "Este atendimento ja foi excluido.";
+  }
+
+  return friendlyDbError(error, "Nao foi possivel excluir atendimento. Tente novamente.");
 }
 
 function sanitizeMoney(value: FormDataEntryValue | null): number {

@@ -335,7 +335,7 @@ export async function deletePaymentAction(
   const id = sanitizeText(formData.get("id"));
 
   if (!id) {
-    return { success: false, message: "Pagamento invalido para exclusao." };
+    return { success: false, message: "Pagamento invalido para estorno." };
   }
 
   const { supabase, companyId, role, errorMessage } = await getCompanyScope();
@@ -354,19 +354,46 @@ export async function deletePaymentAction(
     };
   }
 
-  const { error } = await supabase
+  const { data: payment, error: paymentError } = await supabase
     .from("payments")
-    .delete()
+    .select("appointment_id")
     .eq("id", id)
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (paymentError) {
+    return {
+      success: false,
+      message: friendlyDbError(paymentError, "Nao foi possivel estornar pagamento. Tente novamente."),
+    };
+  }
+
+  if (!payment?.appointment_id) {
+    return { success: false, message: "Pagamento nao encontrado." };
+  }
+
+  const { data, error } = await supabase.rpc("void_appointment", {
+    p_appointment_id: payment.appointment_id as string,
+    p_motivo: sanitizeText(formData.get("motivo")),
+  });
 
   if (error) {
     return {
       success: false,
-      message: friendlyDbError(error, "Nao foi possivel excluir pagamento. Tente novamente."),
+      message: friendlyDbError(error, "Nao foi possivel estornar pagamento. Tente novamente."),
     };
   }
 
+  revalidatePath("/painel");
+  revalidatePath("/painel/agendamentos");
   revalidatePath("/painel/financeiro");
-  return { success: true, message: "Pagamento excluido com sucesso." };
+  revalidatePath("/painel/relatorios");
+
+  const refunded = data === null || data === undefined ? null : Number(data);
+  const suffix =
+    refunded !== null && Number.isFinite(refunded)
+      ? ` Pagamento de ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(refunded)} estornado.`
+      : "";
+
+  return { success: true, message: `Atendimento excluido.${suffix}` };
 }
