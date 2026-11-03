@@ -127,6 +127,16 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
           },
         ]
       : []),
+    ...(canAccessModule(role, "configuracoes")
+      ? [
+          {
+            href: "/painel/configuracoes",
+            label: "Configuracoes",
+            section: "Administracao",
+            icon: "configuracoes" as const,
+          },
+        ]
+      : []),
     ...(canAccessModule(role, "auditoria")
       ? [
           {
