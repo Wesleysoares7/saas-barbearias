@@ -21,7 +21,27 @@ import {
 } from "@/lib/auth/access";
 import type { AppointmentStatus } from "@/types";
 import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
-import { isoToLocalInputValue, todayInputValue } from "@/lib/datetime";
+import { ListRow } from "@/components/painel/ui/list-row";
+import { StatusPill } from "@/components/painel/ui/status-pill";
+import { formatDateBR, formatDateTimeBR, isoToLocalInputValue, todayInputValue } from "@/lib/datetime";
+
+const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+type VoidedAppointmentRow = {
+  id: string;
+  cliente_nome: string;
+  employee_id: string;
+  service_id: string;
+  data_hora: string;
+  valor_estornado: number | null;
+  excluido_em: string | null;
+  excluido_por: string | null;
+  motivo_exclusao: string | null;
+};
+
+function daysAgoIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
 
 function addDays(dayKey: string, amount: number): string {
   const date = new Date(`${dayKey}T12:00:00Z`);
@@ -127,7 +147,8 @@ export default async function AgendamentosPage() {
     .select(
       "id, customer_id, cliente_nome, cliente_telefone, employee_id, service_id, data_hora, data_hora_fim, status, observacoes",
     )
-    .eq("company_id", companyId);
+    .eq("company_id", companyId)
+    .neq("status", "excluido");
 
   if (ownEmployeeId) {
     employeesQuery = employeesQuery.eq("id", ownEmployeeId);
@@ -186,6 +207,40 @@ export default async function AgendamentosPage() {
   const today = todayInputValue();
   const pendingGroups = groupByDay(pendingAppointments);
   const completedGroups = groupByDay(completedAppointments);
+
+  let voidedAppointments: VoidedAppointmentRow[] = [];
+  const excluidoPorNomes = new Map<string, string>();
+
+  if (role === "admin") {
+    const since = daysAgoIso(90);
+    const { data: voidedData } = await supabase
+      .from("appointments")
+      .select(
+        "id, cliente_nome, employee_id, service_id, data_hora, valor_estornado, excluido_em, excluido_por, motivo_exclusao",
+      )
+      .eq("company_id", companyId)
+      .eq("status", "excluido")
+      .gte("excluido_em", since)
+      .order("excluido_em", { ascending: false });
+
+    voidedAppointments = (voidedData ?? []) as VoidedAppointmentRow[];
+
+    const actorIds = Array.from(
+      new Set(voidedAppointments.map((row) => row.excluido_por).filter((value): value is string => Boolean(value))),
+    );
+
+    if (actorIds.length > 0) {
+      const { data: actors } = await supabase
+        .from("profiles")
+        .select("id, nome, email")
+        .eq("company_id", companyId)
+        .in("id", actorIds);
+
+      for (const actor of (actors ?? []) as Array<{ id: string; nome: string | null; email: string | null }>) {
+        excluidoPorNomes.set(actor.id, actor.nome?.trim() || actor.email || "-");
+      }
+    }
+  }
 
   return (
     <div className="space-y-5">
@@ -314,6 +369,7 @@ export default async function AgendamentosPage() {
                         appointment={appointment}
                         servicoNome={services.find((service) => service.id === appointment.service_id)?.nome}
                         funcionarioNome={employees.find((employee) => employee.id === appointment.employee_id)?.nome}
+                        canDelete={role === "admin"}
                       />
                     ))}
                   </section>
@@ -323,6 +379,41 @@ export default async function AgendamentosPage() {
           </div>
         )}
       </div>
+
+      {role === "admin" && voidedAppointments.length > 0 && (
+        <div className="space-y-3 border-t border-border pt-6">
+          <h3 className="text-lg font-semibold text-foreground">Agendamentos Excluidos</h3>
+          <p className="px-1 text-xs text-muted-foreground">Ultimos 90 dias.</p>
+          {voidedAppointments.map((row) => {
+            const valor = row.valor_estornado;
+            const servicoNome = services.find((service) => service.id === row.service_id)?.nome ?? "Servico";
+            const funcionarioNome = employees.find((employee) => employee.id === row.employee_id)?.nome ?? "Funcionario";
+
+            return (
+              <ListRow
+                key={row.id}
+                time={isoToLocalInputValue(row.data_hora).slice(11, 16)}
+                title={row.cliente_nome}
+                subtitle={`${servicoNome} - ${funcionarioNome} - ${formatDateBR(row.data_hora)}`}
+                columns={[
+                  {
+                    label: "Valor estornado",
+                    value: typeof valor === "number" ? currencyFormatter.format(valor) : "-",
+                  },
+                  { label: "Excluido em", value: formatDateTimeBR(row.excluido_em) },
+                  {
+                    label: "Excluido por",
+                    value: row.excluido_por ? (excluidoPorNomes.get(row.excluido_por) ?? "-") : "-",
+                  },
+                  { label: "Motivo", value: row.motivo_exclusao?.trim() || "-" },
+                ]}
+                status={<StatusPill tone="danger">Excluido</StatusPill>}
+                actions={null}
+              />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
