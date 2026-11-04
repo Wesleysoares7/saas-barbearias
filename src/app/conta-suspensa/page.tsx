@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { signOutAction } from "@/app/painel/actions";
+import { PendingButton } from "@/components/ui/pending-button";
 import { getAccountStatusContext } from "@/lib/auth/access";
 import { blockedMessage } from "@/lib/billing/state";
 import { getSupportContact, whatsappLink } from "@/lib/billing/contact";
@@ -78,9 +79,14 @@ export default async function ContaSuspensaPage() {
           )}
 
           <form action={signOutAction}>
-            <button type="submit" className={`${ACTION_CLASS} text-zinc-300 hover:bg-zinc-800`}>
+            <PendingButton
+              type="submit"
+              variant="ghost"
+              pendingLabel="Saindo..."
+              className={`${ACTION_CLASS} h-auto gap-2 text-zinc-300 hover:bg-zinc-800 hover:text-zinc-300`}
+            >
               Sair
-            </button>
+            </PendingButton>
           </form>
         </div>
       </section>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 
 import { createMasterCompanyAction } from "@/app/master/actions";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const FIELD_CLASS =
@@ -52,12 +53,14 @@ export function NewCompanyDialog() {
             </label>
             <input id="nova-empresa-endereco" name="endereco" className={FIELD_CLASS} />
           </div>
-          <button
+          <PendingButton
             type="submit"
-            className="min-h-11 w-full rounded-xl bg-brand px-4 text-sm font-semibold text-brand-foreground hover:bg-brand/90"
+            variant="ghost"
+            pendingLabel="Incluindo..."
+            className="h-auto min-h-11 w-full gap-2 bg-brand px-4 text-brand-foreground hover:bg-brand/90 hover:text-brand-foreground"
           >
             Incluir empresa
-          </button>
+          </PendingButton>
         </form>
       </DialogContent>
     </Dialog>

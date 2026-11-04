@@ -7,6 +7,7 @@ import { Bell, ChevronRight, LogOut } from "lucide-react";
 
 import { signOutAction } from "@/app/painel/actions";
 
+import { PendingButton } from "@/components/ui/pending-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CompanyLogo, isActivePath, type SidebarNavItem } from "@/components/painel/sidebar-nav";
 
@@ -92,13 +93,15 @@ export function Topbar({ items, companyName, logoUrl, roleLabel, userEmail, unre
             </div>
           </dl>
           <form action={signOutAction}>
-            <button
+            <PendingButton
               type="submit"
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-medium text-foreground transition hover:border-rose-400 hover:text-rose-300"
+              variant="ghost"
+              pendingLabel="Saindo..."
+              className="h-auto min-h-11 w-full gap-2 border-border font-medium text-foreground hover:border-rose-400 hover:bg-transparent hover:text-rose-300"
             >
               <LogOut className="size-4" />
               Sair da conta
-            </button>
+            </PendingButton>
           </form>
         </DialogContent>
       </Dialog>

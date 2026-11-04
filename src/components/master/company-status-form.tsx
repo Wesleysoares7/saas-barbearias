@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 import { setCompanyStatusAction } from "@/app/master/actions";
 import { Button } from "@/components/ui/button";
+import { PendingButton } from "@/components/ui/pending-button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const FIELD_CLASS =
@@ -59,12 +60,14 @@ export function CompanyStatusForm({ companyId, status, plan }: CompanyStatusForm
           <input id="conta-plano" name="plan" maxLength={40} defaultValue={plan ?? ""} className={FIELD_CLASS} />
         </div>
         <div className="flex items-end">
-          <button
+          <PendingButton
             type="submit"
-            className="min-h-11 w-full rounded-xl border border-border bg-surface-2 px-4 text-sm font-medium text-foreground transition hover:border-brand hover:text-brand sm:w-auto"
+            variant="ghost"
+            pendingLabel="Salvando..."
+            className="h-auto min-h-11 w-full gap-2 border-border bg-surface-2 px-4 font-medium text-foreground hover:border-brand hover:bg-surface-2 hover:text-brand sm:w-auto"
           >
             Salvar
-          </button>
+          </PendingButton>
         </div>
       </form>
 

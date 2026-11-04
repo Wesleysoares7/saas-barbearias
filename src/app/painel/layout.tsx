@@ -4,6 +4,7 @@ import { endSupportSessionAction } from "@/app/master/actions";
 import { MobileSidebarMenu } from "@/components/painel/mobile-sidebar-menu";
 import { SidebarNav } from "@/components/painel/sidebar-nav";
 import { Topbar } from "@/components/painel/topbar";
+import { PendingButton } from "@/components/ui/pending-button";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { getSupportContact, whatsappLink } from "@/lib/billing/contact";
 
@@ -219,12 +220,14 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
               : ""}
           </span>
           <form action={endSupportSessionAction}>
-            <button
+            <PendingButton
               type="submit"
-              className="min-h-11 rounded-lg border border-current px-3 text-xs font-semibold sm:min-h-9"
+              variant="ghost"
+              pendingLabel="Encerrando..."
+              className="h-auto min-h-11 gap-1.5 rounded-lg border-current px-3 text-xs text-inherit hover:bg-transparent hover:text-inherit sm:min-h-9"
             >
               Sair do modo suporte
-            </button>
+            </PendingButton>
           </form>
         </div>
       ) : null}

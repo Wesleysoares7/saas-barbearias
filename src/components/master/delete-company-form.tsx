@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { deleteMasterCompanyAction } from "@/app/master/actions";
+import { PendingButton } from "@/components/ui/pending-button";
 
 export function DeleteCompanyForm({ companyId, companyName }: { companyId: string; companyName: string }) {
   const [typed, setTyped] = useState("");
@@ -25,13 +26,15 @@ export function DeleteCompanyForm({ companyId, companyName }: { companyId: strin
           className="h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-base text-foreground outline-none focus:border-rose-400"
         />
       </div>
-      <button
+      <PendingButton
         type="submit"
+        variant="ghost"
         disabled={typed !== companyName}
-        className="min-h-11 rounded-xl bg-rose-500 px-4 text-sm font-semibold text-white transition hover:bg-rose-500/90 disabled:cursor-not-allowed disabled:opacity-50"
+        pendingLabel="Excluindo..."
+        className="h-auto min-h-11 gap-2 bg-rose-500 px-4 text-white hover:bg-rose-500/90 hover:text-white disabled:cursor-not-allowed"
       >
         Excluir empresa
-      </button>
+      </PendingButton>
     </form>
   );
 }

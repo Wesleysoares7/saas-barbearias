@@ -1,4 +1,5 @@
 import { BellRing } from "lucide-react";
+import { PendingButton } from "@/components/ui/pending-button";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -118,12 +119,14 @@ export default async function NotificacoesPage({
             </Link>
 
             <form action={markAllNotificationsReadAction}>
-              <button
+              <PendingButton
                 type="submit"
-                className="rounded-lg border border-border px-3 py-2 text-sm text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
+                variant="ghost"
+                pendingLabel="Marcando..."
+                className="h-auto gap-2 rounded-lg border-border px-3 py-2 font-normal text-zinc-100 hover:border-amber-400 hover:bg-transparent hover:text-amber-300"
               >
                 Marcar todas como lidas
-              </button>
+              </PendingButton>
             </form>
           </div></>} />
 
@@ -173,12 +176,14 @@ export default async function NotificacoesPage({
                     ) : (
                       <form action={markNotificationReadAction}>
                         <input type="hidden" name="notification_id" value={notification.id} />
-                        <button
+                        <PendingButton
                           type="submit"
-                          className="rounded-full border border-border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-200 transition hover:border-amber-400 hover:text-amber-300"
+                          variant="ghost"
+                          pendingLabel="Marcando..."
+                          className="h-auto gap-1.5 rounded-full border-border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] text-zinc-200 hover:border-amber-400 hover:bg-transparent hover:text-amber-300"
                         >
                           Marcar como lida
-                        </button>
+                        </PendingButton>
                       </form>
                     )}
                   </div>
