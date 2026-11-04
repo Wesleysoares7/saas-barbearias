@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { createCustomerAction } from "@/app/painel/clientes/actions";
+import { useCloseOnSuccess } from "@/components/painel/ui/form-dialog";
 import { Button } from "@/components/ui/button";
 
 type ActionState = {
@@ -29,15 +30,8 @@ function SubmitButton() {
 export function CreateCustomerForm() {
   const [state, formAction] = useActionState<ActionState, FormData>(createCustomerAction, INITIAL_STATE);
 
-  // Recarregar página após sucesso
-  useEffect(() => {
-    if (state.success) {
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state.success]);
+  // O modal fecha no sucesso; a action ja revalida a lista
+  useCloseOnSuccess(state.success);
 
   return (
     <>

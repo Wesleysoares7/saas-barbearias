@@ -3,13 +3,7 @@ import { PageHeader } from "@/components/painel/ui/page-header";
 import { Plus, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FormDialog } from "@/components/painel/ui/form-dialog";
 import { CreateCustomerForm } from "@/components/painel/clientes/create-customer-form";
 import { CustomerItemForm } from "@/components/painel/clientes/customer-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -57,20 +51,18 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
       <PageHeader icon={Users} title="Clientes" description="Cadastre e mantenha sua base de clientes com dados de contato."
         actions={
           <>
-<Dialog>
-          <DialogTrigger asChild>
-            <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-              <Plus className="size-4 mr-2" />
-              Novo Cliente
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Novo Cliente</DialogTitle>
-            </DialogHeader>
+<FormDialog
+            title="Novo Cliente"
+            contentClassName="max-w-2xl"
+            trigger={
+              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                <Plus className="size-4 mr-2" />
+                Novo Cliente
+              </Button>
+            }
+          >
             <CreateCustomerForm />
-          </DialogContent>
-        </Dialog>
+          </FormDialog>
           </>
         }
       />

@@ -5,6 +5,7 @@ import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { createServiceAction } from "@/app/painel/servicos/actions";
+import { useCloseOnSuccess } from "@/components/painel/ui/form-dialog";
 
 type ActionState = {
   success: boolean;
@@ -38,6 +39,9 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
       return () => clearTimeout(timer);
     }
   }, [state.success, onSuccess]);
+
+  // Com onSuccess, quem fecha e o chamador (evita fechar duas vezes)
+  useCloseOnSuccess(state.success && !onSuccess);
 
   return (
     <>

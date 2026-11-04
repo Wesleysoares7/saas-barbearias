@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useCallback, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2, Zap } from "lucide-react";
 
@@ -64,32 +64,10 @@ export function QuickAppointmentDialog({
   customers: ComboboxCustomer[];
 }) {
   const [open, setOpen] = useState(false);
-  const [serviceId, setServiceId] = useState("");
-  const [valor, setValor] = useState("");
-  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
-  const [state, formAction] = useActionState<ActionState, FormData>(
-    createQuickAppointmentAction,
-    INITIAL_STATE,
-  );
-
-  function handleServiceChange(id: string) {
-    setServiceId(id);
-    const service = services.find((item) => item.id === id);
-    setValor(service?.valor !== undefined ? String(service.valor) : "");
-  }
-
-  function handleOpenChange(next: boolean) {
-    setOpen(next);
-
-    if (next) {
-      setServiceId("");
-      setValor("");
-      setFormaPagamento(DEFAULT_PAYMENT_METHOD);
-    }
-  }
+  const close = useCallback(() => setOpen(false), []);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button type="button" variant="outline" className="h-11">
           <Zap className="mr-2 size-4" />
@@ -98,18 +76,67 @@ export function QuickAppointmentDialog({
       </DialogTrigger>
 
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Atendimento rapido</DialogTitle>
-          <DialogDescription>
-            Para cliente sem agendamento. Registra como concluido agora.
-          </DialogDescription>
-        </DialogHeader>
+        <QuickAppointmentContent
+          employees={employees}
+          services={services}
+          customers={customers}
+          onClose={close}
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
 
-        {state.success ? (
-          <div className="space-y-4">
-            <p className="text-sm text-emerald-300">{state.message}</p>
-            <Button type="button" className="h-11 w-full" onClick={() => setOpen(false)}>
-              Fechar
+// Montado so enquanto o modal esta aberto: ao reabrir, estado e mensagens voltam limpos.
+function QuickAppointmentContent({
+  employees,
+  services,
+  customers,
+  onClose,
+}: {
+  employees: Option[];
+  services: Option[];
+  customers: ComboboxCustomer[];
+  onClose: () => void;
+}) {
+  const [serviceId, setServiceId] = useState("");
+  const [valor, setValor] = useState("");
+  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    createQuickAppointmentAction,
+    INITIAL_STATE,
+  );
+
+  useEffect(() => {
+    if (!state.success) {
+      return;
+    }
+
+    const timer = setTimeout(onClose, 1000);
+
+    return () => clearTimeout(timer);
+  }, [state.success, onClose]);
+
+  function handleServiceChange(id: string) {
+    setServiceId(id);
+    const service = services.find((item) => item.id === id);
+    setValor(service?.valor !== undefined ? String(service.valor) : "");
+  }
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Atendimento rapido</DialogTitle>
+        <DialogDescription>
+          Para cliente sem agendamento. Registra como concluido agora.
+        </DialogDescription>
+      </DialogHeader>
+
+      {state.success ? (
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-300">{state.message}</p>
+          <Button type="button" className="h-11 w-full" onClick={onClose}>
+            Fechar
             </Button>
           </div>
         ) : (
@@ -201,7 +228,6 @@ export function QuickAppointmentDialog({
             <SubmitButton />
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }
