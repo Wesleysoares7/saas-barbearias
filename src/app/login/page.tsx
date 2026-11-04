@@ -14,7 +14,15 @@ export default function LoginPage() {
           <p className="text-sm text-zinc-300">Entre para continuar a gestao do seu negocio.</p>
         </div>
 
-        <Suspense fallback={null}>
+        <Suspense
+          fallback={
+            <div className="space-y-4" aria-hidden="true">
+              <div className="h-11 animate-pulse rounded-lg bg-zinc-800/70" />
+              <div className="h-11 animate-pulse rounded-lg bg-zinc-950/80" />
+              <div className="h-11 animate-pulse rounded-lg bg-amber-400/40" />
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </section>
