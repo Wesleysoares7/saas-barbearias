@@ -2,11 +2,12 @@
 
 import { friendlyAuthError } from "@/lib/errors";
 import { safeNextPath } from "@/lib/safe-redirect";
-import { type FormEvent, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup" | "recover";
@@ -70,14 +71,30 @@ export function LoginForm() {
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
+  const isBusy = isSubmitting || redirecting;
 
   const isDisabled = useMemo(
     () =>
-      isSubmitting ||
+      isBusy ||
       !form.email ||
       (mode !== "recover" && !form.password),
-    [form.email, form.password, isSubmitting, mode],
+    [form.email, form.password, isBusy, mode],
   );
+
+  useEffect(() => {
+    if (!redirecting) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRedirecting(false);
+      setIsSubmitting(false);
+      setErrors({ form: "Demorou mais que o esperado. Tente novamente." });
+    }, 15000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [redirecting]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,6 +121,7 @@ export function LoginForm() {
     setErrors({});
     setSuccessMessage(null);
     setIsSubmitting(true);
+    let didRedirect = false;
 
     try {
       const supabase = createSupabaseBrowserClient();
@@ -132,6 +150,8 @@ export function LoginForm() {
           }
         }
 
+        setRedirecting(true);
+        didRedirect = true;
         router.replace(destinationPath);
         router.refresh();
         return;
@@ -155,7 +175,9 @@ export function LoginForm() {
         }
 
         if (data.session) {
-          router.replace(signupNext === "/login" ? "/painel" : signupNext);
+          setRedirecting(true);
+          didRedirect = true;
+          router.replace(signupNext ===  "/login" ? "/painel" : signupNext);
           router.refresh();
           return;
         }
@@ -180,7 +202,9 @@ export function LoginForm() {
         form: "Nao foi possivel processar sua solicitacao. Tente novamente.",
       });
     } finally {
-      setIsSubmitting(false);
+      if (!didRedirect) {
+        setIsSubmitting(false);
+      }
     }
   }
 
@@ -199,12 +223,23 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit} className="relative space-y-4" noValidate aria-busy={isBusy}>
+      {redirecting ? (
+        <div
+          role="status"
+          className="absolute -inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-xl bg-zinc-950/70 backdrop-blur-[1px]"
+        >
+          <Spinner className="size-6 text-amber-400" />
+          <p className="text-sm text-zinc-100">Entrando no sistema...</p>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-3 gap-2 rounded-lg bg-zinc-800/70 p-1">
         <button
           type="button"
           onClick={() => switchMode("login")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
+          disabled={isBusy}
+          className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
             mode === "login" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
           }`}
         >
@@ -213,7 +248,8 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => switchMode("signup")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
+          disabled={isBusy}
+          className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
             mode === "signup" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
           }`}
         >
@@ -222,7 +258,8 @@ export function LoginForm() {
         <button
           type="button"
           onClick={() => switchMode("recover")}
-          className={`h-9 rounded-md text-xs font-medium transition ${
+          disabled={isBusy}
+          className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
             mode === "recover" ? "bg-amber-400 text-zinc-950" : "text-zinc-200 hover:bg-zinc-700"
           }`}
         >
@@ -241,6 +278,7 @@ export function LoginForm() {
           autoComplete="email"
           value={form.email}
           onChange={(event) => onFieldChange("email", event.target.value)}
+          disabled={isBusy}
           className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
           placeholder="voce@barbearia.com"
           aria-invalid={Boolean(errors.email)}
@@ -266,6 +304,7 @@ export function LoginForm() {
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               value={form.password}
               onChange={(event) => onFieldChange("password", event.target.value)}
+              disabled={isBusy}
               className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 pr-24 text-sm text-zinc-100 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20"
               placeholder="********"
               aria-invalid={Boolean(errors.password)}
@@ -274,6 +313,7 @@ export function LoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
+              disabled={isBusy}
               className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-amber-300 hover:text-amber-200"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
@@ -295,6 +335,7 @@ export function LoginForm() {
             type="checkbox"
             checked={acceptedTerms}
             onChange={(event) => setAcceptedTerms(event.target.checked)}
+            disabled={isBusy}
             className="mt-1 size-4 shrink-0 accent-amber-400"
           />
           <label htmlFor="accept-terms" className="text-sm text-zinc-300">
@@ -316,13 +357,18 @@ export function LoginForm() {
         className="h-11 w-full bg-amber-400 text-zinc-950 hover:bg-amber-300"
         disabled={isDisabled}
       >
-        {isSubmitting
-          ? "Processando..."
-          : mode === "login"
-            ? "Entrar"
-            : mode === "signup"
-              ? "Criar conta"
-              : "Enviar link de recuperacao"}
+        {isBusy ? (
+          <>
+            <Spinner />
+            {mode === "login" ? "Entrando..." : mode === "signup" ? "Criando conta..." : "Enviando..."}
+          </>
+        ) : mode === "login" ? (
+          "Entrar"
+        ) : mode === "signup" ? (
+          "Criar conta"
+        ) : (
+          "Enviar link de recuperacao"
+        )}
       </Button>
 
       {errors.form ? <p className="text-sm text-amber-300">{errors.form}</p> : null}
