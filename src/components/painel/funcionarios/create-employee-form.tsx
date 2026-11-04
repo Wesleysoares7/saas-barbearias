@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useRef, useState, useEffect } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { useCloseOnSuccess } from "@/components/painel/ui/form-dialog";
 import {
   createEmployeeAction,
   getMyProfileForEmployeeFormAction,
@@ -43,15 +44,8 @@ export function CreateEmployeeForm() {
   const nomeInputRef = useRef<HTMLInputElement>(null);
   const telefoneInputRef = useRef<HTMLInputElement>(null);
 
-  // Recarregar página após sucesso
-  useEffect(() => {
-    if (state.success) {
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [state.success]);
+  // O modal fecha no sucesso; a action ja revalida a lista
+  useCloseOnSuccess(state.success);
 
   async function handleFillMyData() {
     setIsFillingMyData(true);

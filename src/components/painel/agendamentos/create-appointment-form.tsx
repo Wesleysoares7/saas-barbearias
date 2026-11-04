@@ -6,6 +6,7 @@ import { useFormStatus } from "react-dom";
 import { CustomerCombobox } from "@/components/painel/agendamentos/customer-combobox";
 import { Button } from "@/components/ui/button";
 import { createAppointmentAction } from "@/app/painel/agendamentos/actions";
+import { useCloseOnSuccess } from "@/components/painel/ui/form-dialog";
 import { calculateEndDateIso, hasEmployeeConflict, type AppointmentSlot } from "@/lib/appointments/conflict";
 import { localDateTimeToIso } from "@/lib/datetime";
 import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
@@ -52,6 +53,7 @@ export function CreateAppointmentForm({
   const [status, setStatus] = useState("agendado");
   const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
   const [state, formAction] = useActionState<ActionState, FormData>(createAppointmentAction, INITIAL_STATE);
+  useCloseOnSuccess(state.success);
   const serviceDurationsById = useMemo(() => {
     return new Map(services.map((service) => [service.id, Number(service.duracao ?? 0)]));
   }, [services]);

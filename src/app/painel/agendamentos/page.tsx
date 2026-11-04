@@ -4,13 +4,7 @@ import { PageHeader } from "@/components/painel/ui/page-header";
 import { CalendarClock, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FormDialog } from "@/components/painel/ui/form-dialog";
 import { CreateAppointmentForm } from "@/components/painel/agendamentos/create-appointment-form";
 import { AppointmentItemForm } from "@/components/painel/agendamentos/appointment-item-form";
 import { QuickAppointmentDialog } from "@/components/painel/agendamentos/quick-appointment-dialog";
@@ -359,25 +353,23 @@ export default async function AgendamentosPage({
             {canCreateAppointment &&
               employees.length > 0 &&
               services.length > 0 && (
-                <Dialog>
-                  <DialogTrigger asChild>
+                <FormDialog
+                  title="Novo Agendamento"
+                  contentClassName="max-w-3xl"
+                  trigger={
                     <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
                       <Plus className="size-4 mr-2" />
                       Novo Agendamento
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-3xl">
-                    <DialogHeader>
-                      <DialogTitle>Novo Agendamento</DialogTitle>
-                    </DialogHeader>
-                    <CreateAppointmentForm
-                      employees={employees}
-                      services={services}
-                      customers={customers}
-                      appointmentSlots={appointmentSlots}
-                    />
-                  </DialogContent>
-                </Dialog>
+                  }
+                >
+                  <CreateAppointmentForm
+                    employees={employees}
+                    services={services}
+                    customers={customers}
+                    appointmentSlots={appointmentSlots}
+                  />
+                </FormDialog>
               )}
           </>
         }

@@ -3,13 +3,7 @@ import { PageHeader } from "@/components/painel/ui/page-header";
 import { Plus, Scissors } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FormDialog } from "@/components/painel/ui/form-dialog";
 import { CreateServiceForm } from "@/components/painel/servicos/create-service-form";
 import { ServiceItemForm } from "@/components/painel/servicos/service-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -63,20 +57,18 @@ export default async function ServicosPage({ searchParams }: { searchParams: Pro
       <PageHeader icon={Scissors} title="Servicos" description="Cadastre e mantenha os servicos oferecidos pela sua empresa."
         actions={
           <>
-<Dialog>
-          <DialogTrigger asChild>
-            <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-              <Plus className="size-4 mr-2" />
-              Novo Servico
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Novo Servico</DialogTitle>
-            </DialogHeader>
+<FormDialog
+            title="Novo Servico"
+            contentClassName="max-w-2xl"
+            trigger={
+              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                <Plus className="size-4 mr-2" />
+                Novo Servico
+              </Button>
+            }
+          >
             <CreateServiceForm />
-          </DialogContent>
-        </Dialog>
+          </FormDialog>
           </>
         }
       />

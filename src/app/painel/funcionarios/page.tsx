@@ -3,13 +3,7 @@ import { PageHeader } from "@/components/painel/ui/page-header";
 import { Plus, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FormDialog } from "@/components/painel/ui/form-dialog";
 import { CreateEmployeeForm } from "@/components/painel/funcionarios/create-employee-form";
 import { EmployeeItemForm } from "@/components/painel/funcionarios/employee-item-form";
 import { RegisterMyselfAsEmployeeCard } from "@/components/painel/funcionarios/register-myself-as-employee-card";
@@ -155,20 +149,18 @@ export default async function FuncionariosPage({ searchParams }: { searchParams:
       <PageHeader icon={UserRound} title="Funcionarios" description="Cadastre e mantenha a equipe da sua empresa."
         actions={
           <>
-<Dialog>
-          <DialogTrigger asChild>
-            <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-              <Plus className="size-4 mr-2" />
-              Novo Funcionario
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Novo Funcionario</DialogTitle>
-            </DialogHeader>
+<FormDialog
+            title="Novo Funcionario"
+            contentClassName="max-w-2xl"
+            trigger={
+              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                <Plus className="size-4 mr-2" />
+                Novo Funcionario
+              </Button>
+            }
+          >
             <CreateEmployeeForm />
-          </DialogContent>
-        </Dialog>
+          </FormDialog>
           </>
         }
       />
