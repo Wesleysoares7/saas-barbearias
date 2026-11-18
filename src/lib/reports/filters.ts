@@ -9,3 +9,11 @@ export function normalizeDate(value: string, fallback: string): string {
 
   return value;
 }
+
+export function formatMetadata(metadata: Record<string, unknown>): string {
+  try {
+    return JSON.stringify(metadata);
+  } catch {
+    return "{}";
+  }
+}

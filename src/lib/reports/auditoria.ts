@@ -1,5 +1,5 @@
 import { addDaysToInput, endOfDayIso, startOfDayIso, todayInputValue } from "@/lib/datetime";
-import { sanitizeText, normalizeDate } from "./filters";
+import { sanitizeText, normalizeDate, formatMetadata } from "./filters";
 import { AuthContext } from "./auth";
 
 export type AuditRow = {
@@ -41,14 +41,6 @@ export type AuditoriaReportData = {
   columns: string[];
   rows: (string | number)[][];
 };
-
-function formatMetadata(metadata: Record<string, unknown>): string {
-  try {
-    return JSON.stringify(metadata);
-  } catch {
-    return "{}";
-  }
-}
 
 export function validateDateFilters(url: URL): AuditFilters {
   const defaultTo = todayInputValue();
