@@ -10,7 +10,13 @@ import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
 import { PaymentItemForm } from "@/components/painel/financeiro/payment-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-import { endOfDayIso, formatDateBR, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
+import {
+  endOfDayIso,
+  formatDateBR,
+  monthStartInputValue,
+  startOfDayIso,
+  todayInputValue,
+} from "@/lib/datetime";
 import { CashEntryDialog } from "@/components/painel/financeiro/caixa/cash-entry-dialog";
 import { CashEntryItem } from "@/components/painel/financeiro/caixa/cash-entry-item";
 import { OpeningBalanceCard } from "@/components/painel/financeiro/caixa/opening-balance-card";
@@ -110,7 +116,7 @@ function formatCurrency(value: number): string {
 
 function normalizeDateInput(
   value: string | undefined,
-  fallback: string,
+  fallback: string
 ): string {
   if (!value) {
     return fallback;
@@ -142,7 +148,9 @@ export default async function FinanceiroPage({
   const defaultStart = monthStartInputValue();
   const defaultEnd = todayInputValue();
 
-  const tab: Tab = ["caixa", "funcionarios", "pagamentos"].includes(resolvedSearchParams.aba ?? "")
+  const tab: Tab = ["caixa", "funcionarios", "pagamentos"].includes(
+    resolvedSearchParams.aba ?? ""
+  )
     ? (resolvedSearchParams.aba as Tab)
     : "resumo";
   const start = normalizeDateInput(resolvedSearchParams.start, defaultStart);
@@ -171,7 +179,7 @@ export default async function FinanceiroPage({
     supabase
       .from("payments")
       .select(
-        "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, appointments(cliente_nome, data_hora, employee_id)",
+        "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, appointments(cliente_nome, data_hora, employee_id)"
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false }),
@@ -183,26 +191,23 @@ export default async function FinanceiroPage({
   const payments = (paymentsResponse.data ?? []) as PaymentRow[];
 
   const serviceValueById = new Map(
-    services.map((service) => [service.id, Number(service.valor)]),
+    services.map((service) => [service.id, Number(service.valor)])
   );
   const employeeCommissionById = new Map(
     employees.map((employee) => [
       employee.id,
       Number(employee.percentual_comissao ?? 0),
-    ]),
+    ])
   );
   const employeeNameById = new Map(
-    employees.map((employee) => [employee.id, employee.nome]),
+    employees.map((employee) => [employee.id, employee.nome])
   );
   const appointmentEmployeeById = new Map(
-    appointments.map((appointment) => [
-      appointment.id,
-      appointment.employee_id,
-    ]),
+    appointments.map((appointment) => [appointment.id, appointment.employee_id])
   );
 
   const paidAppointmentIds = new Set(
-    payments.map((payment) => payment.appointment_id),
+    payments.map((payment) => payment.appointment_id)
   );
 
   const filteredPayments = payments.filter((payment) => {
@@ -222,18 +227,18 @@ export default async function FinanceiroPage({
         id: employee.id,
         nome: employee.nome,
         percentualComissao: roundToTwo(
-          Number(employee.percentual_comissao ?? 0),
+          Number(employee.percentual_comissao ?? 0)
         ),
         quantidadePagamentos: 0,
         faturamento: 0,
         comissaoTotal: 0,
       },
-    ]),
+    ])
   );
 
   for (const payment of filteredPayments) {
     const appointmentEmployeeId = appointmentEmployeeById.get(
-      payment.appointment_id,
+      payment.appointment_id
     );
 
     if (!appointmentEmployeeId) {
@@ -270,48 +275,69 @@ export default async function FinanceiroPage({
     .sort((left, right) => right.comissaoTotal - left.comissaoTotal);
 
   const totalFaturamento = roundToTwo(
-    payments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0),
+    payments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0)
   );
   const totalComissao = roundToTwo(
     filteredPayments.reduce(
       (sum, payment) => sum + Number(payment.valor_comissao ?? 0),
-      0,
-    ),
+      0
+    )
   );
 
-  const [summaryResponse, entriesResponse, openingResponse] = await Promise.all([
-    supabase.rpc("finance_summary", { p_company_id: companyId, p_start: start, p_end: end }),
-    supabase
-      .from("cash_entries")
-      .select("id, tipo, valor, categoria, descricao, data_lancamento")
-      .eq("company_id", companyId)
-      .in("tipo", ["entrada", "despesa"])
-      .gte("data_lancamento", start)
-      .lte("data_lancamento", end)
-      .order("data_lancamento", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(50),
-    supabase
-      .from("cash_entries")
-      .select("id, valor, valor_pix, valor_conta, data_lancamento")
-      .eq("company_id", companyId)
-      .eq("tipo", "saldo_inicial")
-      .maybeSingle(),
-  ]);
+  const [summaryResponse, entriesResponse, openingResponse] = await Promise.all(
+    [
+      supabase.rpc("finance_summary", {
+        p_company_id: companyId,
+        p_start: start,
+        p_end: end,
+      }),
+      supabase
+        .from("cash_entries")
+        .select("id, tipo, valor, categoria, descricao, data_lancamento")
+        .eq("company_id", companyId)
+        .in("tipo", ["entrada", "despesa"])
+        .gte("data_lancamento", start)
+        .lte("data_lancamento", end)
+        .order("data_lancamento", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("cash_entries")
+        .select("id, valor, valor_pix, valor_conta, data_lancamento")
+        .eq("company_id", companyId)
+        .eq("tipo", "saldo_inicial")
+        .maybeSingle(),
+    ]
+  );
 
   const summaryRows = (summaryResponse.data ?? []) as FinanceSummary[];
-  const summary: FinanceSummary | null = summaryResponse.error ? null : (summaryRows[0] ?? null);
+  const summary: FinanceSummary | null = summaryResponse.error
+    ? null
+    : summaryRows[0] ?? null;
   const cashEntries = (entriesResponse.data ?? []) as Pick<
     CashEntry,
     "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
   >[];
-  const openingRow = openingResponse.data as { id: string; valor: number; valor_pix: number; valor_conta: number; data_lancamento: string } | null;
+  const openingRow = openingResponse.data as {
+    id: string;
+    valor: number;
+    valor_pix: number;
+    valor_conta: number;
+    data_lancamento: string;
+  } | null;
   const openingEntry = openingRow
-    ? { id: openingRow.id, valor: Number(openingRow.valor), valorPix: Number(openingRow.valor_pix) ?? 0, valorConta: Number(openingRow.valor_conta) ?? 0, data: openingRow.data_lancamento }
+    ? {
+        id: openingRow.id,
+        valor: Number(openingRow.valor ?? 0),
+        valorPix: Number(openingRow.valor_pix ?? 0),
+        valorConta: Number(openingRow.valor_conta ?? 0),
+        data: openingRow.data_lancamento,
+      }
     : null;
   const cashItems = cashEntries.map((entry) => ({
     id: entry.id,
-    tipo: entry.tipo === "entrada" ? ("entrada" as const) : ("despesa" as const),
+    tipo:
+      entry.tipo === "entrada" ? ("entrada" as const) : ("despesa" as const),
     valor: Number(entry.valor),
     categoria: entry.categoria,
     descricao: entry.descricao,
@@ -343,9 +369,13 @@ export default async function FinanceiroPage({
         .lt("data_lancamento", openingDate),
     ]);
 
-    movimentosAnteriores = [paymentsBefore, purchasesBefore, entriesBefore].reduce(
-      (sum, response) => sum + (response.error ? 0 : (response.count ?? 0)),
-      0,
+    movimentosAnteriores = [
+      paymentsBefore,
+      purchasesBefore,
+      entriesBefore,
+    ].reduce(
+      (sum, response) => sum + (response.error ? 0 : response.count ?? 0),
+      0
     );
   }
 
@@ -357,10 +387,10 @@ export default async function FinanceiroPage({
     .filter((appointment) => !paidAppointmentIds.has(appointment.id))
     .map((appointment) => {
       const valorSugerido = Number(
-        serviceValueById.get(appointment.service_id) ?? 0,
+        serviceValueById.get(appointment.service_id) ?? 0
       );
       const percentualComissaoSugerido = Number(
-        employeeCommissionById.get(appointment.employee_id) ?? 0,
+        employeeCommissionById.get(appointment.employee_id) ?? 0
       );
 
       return {
@@ -394,12 +424,21 @@ export default async function FinanceiroPage({
     { id: "funcionarios", label: "Funcionarios" },
     { id: "pagamentos", label: "Pagamentos" },
   ];
-  const tabHref = (id: Tab) => `/painel/financeiro?${new URLSearchParams({ aba: id, start, end }).toString()}`;
+  const tabHref = (id: Tab) =>
+    `/painel/financeiro?${new URLSearchParams({
+      aba: id,
+      start,
+      end,
+    }).toString()}`;
   const tabClass = (active: boolean) =>
     `flex min-h-11 shrink-0 items-center justify-center border-b-2 px-4 text-sm font-medium transition ${
-      active ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:text-foreground"
+      active
+        ? "border-brand text-brand"
+        : "border-transparent text-muted-foreground hover:text-foreground"
     }`;
-  const sellersCount = employeeFinancialSummaries.filter((item) => item.quantidadePagamentos > 0).length;
+  const sellersCount = employeeFinancialSummaries.filter(
+    (item) => item.quantidadePagamentos > 0
+  ).length;
   const indicators = [
     { label: "Faturamento", value: formatCurrency(totalFaturamento) },
     { label: "Comissao total", value: formatCurrency(totalComissao) },
@@ -408,27 +447,61 @@ export default async function FinanceiroPage({
   ];
   const statementLines: { label: string; value: string }[] = summary
     ? [
-        { label: "Saldo anterior", value: formatCurrency(Number(summary.saldo_anterior)) },
+        {
+          label: "Saldo anterior",
+          value: formatCurrency(Number(summary.saldo_anterior)),
+        },
         ...(saldoInicialNoPeriodo !== 0
-          ? [{ label: "Saldo inicial", value: formatCurrency(saldoInicialNoPeriodo) }]
+          ? [
+              {
+                label: "Saldo inicial",
+                value: formatCurrency(saldoInicialNoPeriodo),
+              },
+            ]
           : []),
-        { label: "Receitas (+)", value: formatCurrency(Number(summary.receitas)) },
-        { label: "Entradas avulsas (+)", value: formatCurrency(Number(summary.entradas_avulsas)) },
-        { label: "Comissoes (-)", value: formatCurrency(Number(summary.comissoes)) },
-        { label: "Compras de estoque (-)", value: formatCurrency(Number(summary.compras_estoque)) },
-        { label: "Despesas (-)", value: formatCurrency(Number(summary.despesas)) },
+        {
+          label: "Receitas (+)",
+          value: formatCurrency(Number(summary.receitas)),
+        },
+        {
+          label: "Entradas avulsas (+)",
+          value: formatCurrency(Number(summary.entradas_avulsas)),
+        },
+        {
+          label: "Comissoes (-)",
+          value: formatCurrency(Number(summary.comissoes)),
+        },
+        {
+          label: "Compras de estoque (-)",
+          value: formatCurrency(Number(summary.compras_estoque)),
+        },
+        {
+          label: "Despesas (-)",
+          value: formatCurrency(Number(summary.despesas)),
+        },
       ]
     : [];
 
   return (
     <div className="space-y-4 pb-24">
-      <PageHeader icon={Wallet} title="Financeiro" description="Registre pagamentos, acompanhe o faturamento total e veja a comissao por funcionario." />
+      <PageHeader
+        icon={Wallet}
+        title="Financeiro"
+        description="Registre pagamentos, acompanhe o faturamento total e veja a comissao por funcionario."
+      />
 
       <PeriodPicker start={start} end={end} aba={tab} />
 
-      <nav aria-label="Abas do financeiro" className="flex overflow-x-auto border-b border-border">
+      <nav
+        aria-label="Abas do financeiro"
+        className="flex overflow-x-auto border-b border-border"
+      >
         {tabs.map((item) => (
-          <Link key={item.id} href={tabHref(item.id)} className={tabClass(tab === item.id)}>
+          <Link
+            key={item.id}
+            href={tabHref(item.id)}
+            className={tabClass(tab === item.id)}
+          >
             {item.label}
           </Link>
         ))}
@@ -438,14 +511,24 @@ export default async function FinanceiroPage({
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {indicators.map((item) => (
-              <div key={item.label} className="min-h-14 min-w-0 rounded-xl border border-border bg-surface px-3 py-2">
-                <p className="truncate text-xs text-muted-foreground">{item.label}</p>
-                <p className="text-base font-semibold break-words tabular-nums text-foreground">{item.value}</p>
+              <div
+                key={item.label}
+                className="min-h-14 min-w-0 rounded-xl border border-border bg-surface px-3 py-2"
+              >
+                <p className="truncate text-xs text-muted-foreground">
+                  {item.label}
+                </p>
+                <p className="text-base font-semibold break-words tabular-nums text-foreground">
+                  {item.value}
+                </p>
               </div>
             ))}
           </div>
 
-          <Panel title="Resumo do periodo" description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final">
+          <Panel
+            title="Resumo do periodo"
+            description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final"
+          >
             {summary ? (
               <>
                 <StatCard
@@ -455,31 +538,45 @@ export default async function FinanceiroPage({
                 />
                 <ul className="mt-3 divide-y divide-border">
                   {statementLines.map((line) => (
-                    <li key={line.label} className="flex items-center justify-between gap-3 py-2 text-sm">
-                      <span className="min-w-0 text-muted-foreground">{line.label}</span>
-                      <span className="shrink-0 font-medium tabular-nums text-foreground">{line.value}</span>
+                    <li
+                      key={line.label}
+                      className="flex items-center justify-between gap-3 py-2 text-sm"
+                    >
+                      <span className="min-w-0 text-muted-foreground">
+                        {line.label}
+                      </span>
+                      <span className="shrink-0 font-medium tabular-nums text-foreground">
+                        {line.value}
+                      </span>
                     </li>
                   ))}
                 </ul>
                 <p className="mt-3 text-sm text-muted-foreground">
                   Consumo de estoque no periodo (nao entra no saldo):{" "}
-                  <span className="font-medium text-foreground">{formatCurrency(Number(summary.consumo_estoque))}</span>
+                  <span className="font-medium text-foreground">
+                    {formatCurrency(Number(summary.consumo_estoque))}
+                  </span>
                 </p>
                 {openingAfterEnd && openingDate ? (
                   <p className="mt-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
-                    O caixa comeca em {formatDateBR(openingDate)}; periodos anteriores aparecem zerados.
+                    O caixa comeca em {formatDateBR(openingDate)}; periodos
+                    anteriores aparecem zerados.
                   </p>
                 ) : null}
                 {openingDate === null ? (
                   <div className="mt-2 flex flex-col gap-2 rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200 sm:flex-row sm:items-center sm:justify-between">
-                    <p>Sem saldo inicial: o saldo considera apenas o historico do app.</p>
+                    <p>
+                      Sem saldo inicial: o saldo considera apenas o historico do
+                      app.
+                    </p>
                     <OpeningBalanceCard entry={null} />
                   </div>
                 ) : null}
               </>
             ) : (
               <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-3 text-sm text-amber-200">
-                Nao foi possivel calcular o resumo. Verifique se o script 016 foi executado.
+                Nao foi possivel calcular o resumo. Verifique se o script 016
+                foi executado.
               </p>
             )}
           </Panel>
@@ -493,13 +590,20 @@ export default async function FinanceiroPage({
           actions={<CashEntryDialog />}
         >
           <div className="space-y-4">
-            <OpeningBalanceCard entry={openingEntry} movimentosAnteriores={movimentosAnteriores} />
+            <OpeningBalanceCard
+              entry={openingEntry}
+              movimentosAnteriores={movimentosAnteriores}
+            />
 
-            <h3 className="text-sm font-semibold text-foreground">Lancamentos do periodo</h3>
+            <h3 className="text-sm font-semibold text-foreground">
+              Lancamentos do periodo
+            </h3>
 
             {cashItems.length === 0 ? (
               <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
-                Nenhum lancamento avulso neste periodo. Use o botao Novo lancamento para registrar entradas e despesas como aluguel ou energia.
+                Nenhum lancamento avulso neste periodo. Use o botao Novo
+                lancamento para registrar entradas e despesas como aluguel ou
+                energia.
               </p>
             ) : (
               <div className="space-y-2">
@@ -513,7 +617,10 @@ export default async function FinanceiroPage({
       ) : null}
 
       {tab === "funcionarios" ? (
-        <Panel title="Faturamento por funcionario" description="Valores calculados com base nos pagamentos concluidos.">
+        <Panel
+          title="Faturamento por funcionario"
+          description="Valores calculados com base nos pagamentos concluidos."
+        >
           {employeeFinancialSummaries.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
               Nenhum funcionario cadastrado ainda.
@@ -524,12 +631,26 @@ export default async function FinanceiroPage({
                 <ListRow
                   key={item.id}
                   title={item.nome}
-                  subtitle={`Comissao ${formatCurrency(item.comissaoTotal)} - ${item.quantidadePagamentos} pagamento(s)`}
+                  subtitle={`Comissao ${formatCurrency(item.comissaoTotal)} - ${
+                    item.quantidadePagamentos
+                  } pagamento(s)`}
                   columns={[
-                    { label: "Comissao", value: formatCurrency(item.comissaoTotal) },
-                    { label: "Pagamentos", value: `${item.quantidadePagamentos} | ${item.percentualComissao.toFixed(2)}%` },
+                    {
+                      label: "Comissao",
+                      value: formatCurrency(item.comissaoTotal),
+                    },
+                    {
+                      label: "Pagamentos",
+                      value: `${
+                        item.quantidadePagamentos
+                      } | ${item.percentualComissao.toFixed(2)}%`,
+                    },
                   ]}
-                  status={<span className="text-sm font-semibold whitespace-nowrap tabular-nums text-foreground">{formatCurrency(item.faturamento)}</span>}
+                  status={
+                    <span className="text-sm font-semibold whitespace-nowrap tabular-nums text-foreground">
+                      {formatCurrency(item.faturamento)}
+                    </span>
+                  }
                   hideSubtitleOnDesktop
                   actions={null}
                 />
@@ -550,7 +671,9 @@ export default async function FinanceiroPage({
           )}
 
           <div className="space-y-3">
-            <h2 className="text-lg font-medium text-zinc-100">Lista de pagamentos</h2>
+            <h2 className="text-lg font-medium text-zinc-100">
+              Lista de pagamentos
+            </h2>
 
             {paymentItems.length === 0 ? (
               <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
