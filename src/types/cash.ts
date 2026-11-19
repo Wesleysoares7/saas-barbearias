@@ -5,6 +5,8 @@ export type CashEntry = {
   company_id: string;
   tipo: CashEntryType;
   valor: number;
+  valor_pix: number;
+  valor_conta: number;
   categoria: string | null;
   descricao: string | null;
   data_lancamento: string;
