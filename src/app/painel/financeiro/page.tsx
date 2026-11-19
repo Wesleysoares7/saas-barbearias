@@ -293,7 +293,7 @@ export default async function FinanceiroPage({
       .limit(50),
     supabase
       .from("cash_entries")
-      .select("id, valor, data_lancamento")
+      .select("id, valor, valor_pix, valor_conta, data_lancamento")
       .eq("company_id", companyId)
       .eq("tipo", "saldo_inicial")
       .maybeSingle(),
@@ -305,9 +305,9 @@ export default async function FinanceiroPage({
     CashEntry,
     "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
   >[];
-  const openingRow = openingResponse.data as { id: string; valor: number; data_lancamento: string } | null;
+  const openingRow = openingResponse.data as { id: string; valor: number; valor_pix: number; valor_conta: number; data_lancamento: string } | null;
   const openingEntry = openingRow
-    ? { id: openingRow.id, valor: Number(openingRow.valor), data: openingRow.data_lancamento }
+    ? { id: openingRow.id, valor: Number(openingRow.valor), valorPix: Number(openingRow.valor_pix) ?? 0, valorConta: Number(openingRow.valor_conta) ?? 0, data: openingRow.data_lancamento }
     : null;
   const cashItems = cashEntries.map((entry) => ({
     id: entry.id,

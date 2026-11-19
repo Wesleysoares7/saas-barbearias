@@ -84,7 +84,7 @@ async function writeAuditLog(
   access: AdminAccess,
   action: string,
   entityId: string,
-  metadata: { tipo: string; valor: number; data: string },
+  metadata: { tipo: string; valor: number; data: string; valor_caixa?: number; valor_pix?: number; valor_conta?: number },
 ) {
   const { error } = await access.supabase.from("audit_logs").insert({
     company_id: access.companyId,
@@ -156,16 +156,28 @@ export async function setOpeningBalanceAction(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const valor = parseMoneyBR(sanitizeText(formData.get("valor")));
+  const valorCaixa = parseMoneyBR(sanitizeText(formData.get("valor_caixa")));
+  const valorPix = parseMoneyBR(sanitizeText(formData.get("valor_pix")));
+  const valorConta = parseMoneyBR(sanitizeText(formData.get("valor_conta")));
   const data = sanitizeText(formData.get("data"));
 
-  if (valor === null) {
-    return { success: false, message: "Informe um valor valido." };
+  const valor_caixa = valorCaixa ?? 0;
+  const valor_pix = valorPix ?? 0;
+  const valor_conta = valorConta ?? 0;
+
+  if (valorCaixa === null || valorPix === null || valorConta === null) {
+    return { success: false, message: "Informe valores validos." };
+  }
+
+  if (valor_pix < 0 || valor_conta < 0) {
+    return { success: false, message: "Pix e conta nao podem ser negativos." };
   }
 
   if (!isValidDate(data)) {
     return { success: false, message: "Informe uma data valida." };
   }
+
+  const valor = Math.round((valor_caixa + valor_pix + valor_conta) * 100) / 100;
 
   const result = await requireAdmin();
 
@@ -195,11 +207,9 @@ export async function setOpeningBalanceAction(
   let entryId: string | null = existing?.id ?? null;
 
   if (existing) {
-    // Somente valor e data: o banco nao permite alterar outras colunas
-    // (updated_at e preenchido por gatilho).
     const { error } = await access.supabase
       .from("cash_entries")
-      .update({ valor, data_lancamento: data })
+      .update({ valor, valor_pix, valor_conta, data_lancamento: data })
       .eq("id", existing.id)
       .eq("company_id", access.companyId);
 
@@ -214,6 +224,8 @@ export async function setOpeningBalanceAction(
         created_by: access.userId,
         tipo: "saldo_inicial",
         valor,
+        valor_pix,
+        valor_conta,
         data_lancamento: data,
       })
       .select("id")
@@ -237,6 +249,9 @@ export async function setOpeningBalanceAction(
       tipo: "saldo_inicial",
       valor,
       data,
+      valor_caixa,
+      valor_pix,
+      valor_conta,
     });
   }
 
