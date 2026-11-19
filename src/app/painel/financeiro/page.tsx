@@ -321,14 +321,14 @@ export default async function FinanceiroPage({
   const openingRow = openingResponse.data as {
     id: string;
     valor: number;
-    valor_pix: number;
-    valor_conta: number;
+    valor_pix: number | null;
+    valor_conta: number | null;
     data_lancamento: string;
   } | null;
   const openingEntry = openingRow
     ? {
         id: openingRow.id,
-        valor: Number(openingRow.valor ?? 0),
+        valor: Number(openingRow.valor),
         valorPix: Number(openingRow.valor_pix ?? 0),
         valorConta: Number(openingRow.valor_conta ?? 0),
         data: openingRow.data_lancamento,
@@ -680,7 +680,7 @@ export default async function FinanceiroPage({
                 Nenhum pagamento registrado ainda.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {paymentItems.map((payment) => (
                   <PaymentItemForm key={payment.id} payment={payment} />
                 ))}
