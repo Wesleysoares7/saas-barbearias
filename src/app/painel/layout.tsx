@@ -7,6 +7,7 @@ import { Topbar } from "@/components/painel/topbar";
 import { PendingButton } from "@/components/ui/pending-button";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { getSupportContact, whatsappLink } from "@/lib/billing/contact";
+import { getThemeCss } from "@/lib/themes";
 
 type PainelLayoutProps = {
   children: React.ReactNode;
@@ -31,7 +32,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   }
 
   const [companyResponse, userResponse] = await Promise.all([
-    supabase.from("companies").select("nome, logo").eq("id", companyId).maybeSingle(),
+    supabase.from("companies").select("nome, logo, tema").eq("id", companyId).maybeSingle(),
     supportMode ? Promise.resolve(null) : supabase.auth.getUser(),
   ]);
 
@@ -177,6 +178,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   }
 
   const companyName = companyResponse.data?.nome ?? "Minha empresa";
+  const themeCss = getThemeCss(companyResponse.data?.tema);
   const logoPath = companyResponse.data?.logo;
   const logoUrl =
     typeof logoPath === "string" && logoPath
@@ -211,6 +213,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <style>{themeCss}</style>
       {supportMode ? (
         <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-2 bg-brand px-4 py-2 text-sm font-medium text-brand-foreground">
           <span className="min-w-0 truncate">

@@ -3,7 +3,10 @@
 import { useActionState, useState, useTransition } from "react";
 import { useFormStatus } from "react-dom";
 
-import { addMemberAsEmployeeAction, updateMemberRoleAction } from "@/app/painel/equipe/actions";
+import {
+  addMemberAsEmployeeAction,
+  updateMemberRoleAction,
+} from "@/app/painel/equipe/actions";
 import { type UserRole } from "@/lib/auth/access";
 import { Button } from "@/components/ui/button";
 
@@ -28,7 +31,11 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-9 bg-brand text-brand-foreground hover:bg-brand/90"
+      disabled={pending}
+    >
       {pending ? "Salvando..." : "Salvar papel"}
     </Button>
   );
@@ -54,13 +61,17 @@ export function TeamMemberRoleForm({
     });
   }
 
-  const [state, formAction] = useActionState<ActionState, FormData>(updateMemberRoleAction, INITIAL_STATE);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    updateMemberRoleAction,
+    INITIAL_STATE,
+  );
   const [isEditing, setIsEditing] = useState(false);
-  const shouldShowEditForm = isEditing || (!state.success && Boolean(state.message));
+  const shouldShowEditForm =
+    isEditing || (!state.success && Boolean(state.message));
 
   return (
     <article className="rounded-xl border border-border bg-surface-2 p-4">
-      {(addState.message || state.message) ? (
+      {addState.message || state.message ? (
         <div className="mb-3" aria-live="polite">
           <div
             className={`w-full rounded-lg border px-4 py-3 text-sm font-medium ${
@@ -80,10 +91,14 @@ export function TeamMemberRoleForm({
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full border px-2 py-0.5 text-xs ${
-              isEmployee || addState.success ? "border-brand/40 bg-brand/15 text-brand" : "border-border text-zinc-400"
+              isEmployee || addState.success
+                ? "border-brand/40 bg-brand/15 text-brand"
+                : "border-border text-zinc-400"
             }`}
           >
-            {isEmployee || addState.success ? "Funcionario" : "Sem cadastro de funcionario"}
+            {isEmployee || addState.success
+              ? "Funcionario"
+              : "Sem cadastro de funcionario"}
           </span>
           {canManage && !isEmployee && !addState.success ? (
             <Button
@@ -100,11 +115,18 @@ export function TeamMemberRoleForm({
       </div>
 
       {shouldShowEditForm ? (
-        <form action={formAction} onSubmit={() => setIsEditing(false)} className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+        <form
+          action={formAction}
+          onSubmit={() => setIsEditing(false)}
+          className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end"
+        >
           <input type="hidden" name="member_id" value={member.id} />
 
           <div className="space-y-1">
-            <label htmlFor={`membro-role-${member.id}`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`membro-role-${member.id}`}
+              className="text-sm text-zinc-200"
+            >
               Papel de acesso
             </label>
             <select
@@ -112,17 +134,26 @@ export function TeamMemberRoleForm({
               name="role"
               defaultValue={member.role}
               disabled={isCurrentUser}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400 disabled:opacity-60"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand disabled:opacity-60"
             >
               <option value="admin">Administrador</option>
               <option value="employee">Equipe</option>
             </select>
-            {isCurrentUser ? <p className="text-xs text-zinc-500">Seu proprio papel nao pode ser rebaixado.</p> : null}
+            {isCurrentUser ? (
+              <p className="text-xs text-zinc-500">
+                Seu proprio papel nao pode ser rebaixado.
+              </p>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2">
             <SubmitButton />
-            <Button type="button" variant="outline" className="h-9 border-border text-zinc-100" onClick={() => setIsEditing(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-9 border-border text-zinc-100"
+              onClick={() => setIsEditing(false)}
+            >
               Cancelar
             </Button>
           </div>
@@ -132,12 +163,20 @@ export function TeamMemberRoleForm({
           <div>
             <p className="text-xs text-zinc-400">Perfil atual</p>
             <p className="text-sm text-zinc-100">
-              {member.role === "admin" ? "Administrador" : isEmployee || addState.success ? "Funcionario" : "Recepcao"}
+              {member.role === "admin"
+                ? "Administrador"
+                : isEmployee || addState.success
+                  ? "Funcionario"
+                  : "Recepcao"}
             </p>
           </div>
 
           {!isCurrentUser ? (
-            <Button type="button" className="h-9 bg-amber-400 text-zinc-950 hover:bg-amber-300" onClick={() => setIsEditing(true)}>
+            <Button
+              type="button"
+              className="h-9 bg-brand text-brand-foreground hover:bg-brand/90"
+              onClick={() => setIsEditing(true)}
+            >
               Editar
             </Button>
           ) : (

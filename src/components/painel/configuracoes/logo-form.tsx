@@ -5,7 +5,10 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
 
-import { removeLogoAction, uploadLogoAction } from "@/app/painel/configuracoes/actions";
+import {
+  removeLogoAction,
+  uploadLogoAction,
+} from "@/app/painel/configuracoes/actions";
 import { Button } from "@/components/ui/button";
 
 type ActionState = {
@@ -15,14 +18,26 @@ type ActionState = {
 
 const INITIAL_STATE: ActionState = { success: false, message: "" };
 
-function SubmitButton({ label, pendingLabel, outline }: { label: string; pendingLabel: string; outline?: boolean }) {
+function SubmitButton({
+  label,
+  pendingLabel,
+  outline,
+}: {
+  label: string;
+  pendingLabel: string;
+  outline?: boolean;
+}) {
   const { pending } = useFormStatus();
 
   return (
     <Button
       type="submit"
       variant={outline ? "outline" : "default"}
-      className={outline ? "h-11" : "h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300"}
+      className={
+        outline
+          ? "h-11"
+          : "h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      }
       disabled={pending}
     >
       {pending ? (
@@ -56,9 +71,21 @@ function Feedback({ state }: { state: ActionState }) {
   );
 }
 
-export function LogoForm({ logoUrl, companyName }: { logoUrl: string | null; companyName: string }) {
-  const [uploadState, uploadAction] = useActionState<ActionState, FormData>(uploadLogoAction, INITIAL_STATE);
-  const [removeState, removeAction] = useActionState<ActionState, FormData>(removeLogoAction, INITIAL_STATE);
+export function LogoForm({
+  logoUrl,
+  companyName,
+}: {
+  logoUrl: string | null;
+  companyName: string;
+}) {
+  const [uploadState, uploadAction] = useActionState<ActionState, FormData>(
+    uploadLogoAction,
+    INITIAL_STATE,
+  );
+  const [removeState, removeAction] = useActionState<ActionState, FormData>(
+    removeLogoAction,
+    INITIAL_STATE,
+  );
 
   return (
     <div className="space-y-4">
@@ -80,7 +107,9 @@ export function LogoForm({ logoUrl, companyName }: { logoUrl: string | null; com
             {companyName.trim().slice(0, 2).toUpperCase()}
           </div>
         )}
-        <p className="text-sm text-muted-foreground">PNG, JPEG ou WEBP, ate 2 MB.</p>
+        <p className="text-sm text-muted-foreground">
+          PNG, JPEG ou WEBP, ate 2 MB.
+        </p>
       </div>
 
       <form action={uploadAction} className="space-y-3">
@@ -98,7 +127,11 @@ export function LogoForm({ logoUrl, companyName }: { logoUrl: string | null; com
 
       {logoUrl ? (
         <form action={removeAction} className="space-y-3">
-          <SubmitButton label="Remover logo" pendingLabel="Removendo..." outline />
+          <SubmitButton
+            label="Remover logo"
+            pendingLabel="Removendo..."
+            outline
+          />
           <Feedback state={removeState} />
         </form>
       ) : null}

@@ -14,7 +14,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { completeAppointmentAndRegisterPaymentAction } from "@/app/painel/agendamentos/actions";
-import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
+
+import { DEFAULT_PAYMENT_METHOD, PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -32,7 +33,7 @@ function ConfirmButton() {
   return (
     <Button
       type="submit"
-      className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+      className="bg-brand text-brand-foreground hover:bg-brand/90"
       disabled={pending}
     >
       {pending ? (
@@ -61,7 +62,9 @@ export function CompleteAppointmentModal({
   onCompleted?: (message: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState<string>(DEFAULT_PAYMENT_METHOD);
+  const [formaPagamento, setFormaPagamento] = useState<string>(
+    DEFAULT_PAYMENT_METHOD,
+  );
   const [handledMessage, setHandledMessage] = useState<string | null>(null);
   const [state, formAction] = useActionState<ActionState, FormData>(
     completeAppointmentAndRegisterPaymentAction,
@@ -125,7 +128,7 @@ export function CompleteAppointmentModal({
               min={0}
               step="0.01"
               defaultValue={valorSugerido}
-              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             />
           </div>
 
@@ -139,7 +142,7 @@ export function CompleteAppointmentModal({
                   onClick={() => setFormaPagamento(method.value)}
                   className={`h-9 rounded-lg border px-3 text-sm font-medium transition ${
                     formaPagamento === method.value
-                      ? "border-amber-400 bg-amber-400/15 text-amber-200"
+                      ? "border-brand bg-brand/15 text-brand"
                       : "border-border bg-surface text-zinc-300 hover:border-border"
                   }`}
                 >
@@ -160,13 +163,13 @@ export function CompleteAppointmentModal({
               id={`observacoes-${appointmentId}`}
               name="observacoes"
               rows={2}
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand"
               placeholder="Detalhes adicionais do atendimento"
             />
           </div>
 
           {!state.success && state.message ? (
-            <p className="text-sm text-amber-300">{state.message}</p>
+            <p className="text-sm text-amber-200">{state.message}</p>
           ) : null}
 
           <div className="flex items-center justify-end gap-3">

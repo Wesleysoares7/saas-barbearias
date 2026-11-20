@@ -22,7 +22,7 @@ function RegisterButton() {
   return (
     <Button
       type="submit"
-      className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
       disabled={pending}
     >
       {pending ? "Cadastrando..." : "Cadastrar-me como funcionario"}

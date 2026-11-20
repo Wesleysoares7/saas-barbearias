@@ -15,13 +15,20 @@ type CustomerComboboxProps = {
 };
 
 const INPUT_CLASS =
-  "h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400";
+  "h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand";
 
 function fold(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
-export function CustomerCombobox({ customers, onSelectionChange, optional = false }: CustomerComboboxProps) {
+export function CustomerCombobox({
+  customers,
+  onSelectionChange,
+  optional = false,
+}: CustomerComboboxProps) {
   const listId = useId();
   const [text, setText] = useState("");
   const [phone, setPhone] = useState("");
@@ -43,7 +50,10 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
           return true;
         }
 
-        return digits.length > 0 && (customer.telefone ?? "").replace(/\D/g, "").includes(digits);
+        return (
+          digits.length > 0 &&
+          (customer.telefone ?? "").replace(/\D/g, "").includes(digits)
+        );
       })
       .slice(0, 8);
   }, [customers, text]);
@@ -68,7 +78,9 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
     if (event.key === "ArrowDown") {
       event.preventDefault();
       setOpen(true);
-      setActive((index) => Math.min(index + 1, Math.max(results.length - 1, 0)));
+      setActive((index) =>
+        Math.min(index + 1, Math.max(results.length - 1, 0)),
+      );
     } else if (event.key === "ArrowUp") {
       event.preventDefault();
       setActive((index) => Math.max(index - 1, 0));
@@ -116,7 +128,7 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
             <button
               type="button"
               onClick={clearSelection}
-              className="min-h-11 shrink-0 rounded-lg border border-border bg-surface px-4 text-sm text-zinc-100 hover:border-amber-400"
+              className="min-h-11 shrink-0 rounded-lg border border-border bg-surface px-4 text-sm text-zinc-100 hover:border-brand"
             >
               Trocar
             </button>
@@ -138,11 +150,17 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
                     choose(customer);
                   }}
                   className={`flex min-h-11 cursor-pointer flex-col justify-center px-3 py-1 text-sm ${
-                    index === active ? "bg-surface-2 text-brand" : "text-zinc-100"
+                    index === active
+                      ? "bg-surface-2 text-brand"
+                      : "text-zinc-100"
                   }`}
                 >
                   <span className="truncate font-medium">{customer.nome}</span>
-                  {customer.telefone ? <span className="truncate text-xs text-muted-foreground">{customer.telefone}</span> : null}
+                  {customer.telefone ? (
+                    <span className="truncate text-xs text-muted-foreground">
+                      {customer.telefone}
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -184,7 +202,10 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
             />
           </div>
           <div className="space-y-1">
-            <label htmlFor={`${listId}-email`} className="text-sm text-zinc-200">
+            <label
+              htmlFor={`${listId}-email`}
+              className="text-sm text-zinc-200"
+            >
               E-mail (opcional)
             </label>
             <input
@@ -203,7 +224,7 @@ export function CustomerCombobox({ customers, onSelectionChange, optional = fals
               id={`${listId}-obs`}
               name="cliente_observacoes"
               rows={2}
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand"
             />
           </div>
         </>

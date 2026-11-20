@@ -8,7 +8,10 @@ const SAFETY_TIMEOUT_MS = 12000;
 const TICK_MS = 200;
 
 function isSameAsCurrent(url: URL) {
-  return url.pathname + url.search === window.location.pathname + window.location.search;
+  return (
+    url.pathname + url.search ===
+    window.location.pathname + window.location.search
+  );
 }
 
 function prefersReducedMotion() {
@@ -61,7 +64,9 @@ export function NavigationProgress() {
       setProgress(8);
       setVisible(true);
       tickRef.current = setInterval(() => {
-        setProgress((current) => current + (MAX_WAIT_PROGRESS - current) * 0.08);
+        setProgress(
+          (current) => current + (MAX_WAIT_PROGRESS - current) * 0.08,
+        );
       }, TICK_MS);
     }
     safetyRef.current = setTimeout(finish, SAFETY_TIMEOUT_MS);
@@ -111,12 +116,16 @@ export function NavigationProgress() {
 
       const submitter = event.submitter;
       const actionAttr =
-        (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement
+        (submitter instanceof HTMLButtonElement ||
+        submitter instanceof HTMLInputElement
           ? submitter.getAttribute("formaction")
           : null) ?? form.getAttribute("action");
       if (typeof actionAttr !== "string" && actionAttr !== null) return;
 
-      const url = new URL(actionAttr ?? window.location.href, window.location.href);
+      const url = new URL(
+        actionAttr ?? window.location.href,
+        window.location.href,
+      );
       if (url.origin !== window.location.origin) return;
 
       const params = new URLSearchParams();
@@ -142,7 +151,7 @@ export function NavigationProgress() {
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none fixed top-0 left-0 z-[9999] h-0.5 bg-amber-400 transition-[width,opacity] duration-200 ease-out motion-reduce:transition-none ${
+      className={`pointer-events-none fixed top-0 left-0 z-[9999] h-0.5 bg-brand transition-[width,opacity] duration-200 ease-out motion-reduce:transition-none ${
         visible ? "opacity-100" : "opacity-0"
       }`}
       style={{ width: `${progress}%` }}

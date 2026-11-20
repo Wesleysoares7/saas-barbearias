@@ -26,7 +26,7 @@ function SubmitButton() {
   return (
     <Button
       type="submit"
-      className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300"
+      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
       disabled={pending}
     >
       {pending ? "Salvando..." : "Adicionar funcionario"}
@@ -112,7 +112,7 @@ export function CreateEmployeeForm() {
             type="text"
             ref={nomeInputRef}
             onChange={() => setIsSelf(false)}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="Ex.: Joao"
             required
           />
@@ -131,7 +131,7 @@ export function CreateEmployeeForm() {
             type="tel"
             ref={telefoneInputRef}
             onChange={() => setIsSelf(false)}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="(11) 99999-9999"
           />
         </div>
@@ -150,7 +150,7 @@ export function CreateEmployeeForm() {
             min={0}
             max={100}
             step="0.01"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="40"
           />
         </div>
@@ -160,7 +160,7 @@ export function CreateEmployeeForm() {
             name="ativo"
             type="checkbox"
             defaultChecked
-            className="h-4 w-4 accent-amber-400"
+            className="h-4 w-4 accent-brand"
           />
           Funcionario ativo
         </label>

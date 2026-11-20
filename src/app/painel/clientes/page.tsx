@@ -8,12 +8,21 @@ import { CreateCustomerForm } from "@/components/painel/clientes/create-customer
 import { CustomerItemForm } from "@/components/painel/clientes/customer-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { ListToolbar } from "@/components/painel/ui/list-toolbar";
-import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
-import { Panel } from "@/components/painel/ui/panel";import type { CustomerRow } from "@/types";
+import {
+  Pagination,
+  parsePageParam,
+  sanitizeSearchTerm,
+} from "@/components/painel/ui/pagination";
+import { Panel } from "@/components/painel/ui/panel";
+import type { CustomerRow } from "@/types";
 
 const PAGE_SIZE = 20;
 
-export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string; pagina?: string }> }) {
+export default async function ClientesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; pagina?: string }>;
+}) {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();
 
   if (!companyId || !role) {
@@ -35,7 +44,9 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
     .eq("company_id", companyId);
 
   if (term) {
-    customersQuery = customersQuery.or(`nome.ilike.%${term}%,telefone.ilike.%${term}%`);
+    customersQuery = customersQuery.or(
+      `nome.ilike.%${term}%,telefone.ilike.%${term}%`,
+    );
   }
 
   const customersResponse = await customersQuery
@@ -43,43 +54,58 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
     .range(from, from + PAGE_SIZE - 1);
   const total = customersResponse.count ?? 0;
 
-  const hasCustomerTableIssue = Boolean(customersResponse.error?.message.includes("customers"));
-  const customerRows: CustomerRow[] = (customersResponse.data ?? []) as CustomerRow[];
+  const hasCustomerTableIssue = Boolean(
+    customersResponse.error?.message.includes("customers"),
+  );
+  const customerRows: CustomerRow[] = (customersResponse.data ??
+    []) as CustomerRow[];
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={Users} title="Clientes" description="Cadastre e mantenha sua base de clientes com dados de contato."
+      <PageHeader
+        icon={Users}
+        title="Clientes"
+        description="Cadastre e mantenha sua base de clientes com dados de contato."
         actions={
           <>
-<FormDialog
-            title="Novo Cliente"
-            contentClassName="max-w-2xl"
-            trigger={
-              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-                <Plus className="size-4 mr-2" />
-                Novo Cliente
-              </Button>
-            }
-          >
-            <CreateCustomerForm />
-          </FormDialog>
+            <FormDialog
+              title="Novo Cliente"
+              contentClassName="max-w-2xl"
+              trigger={
+                <Button className="h-11 bg-brand text-brand-foreground hover:bg-brand/90">
+                  <Plus className="size-4 mr-2" />
+                  Novo Cliente
+                </Button>
+              }
+            >
+              <CreateCustomerForm />
+            </FormDialog>
           </>
         }
       />
 
       {hasCustomerTableIssue ? (
         <div className="rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
-          Este recurso está temporariamente indisponível. Tente novamente em instantes.
+          Este recurso está temporariamente indisponível. Tente novamente em
+          instantes.
         </div>
       ) : (
         <>
-          <Panel title="Lista de clientes" description={`${total} cadastrado(s)`}>
+          <Panel
+            title="Lista de clientes"
+            description={`${total} cadastrado(s)`}
+          >
             <div className="space-y-3">
-              <ListToolbar placeholder="Buscar por nome ou telefone" defaultValue={term} />
+              <ListToolbar
+                placeholder="Buscar por nome ou telefone"
+                defaultValue={term}
+              />
 
               {customerRows.length === 0 ? (
                 <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
-                  {term ? "Nenhum cliente encontrado para essa busca." : "Nenhum cliente cadastrado ainda."}
+                  {term
+                    ? "Nenhum cliente encontrado para essa busca."
+                    : "Nenhum cliente cadastrado ainda."}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -89,7 +115,13 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
                 </div>
               )}
             </div>
-            <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/painel/clientes" params={{ q: term }} />
+            <Pagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              basePath="/painel/clientes"
+              params={{ q: term }}
+            />
           </Panel>
         </>
       )}

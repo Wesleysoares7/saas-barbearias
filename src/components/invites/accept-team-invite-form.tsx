@@ -21,14 +21,21 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      disabled={pending}
+    >
       {pending ? "Confirmando..." : "Aceitar convite"}
     </Button>
   );
 }
 
 export function AcceptTeamInviteForm({ token }: { token: string }) {
-  const [state, formAction] = useActionState<ActionState, FormData>(acceptTeamInviteAction, INITIAL_STATE);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    acceptTeamInviteAction,
+    INITIAL_STATE,
+  );
 
   return (
     <>
@@ -54,7 +61,7 @@ export function AcceptTeamInviteForm({ token }: { token: string }) {
       <div className="mt-4">
         <Link
           href="/painel"
-          className="text-sm text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:text-amber-300"
+          className="text-sm text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:text-brand"
         >
           Ir para o painel
         </Link>
