@@ -9,7 +9,11 @@ import { EmployeeItemForm } from "@/components/painel/funcionarios/employee-item
 import { RegisterMyselfAsEmployeeCard } from "@/components/painel/funcionarios/register-myself-as-employee-card";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { ListToolbar } from "@/components/painel/ui/list-toolbar";
-import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
+import {
+  Pagination,
+  parsePageParam,
+  sanitizeSearchTerm,
+} from "@/components/painel/ui/pagination";
 import { Panel } from "@/components/painel/ui/panel";
 const PAGE_SIZE = 20;
 
@@ -71,7 +75,11 @@ function findMatchingEmployee(
   );
 }
 
-export default async function FuncionariosPage({ searchParams }: { searchParams: Promise<{ q?: string; pagina?: string }> }) {
+export default async function FuncionariosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; pagina?: string }>;
+}) {
   const { supabase, companyId, userId, role, redirectTo } =
     await getAccessContext();
 
@@ -90,35 +98,43 @@ export default async function FuncionariosPage({ searchParams }: { searchParams:
 
   let pagedQuery = supabase
     .from("employees")
-    .select("id, nome, telefone, percentual_comissao, ativo, user_id, email", { count: "exact" })
+    .select("id, nome, telefone, percentual_comissao, ativo, user_id, email", {
+      count: "exact",
+    })
     .eq("company_id", companyId);
 
   if (term) {
-    pagedQuery = pagedQuery.or(`nome.ilike.%${term}%,telefone.ilike.%${term}%,email.ilike.%${term}%`);
+    pagedQuery = pagedQuery.or(
+      `nome.ilike.%${term}%,telefone.ilike.%${term}%,email.ilike.%${term}%`,
+    );
   }
 
-  const [{ data: employees }, { data: profile }, { data: company }, pagedResponse] =
-    await Promise.all([
-      supabase
-        .from("employees")
-        .select(
-          "id, nome, telefone, percentual_comissao, ativo, user_id, email",
-        )
-        .eq("company_id", companyId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("profiles")
-        .select("nome, email")
-        .eq("id", userId)
-        .eq("company_id", companyId)
-        .maybeSingle(),
-      supabase
-        .from("companies")
-        .select("telefone")
-        .eq("id", companyId)
-        .maybeSingle(),
-      pagedQuery.order("created_at", { ascending: false }).range(from, from + PAGE_SIZE - 1),
-    ]);
+  const [
+    { data: employees },
+    { data: profile },
+    { data: company },
+    pagedResponse,
+  ] = await Promise.all([
+    supabase
+      .from("employees")
+      .select("id, nome, telefone, percentual_comissao, ativo, user_id, email")
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("profiles")
+      .select("nome, email")
+      .eq("id", userId)
+      .eq("company_id", companyId)
+      .maybeSingle(),
+    supabase
+      .from("companies")
+      .select("telefone")
+      .eq("id", companyId)
+      .maybeSingle(),
+    pagedQuery
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1),
+  ]);
 
   const pagedRows: EmployeeRow[] = (pagedResponse.data ?? []) as EmployeeRow[];
   const total = pagedResponse.count ?? 0;
@@ -146,34 +162,45 @@ export default async function FuncionariosPage({ searchParams }: { searchParams:
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={UserRound} title="Funcionarios" description="Cadastre e mantenha a equipe da sua empresa."
+      <PageHeader
+        icon={UserRound}
+        title="Funcionarios"
+        description="Cadastre e mantenha a equipe da sua empresa."
         actions={
           <>
-<FormDialog
-            title="Novo Funcionario"
-            contentClassName="max-w-2xl"
-            trigger={
-              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-                <Plus className="size-4 mr-2" />
-                Novo Funcionario
-              </Button>
-            }
-          >
-            <CreateEmployeeForm />
-          </FormDialog>
+            <FormDialog
+              title="Novo Funcionario"
+              contentClassName="max-w-2xl"
+              trigger={
+                <Button className="h-11 bg-brand text-brand-foreground hover:bg-brand/90">
+                  <Plus className="size-4 mr-2" />
+                  Novo Funcionario
+                </Button>
+              }
+            >
+              <CreateEmployeeForm />
+            </FormDialog>
           </>
         }
       />
 
       {isCurrentUserRegistered ? null : <RegisterMyselfAsEmployeeCard />}
 
-      <Panel title="Lista de funcionarios" description={`${total} cadastrado(s)`}>
+      <Panel
+        title="Lista de funcionarios"
+        description={`${total} cadastrado(s)`}
+      >
         <div className="space-y-3">
-          <ListToolbar placeholder="Buscar por nome, telefone ou e-mail" defaultValue={term} />
+          <ListToolbar
+            placeholder="Buscar por nome, telefone ou e-mail"
+            defaultValue={term}
+          />
 
           {pagedRows.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
-              {term ? "Nenhum funcionario encontrado para essa busca." : "Nenhum funcionario cadastrado ainda."}
+              {term
+                ? "Nenhum funcionario encontrado para essa busca."
+                : "Nenhum funcionario cadastrado ainda."}
             </p>
           ) : (
             <div className="space-y-2">
@@ -183,7 +210,13 @@ export default async function FuncionariosPage({ searchParams }: { searchParams:
             </div>
           )}
         </div>
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/painel/funcionarios" params={{ q: term }} />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          basePath="/painel/funcionarios"
+          params={{ q: term }}
+        />
       </Panel>
     </div>
   );

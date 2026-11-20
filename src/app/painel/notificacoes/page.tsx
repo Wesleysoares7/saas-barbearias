@@ -6,7 +6,10 @@ import { redirect } from "next/navigation";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 
-import { markAllNotificationsReadAction, markNotificationReadAction } from "./actions";
+import {
+  markAllNotificationsReadAction,
+  markNotificationReadAction,
+} from "./actions";
 import { formatDateTimeBR } from "@/lib/datetime";
 
 type NotificationSeverity = "info" | "warning" | "critical";
@@ -68,7 +71,8 @@ export default async function NotificacoesPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { supabase, companyId, userId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, userId, role, redirectTo } =
+    await getAccessContext();
 
   if (!companyId || !userId || !role) {
     redirect(redirectTo ?? "/login");
@@ -79,11 +83,14 @@ export default async function NotificacoesPage({
   }
 
   const resolvedSearchParams = (await searchParams) ?? {};
-  const onlyUnread = sanitizeText(String(resolvedSearchParams.unread ?? "")) === "1";
+  const onlyUnread =
+    sanitizeText(String(resolvedSearchParams.unread ?? "")) === "1";
 
   let notificationsQuery = supabase
     .from("security_notifications")
-    .select("id, actor_id, event_key, title, message, severity, metadata, created_at, read_at")
+    .select(
+      "id, actor_id, event_key, title, message, severity, metadata, created_at, read_at",
+    )
     .eq("company_id", companyId)
     .eq("recipient_id", userId)
     .order("created_at", { ascending: false })
@@ -94,14 +101,23 @@ export default async function NotificacoesPage({
   }
 
   const notificationsResponse = await notificationsQuery;
-  const hasTableIssue = Boolean(notificationsResponse.error?.message.includes("security_notifications"));
-  const notifications = (notificationsResponse.data ?? []) as SecurityNotificationRow[];
+  const hasTableIssue = Boolean(
+    notificationsResponse.error?.message.includes("security_notifications"),
+  );
+  const notifications = (notificationsResponse.data ??
+    []) as SecurityNotificationRow[];
 
-  const actorIds = [...new Set(notifications.map((item) => item.actor_id).filter(Boolean))] as string[];
+  const actorIds = [
+    ...new Set(notifications.map((item) => item.actor_id).filter(Boolean)),
+  ] as string[];
 
   const profilesResponse =
     actorIds.length > 0
-      ? await supabase.from("profiles").select("id, nome, email").eq("company_id", companyId).in("id", actorIds)
+      ? await supabase
+          .from("profiles")
+          .select("id, nome, email")
+          .eq("company_id", companyId)
+          .in("id", actorIds)
       : { data: [] as ProfileRow[], error: null };
 
   const profiles = (profilesResponse.data ?? []) as ProfileRow[];
@@ -110,100 +126,135 @@ export default async function NotificacoesPage({
 
   return (
     <div className="space-y-5">
-        <PageHeader icon={BellRing} title="Notificacoes sensiveis" description="Automacoes para eventos criticos da equipe e convites." actions={<><div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={onlyUnread ? "/painel/notificacoes" : "/painel/notificacoes?unread=1"}
-              className="rounded-lg border border-border px-3 py-2 text-sm text-zinc-100 transition hover:border-amber-400 hover:text-amber-300"
+      <PageHeader
+        icon={BellRing}
+        title="Notificacoes sensiveis"
+        description="Automacoes para eventos criticos da equipe e convites."
+        actions={
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={
+                  onlyUnread
+                    ? "/painel/notificacoes"
+                    : "/painel/notificacoes?unread=1"
+                }
+                className="rounded-lg border border-border px-3 py-2 text-sm text-zinc-100 transition hover:border-brand hover:text-brand"
+              >
+                {onlyUnread ? "Mostrar todas" : "Somente nao lidas"}
+              </Link>
+
+              <form action={markAllNotificationsReadAction}>
+                <PendingButton
+                  type="submit"
+                  variant="ghost"
+                  pendingLabel="Marcando..."
+                  className="h-auto gap-2 rounded-lg border-border px-3 py-2 font-normal text-zinc-100 hover:border-brand hover:bg-transparent hover:text-brand"
+                >
+                  Marcar todas como lidas
+                </PendingButton>
+              </form>
+            </div>
+          </>
+        }
+      />
+
+      <div className="mt-4 rounded-lg border border-border bg-surface-2 px-4 py-3 text-sm text-zinc-200">
+        Total listado: {notifications.length} | Nao lidas: {unreadCount}
+      </div>
+
+      {hasTableIssue ? (
+        <div className="mt-4 rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
+          Este recurso está temporariamente indisponível. Tente novamente em
+          instantes.
+        </div>
+      ) : null}
+
+      {!hasTableIssue && notifications.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-border bg-surface-2 px-4 py-3 text-sm text-zinc-300">
+          Nenhuma notificacao encontrada para os filtros atuais.
+        </p>
+      ) : null}
+
+      <div className="mt-4 space-y-3">
+        {notifications.map((notification) => {
+          const actor = notification.actor_id
+            ? profileById.get(notification.actor_id)
+            : null;
+          const metadataText = JSON.stringify(notification.metadata ?? {});
+
+          return (
+            <article
+              key={notification.id}
+              className="rounded-xl border border-border bg-surface-2 p-4"
             >
-              {onlyUnread ? "Mostrar todas" : "Somente nao lidas"}
-            </Link>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-zinc-100">
+                    {notification.title}
+                  </h2>
+                  <p className="mt-1 text-sm text-zinc-300">
+                    {notification.message}
+                  </p>
+                </div>
 
-            <form action={markAllNotificationsReadAction}>
-              <PendingButton
-                type="submit"
-                variant="ghost"
-                pendingLabel="Marcando..."
-                className="h-auto gap-2 rounded-lg border-border px-3 py-2 font-normal text-zinc-100 hover:border-amber-400 hover:bg-transparent hover:text-amber-300"
-              >
-                Marcar todas como lidas
-              </PendingButton>
-            </form>
-          </div></>} />
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${getSeverityBadgeClassName(notification.severity)}`}
+                  >
+                    {getSeverityLabel(notification.severity)}
+                  </span>
 
-        <div className="mt-4 rounded-lg border border-border bg-surface-2 px-4 py-3 text-sm text-zinc-200">
-          Total listado: {notifications.length} | Nao lidas: {unreadCount}
-        </div>
-
-        {hasTableIssue ? (
-          <div className="mt-4 rounded-lg border border-rose-500/35 bg-rose-600/10 px-4 py-3 text-sm text-rose-100">
-            Este recurso está temporariamente indisponível. Tente novamente em instantes.
-          </div>
-        ) : null}
-
-        {!hasTableIssue && notifications.length === 0 ? (
-          <p className="mt-4 rounded-lg border border-border bg-surface-2 px-4 py-3 text-sm text-zinc-300">
-            Nenhuma notificacao encontrada para os filtros atuais.
-          </p>
-        ) : null}
-
-        <div className="mt-4 space-y-3">
-          {notifications.map((notification) => {
-            const actor = notification.actor_id ? profileById.get(notification.actor_id) : null;
-            const metadataText = JSON.stringify(notification.metadata ?? {});
-
-            return (
-              <article
-                key={notification.id}
-                className="rounded-xl border border-border bg-surface-2 p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-sm font-semibold text-zinc-100">{notification.title}</h2>
-                    <p className="mt-1 text-sm text-zinc-300">{notification.message}</p>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${getSeverityBadgeClassName(notification.severity)}`}
-                    >
-                      {getSeverityLabel(notification.severity)}
+                  {notification.read_at ? (
+                    <span className="rounded-full border border-emerald-500/40 bg-emerald-600/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-200">
+                      Lida
                     </span>
-
-                    {notification.read_at ? (
-                      <span className="rounded-full border border-emerald-500/40 bg-emerald-600/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-emerald-200">
-                        Lida
-                      </span>
-                    ) : (
-                      <form action={markNotificationReadAction}>
-                        <input type="hidden" name="notification_id" value={notification.id} />
-                        <PendingButton
-                          type="submit"
-                          variant="ghost"
-                          pendingLabel="Marcando..."
-                          className="h-auto gap-1.5 rounded-full border-border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] text-zinc-200 hover:border-amber-400 hover:bg-transparent hover:text-amber-300"
-                        >
-                          Marcar como lida
-                        </PendingButton>
-                      </form>
-                    )}
-                  </div>
+                  ) : (
+                    <form action={markNotificationReadAction}>
+                      <input
+                        type="hidden"
+                        name="notification_id"
+                        value={notification.id}
+                      />
+                      <PendingButton
+                        type="submit"
+                        variant="ghost"
+                        pendingLabel="Marcando..."
+                        className="h-auto gap-1.5 rounded-full border-border px-2.5 py-1 text-[11px] uppercase tracking-[0.08em] text-zinc-200 hover:border-brand hover:bg-transparent hover:text-brand"
+                      >
+                        Marcar como lida
+                      </PendingButton>
+                    </form>
+                  )}
                 </div>
+              </div>
 
-                <div className="mt-3 grid gap-2 text-xs text-zinc-400 sm:grid-cols-2">
-                  <p>Evento: {notification.event_key}</p>
-                  <p>Criada em: {formatDateTime(notification.created_at)}</p>
-                  <p>Ator: {actor ? `${actor.nome} (${actor.email})` : "Sistema"}</p>
-                  <p>Lida em: {notification.read_at ? formatDateTime(notification.read_at) : "Nao lida"}</p>
-                </div>
+              <div className="mt-3 grid gap-2 text-xs text-zinc-400 sm:grid-cols-2">
+                <p>Evento: {notification.event_key}</p>
+                <p>Criada em: {formatDateTime(notification.created_at)}</p>
+                <p>
+                  Ator: {actor ? `${actor.nome} (${actor.email})` : "Sistema"}
+                </p>
+                <p>
+                  Lida em:{" "}
+                  {notification.read_at
+                    ? formatDateTime(notification.read_at)
+                    : "Nao lida"}
+                </p>
+              </div>
 
-                <details className="mt-3 rounded-lg border border-border bg-surface px-3 py-2">
-                  <summary className="cursor-pointer text-xs font-medium text-zinc-300">Metadata</summary>
-                  <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-zinc-400">{metadataText}</pre>
-                </details>
-              </article>
-            );
-          })}
-        </div>
+              <details className="mt-3 rounded-lg border border-border bg-surface px-3 py-2">
+                <summary className="cursor-pointer text-xs font-medium text-zinc-300">
+                  Metadata
+                </summary>
+                <pre className="mt-2 overflow-x-auto whitespace-pre-wrap text-xs text-zinc-400">
+                  {metadataText}
+                </pre>
+              </details>
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }

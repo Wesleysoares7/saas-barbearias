@@ -16,7 +16,11 @@ import {
 import type { AppointmentStatus } from "@/types";
 import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
 import { ListRow } from "@/components/painel/ui/list-row";
-import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
+import {
+  Pagination,
+  parsePageParam,
+  sanitizeSearchTerm,
+} from "@/components/painel/ui/pagination";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import {
   AppointmentsFilters,
@@ -33,13 +37,19 @@ import {
 const COMPLETED_PAGE_SIZE = 20;
 const PERIODS: AppointmentPeriod[] = ["hoje", "ontem", "semana", "todos"];
 
-function parsePeriod(value: string | undefined, hasTerm: boolean): AppointmentPeriod {
+function parsePeriod(
+  value: string | undefined,
+  hasTerm: boolean,
+): AppointmentPeriod {
   const found = PERIODS.find((period) => period === value);
 
   return found ?? (hasTerm ? "todos" : "hoje");
 }
 
-function getPeriodRange(periodo: AppointmentPeriod, today: string): { from: string; to: string } | null {
+function getPeriodRange(
+  periodo: AppointmentPeriod,
+  today: string,
+): { from: string; to: string } | null {
   if (periodo === "todos") {
     return null;
   }
@@ -61,10 +71,16 @@ function getPeriodRange(periodo: AppointmentPeriod, today: string): { from: stri
 }
 
 function normalizeText(value: string): string {
-  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
 
 type VoidedAppointmentRow = {
   id: string;
@@ -96,7 +112,10 @@ function addDays(dayKey: string, amount: number): string {
 function formatDayHeading(dayKey: string, today: string): string {
   const [year, month, day] = dayKey.split("-");
   const date = new Date(`${dayKey}T12:00:00Z`);
-  const weekday = new Intl.DateTimeFormat("pt-BR", { weekday: "short", timeZone: "UTC" })
+  const weekday = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    timeZone: "UTC",
+  })
     .format(date)
     .replace(".", "");
   const base = `${weekday}, ${day}/${month}`;
@@ -116,7 +135,9 @@ function formatDayHeading(dayKey: string, today: string): string {
   return base;
 }
 
-function groupByDay<T extends { data_hora: string }>(rows: T[]): Array<{ day: string; rows: T[] }> {
+function groupByDay<T extends { data_hora: string }>(
+  rows: T[],
+): Array<{ day: string; rows: T[] }> {
   const groups: Array<{ day: string; rows: T[] }> = [];
 
   for (const row of rows) {
@@ -167,7 +188,8 @@ export default async function AgendamentosPage({
 }: {
   searchParams: Promise<{ q?: string; periodo?: string; pagina?: string }>;
 }) {
-  const { supabase, companyId, role, redirectTo, employeeId } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, employeeId } =
+    await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -273,26 +295,39 @@ export default async function AgendamentosPage({
     }
 
     const phone = row.cliente_telefone ?? "";
-    const serviceName = services.find((service) => service.id === row.service_id)?.nome ?? "";
-    const employeeName = employees.find((employee) => employee.id === row.employee_id)?.nome ?? "";
-    const textMatch = [row.cliente_nome, phone, serviceName, employeeName].some((value) =>
-      normalizeText(value).includes(normalizedTerm),
+    const serviceName =
+      services.find((service) => service.id === row.service_id)?.nome ?? "";
+    const employeeName =
+      employees.find((employee) => employee.id === row.employee_id)?.nome ?? "";
+    const textMatch = [row.cliente_nome, phone, serviceName, employeeName].some(
+      (value) => normalizeText(value).includes(normalizedTerm),
     );
 
-    return textMatch || (termDigits.length > 0 && phone.replace(/\D/g, "").includes(termDigits));
+    return (
+      textMatch ||
+      (termDigits.length > 0 && phone.replace(/\D/g, "").includes(termDigits))
+    );
   };
 
   // Separar agendamentos concluídos dos pendentes
   const pendingAppointments = appointments.filter(
     (appointment) =>
-      appointment.status !== "concluido" && !isVoidedStatus(appointment.status) && matchesFilters(appointment),
+      appointment.status !== "concluido" &&
+      !isVoidedStatus(appointment.status) &&
+      matchesFilters(appointment),
   );
   const filteredCompleted = appointments
-    .filter((appointment) => appointment.status === "concluido" && matchesFilters(appointment))
+    .filter(
+      (appointment) =>
+        appointment.status === "concluido" && matchesFilters(appointment),
+    )
     .sort((a, b) => b.data_hora.localeCompare(a.data_hora));
 
   const completedTotal = filteredCompleted.length;
-  const completedTotalPages = Math.max(1, Math.ceil(completedTotal / COMPLETED_PAGE_SIZE));
+  const completedTotalPages = Math.max(
+    1,
+    Math.ceil(completedTotal / COMPLETED_PAGE_SIZE),
+  );
   const page = Math.min(requestedPage, completedTotalPages);
   const completedAppointments = filteredCompleted.slice(
     (page - 1) * COMPLETED_PAGE_SIZE,
@@ -317,10 +352,16 @@ export default async function AgendamentosPage({
       .gte("excluido_em", since)
       .order("excluido_em", { ascending: false });
 
-    voidedAppointments = ((voidedData ?? []) as VoidedAppointmentRow[]).filter(matchesFilters);
+    voidedAppointments = ((voidedData ?? []) as VoidedAppointmentRow[]).filter(
+      matchesFilters,
+    );
 
     const actorIds = Array.from(
-      new Set(voidedAppointments.map((row) => row.excluido_por).filter((value): value is string => Boolean(value))),
+      new Set(
+        voidedAppointments
+          .map((row) => row.excluido_por)
+          .filter((value): value is string => Boolean(value)),
+      ),
     );
 
     if (actorIds.length > 0) {
@@ -330,8 +371,15 @@ export default async function AgendamentosPage({
         .eq("company_id", companyId)
         .in("id", actorIds);
 
-      for (const actor of (actors ?? []) as Array<{ id: string; nome: string | null; email: string | null }>) {
-        excluidoPorNomes.set(actor.id, actor.nome?.trim() || actor.email || "-");
+      for (const actor of (actors ?? []) as Array<{
+        id: string;
+        nome: string | null;
+        email: string | null;
+      }>) {
+        excluidoPorNomes.set(
+          actor.id,
+          actor.nome?.trim() || actor.email || "-",
+        );
       }
     }
   }
@@ -348,7 +396,11 @@ export default async function AgendamentosPage({
               canCompleteAndCharge &&
               employees.length > 0 &&
               services.length > 0 && (
-                <QuickAppointmentDialog employees={employees} services={services} customers={customers} />
+                <QuickAppointmentDialog
+                  employees={employees}
+                  services={services}
+                  customers={customers}
+                />
               )}
             {canCreateAppointment &&
               employees.length > 0 &&
@@ -357,7 +409,7 @@ export default async function AgendamentosPage({
                   title="Novo Agendamento"
                   contentClassName="max-w-3xl"
                   trigger={
-                    <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
+                    <Button className="h-11 bg-brand text-brand-foreground hover:bg-brand/90">
                       <Plus className="size-4 mr-2" />
                       Novo Agendamento
                     </Button>
@@ -382,7 +434,10 @@ export default async function AgendamentosPage({
               {role === "admin" ? (
                 <>
                   Cadastre pelo menos um servico ativo para criar agendamentos.{" "}
-                  <Link href="/painel/servicos" className="font-medium underline">
+                  <Link
+                    href="/painel/servicos"
+                    className="font-medium underline"
+                  >
                     Ir para Servicos
                   </Link>
                 </>
@@ -395,8 +450,12 @@ export default async function AgendamentosPage({
             <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
               {role === "admin" ? (
                 <>
-                  Cadastre pelo menos um funcionario ativo (voce pode se cadastrar como funcionario).{" "}
-                  <Link href="/painel/funcionarios" className="font-medium underline">
+                  Cadastre pelo menos um funcionario ativo (voce pode se
+                  cadastrar como funcionario).{" "}
+                  <Link
+                    href="/painel/funcionarios"
+                    className="font-medium underline"
+                  >
                     Ir para Funcionarios
                   </Link>
                 </>
@@ -425,7 +484,9 @@ export default async function AgendamentosPage({
         {appointments.length > 0 ? (
           <p className="px-1 text-xs text-muted-foreground">
             {pendingAppointments.length} pendentes · {completedTotal} concluidos
-            {role === "admin" ? ` · ${voidedAppointments.length} excluidos` : ""}
+            {role === "admin"
+              ? ` · ${voidedAppointments.length} excluidos`
+              : ""}
           </p>
         ) : null}
 
@@ -433,10 +494,15 @@ export default async function AgendamentosPage({
           <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum agendamento cadastrado ainda.
           </p>
-        ) : pendingAppointments.length === 0 && completedTotal === 0 && voidedAppointments.length === 0 ? (
+        ) : pendingAppointments.length === 0 &&
+          completedTotal === 0 &&
+          voidedAppointments.length === 0 ? (
           <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum atendimento encontrado para este filtro.{" "}
-            <Link href="/painel/agendamentos?periodo=todos" className="font-medium underline">
+            <Link
+              href="/painel/agendamentos?periodo=todos"
+              className="font-medium underline"
+            >
               Ver todos
             </Link>
           </p>
@@ -465,7 +531,9 @@ export default async function AgendamentosPage({
 
             {completedAppointments.length > 0 && (
               <div className="space-y-4 border-t border-border pt-6">
-                <h3 className="text-lg font-semibold text-foreground">Agendamentos Concluidos</h3>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Agendamentos Concluidos
+                </h3>
                 {completedGroups.map((group) => (
                   <section key={group.day} className="space-y-2">
                     <h4 className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -475,8 +543,17 @@ export default async function AgendamentosPage({
                       <CompletedAppointmentItem
                         key={appointment.id}
                         appointment={appointment}
-                        servicoNome={services.find((service) => service.id === appointment.service_id)?.nome}
-                        funcionarioNome={employees.find((employee) => employee.id === appointment.employee_id)?.nome}
+                        servicoNome={
+                          services.find(
+                            (service) => service.id === appointment.service_id,
+                          )?.nome
+                        }
+                        funcionarioNome={
+                          employees.find(
+                            (employee) =>
+                              employee.id === appointment.employee_id,
+                          )?.nome
+                        }
                         canDelete={role === "admin"}
                       />
                     ))}
@@ -497,12 +574,18 @@ export default async function AgendamentosPage({
 
       {role === "admin" && voidedAppointments.length > 0 && (
         <div className="space-y-3 border-t border-border pt-6">
-          <h3 className="text-lg font-semibold text-foreground">Agendamentos Excluidos</h3>
+          <h3 className="text-lg font-semibold text-foreground">
+            Agendamentos Excluidos
+          </h3>
           <p className="px-1 text-xs text-muted-foreground">Ultimos 90 dias.</p>
           {voidedAppointments.map((row) => {
             const valor = row.valor_estornado;
-            const servicoNome = services.find((service) => service.id === row.service_id)?.nome ?? "Servico";
-            const funcionarioNome = employees.find((employee) => employee.id === row.employee_id)?.nome ?? "Funcionario";
+            const servicoNome =
+              services.find((service) => service.id === row.service_id)?.nome ??
+              "Servico";
+            const funcionarioNome =
+              employees.find((employee) => employee.id === row.employee_id)
+                ?.nome ?? "Funcionario";
 
             return (
               <ListRow
@@ -513,14 +596,25 @@ export default async function AgendamentosPage({
                 columns={[
                   {
                     label: "Valor estornado",
-                    value: typeof valor === "number" ? currencyFormatter.format(valor) : "-",
+                    value:
+                      typeof valor === "number"
+                        ? currencyFormatter.format(valor)
+                        : "-",
                   },
-                  { label: "Excluido em", value: formatDateTimeBR(row.excluido_em) },
+                  {
+                    label: "Excluido em",
+                    value: formatDateTimeBR(row.excluido_em),
+                  },
                   {
                     label: "Excluido por",
-                    value: row.excluido_por ? (excluidoPorNomes.get(row.excluido_por) ?? "-") : "-",
+                    value: row.excluido_por
+                      ? (excluidoPorNomes.get(row.excluido_por) ?? "-")
+                      : "-",
                   },
-                  { label: "Motivo", value: row.motivo_exclusao?.trim() || "-" },
+                  {
+                    label: "Motivo",
+                    value: row.motivo_exclusao?.trim() || "-",
+                  },
                 ]}
                 status={<StatusPill tone="danger">Excluido</StatusPill>}
                 actions={null}

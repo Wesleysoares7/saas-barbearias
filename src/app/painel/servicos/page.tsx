@@ -8,7 +8,11 @@ import { CreateServiceForm } from "@/components/painel/servicos/create-service-f
 import { ServiceItemForm } from "@/components/painel/servicos/service-item-form";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { ListToolbar } from "@/components/painel/ui/list-toolbar";
-import { Pagination, parsePageParam, sanitizeSearchTerm } from "@/components/painel/ui/pagination";
+import {
+  Pagination,
+  parsePageParam,
+  sanitizeSearchTerm,
+} from "@/components/painel/ui/pagination";
 import { Panel } from "@/components/painel/ui/panel";
 const PAGE_SIZE = 20;
 
@@ -20,7 +24,11 @@ type ServiceRow = {
   ativo: boolean;
 };
 
-export default async function ServicosPage({ searchParams }: { searchParams: Promise<{ q?: string; pagina?: string }> }) {
+export default async function ServicosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; pagina?: string }>;
+}) {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();
 
   if (!companyId || !role) {
@@ -54,21 +62,24 @@ export default async function ServicosPage({ searchParams }: { searchParams: Pro
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={Scissors} title="Servicos" description="Cadastre e mantenha os servicos oferecidos pela sua empresa."
+      <PageHeader
+        icon={Scissors}
+        title="Servicos"
+        description="Cadastre e mantenha os servicos oferecidos pela sua empresa."
         actions={
           <>
-<FormDialog
-            title="Novo Servico"
-            contentClassName="max-w-2xl"
-            trigger={
-              <Button className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300">
-                <Plus className="size-4 mr-2" />
-                Novo Servico
-              </Button>
-            }
-          >
-            <CreateServiceForm />
-          </FormDialog>
+            <FormDialog
+              title="Novo Servico"
+              contentClassName="max-w-2xl"
+              trigger={
+                <Button className="h-11 bg-brand text-brand-foreground hover:bg-brand/90">
+                  <Plus className="size-4 mr-2" />
+                  Novo Servico
+                </Button>
+              }
+            >
+              <CreateServiceForm />
+            </FormDialog>
           </>
         }
       />
@@ -79,7 +90,9 @@ export default async function ServicosPage({ searchParams }: { searchParams: Pro
 
           {serviceRows.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
-              {term ? "Nenhum servico encontrado para essa busca." : "Nenhum servico cadastrado ainda."}
+              {term
+                ? "Nenhum servico encontrado para essa busca."
+                : "Nenhum servico cadastrado ainda."}
             </p>
           ) : (
             <div className="space-y-2">
@@ -89,7 +102,13 @@ export default async function ServicosPage({ searchParams }: { searchParams: Pro
             </div>
           )}
         </div>
-        <Pagination page={page} pageSize={PAGE_SIZE} total={total} basePath="/painel/servicos" params={{ q: term }} />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          basePath="/painel/servicos"
+          params={{ q: term }}
+        />
       </Panel>
     </div>
   );

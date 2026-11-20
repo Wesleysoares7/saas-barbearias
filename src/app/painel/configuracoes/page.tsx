@@ -2,9 +2,11 @@ import { redirect } from "next/navigation";
 import { Settings } from "lucide-react";
 
 import { LogoForm } from "@/components/painel/configuracoes/logo-form";
+import { ThemeForm } from "@/components/painel/configuracoes/theme-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { getTheme } from "@/lib/themes";
 
 export default async function ConfiguracoesPage() {
   const { supabase, companyId, role, redirectTo } = await getAccessContext();
@@ -19,19 +21,40 @@ export default async function ConfiguracoesPage() {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("nome, logo")
+    .select("nome, logo, tema")
     .eq("id", companyId)
     .maybeSingle();
 
-  const logoPath = typeof company?.logo === "string" && company.logo ? company.logo : null;
-  const logoUrl = logoPath ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data.publicUrl : null;
+  const logoPath =
+    typeof company?.logo === "string" && company.logo ? company.logo : null;
+  const logoUrl = logoPath
+    ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data
+        .publicUrl
+    : null;
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={Settings} title="Configuracoes" description="Ajustes da sua empresa." />
+      <PageHeader
+        icon={Settings}
+        title="Configuracoes"
+        description="Ajustes da sua empresa."
+      />
 
-      <Panel title="Logo da empresa" description="Aparece para identificar sua empresa no painel.">
-        <LogoForm logoUrl={logoUrl} companyName={company?.nome ?? "Minha empresa"} />
+      <Panel
+        title="Logo da empresa"
+        description="Aparece para identificar sua empresa no painel."
+      >
+        <LogoForm
+          logoUrl={logoUrl}
+          companyName={company?.nome ?? "Minha empresa"}
+        />
+      </Panel>
+
+      <Panel
+        title="Tema de cores"
+        description="Escolha a cor de destaque do painel. Vale para todos os usuarios da empresa."
+      >
+        <ThemeForm currentTheme={getTheme(company?.tema).value} />
       </Panel>
     </div>
   );

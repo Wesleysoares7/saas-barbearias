@@ -19,7 +19,7 @@ export function LegalPage({
         <header className="space-y-2 border-b border-zinc-800 pb-6">
           <Link
             href="/login"
-            className="text-sm text-amber-300 hover:text-amber-200"
+            className="text-sm text-brand hover:text-amber-200"
           >
             ← Voltar
           </Link>
@@ -30,7 +30,7 @@ export function LegalPage({
         </header>
 
         {showDevWarning ? (
-          <p className="rounded-lg border border-amber-400/40 bg-amber-400/10 p-3 text-sm text-amber-200">
+          <p className="rounded-lg border border-brand/40 bg-brand/10 p-3 text-sm text-amber-200">
             Aviso (somente em desenvolvimento): ainda há campos [PREENCHER] em
             src/lib/legal.ts.
           </p>
@@ -39,13 +39,10 @@ export function LegalPage({
         {children}
 
         <footer className="flex flex-wrap gap-4 border-t border-zinc-800 pt-6 text-sm">
-          <Link href="/termos" className="text-amber-300 hover:text-amber-200">
+          <Link href="/termos" className="text-brand hover:text-amber-200">
             Termos de Uso
           </Link>
-          <Link
-            href="/privacidade"
-            className="text-amber-300 hover:text-amber-200"
-          >
+          <Link href="/privacidade" className="text-brand hover:text-amber-200">
             Política de Privacidade
           </Link>
         </footer>

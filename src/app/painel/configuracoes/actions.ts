@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
+import { isThemeId } from "@/lib/themes";
 
 type ActionState = {
   success: boolean;
@@ -154,4 +155,37 @@ export async function removeLogoAction(): Promise<ActionState> {
 
   revalidatePath("/painel");
   return { success: true, message: "Logo removida." };
+}
+
+export async function setThemeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const tema = formData.get("tema");
+
+  if (!isThemeId(tema)) {
+    return { success: false, message: "Escolha um dos temas disponiveis." };
+  }
+
+  const scope = await getAccessContext();
+
+  if (!scope.companyId) {
+    return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(scope.role)) {
+    return { success: false, message: "Apenas administradores podem alterar o tema da empresa." };
+  }
+
+  const { data: updated, error } = await scope.supabase
+    .from("companies")
+    .update({ tema })
+    .eq("id", scope.companyId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updated) {
+    return { success: false, message: "Nao foi possivel salvar o tema. Tente novamente." };
+  }
+
+  revalidatePath("/painel", "layout");
+
+  return { success: true, message: "Tema atualizado com sucesso." };
 }

@@ -21,14 +21,21 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      disabled={pending}
+    >
       {pending ? "Salvando..." : "Adicionar servico"}
     </Button>
   );
 }
 
 export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
-  const [state, formAction] = useActionState<ActionState, FormData>(createServiceAction, INITIAL_STATE);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    createServiceAction,
+    INITIAL_STATE,
+  );
 
   // Fechar modal após sucesso
   useEffect(() => {
@@ -46,21 +53,31 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <>
       {state.message ? (
-        <div className="sticky top-3 z-30 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-30 flex justify-center"
+          aria-live="polite"
+        >
           <div
             className={`w-full max-w-2xl rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
               state.success
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
-            style={state.success ? { animation: "service-toast-fade 3.5s ease forwards" } : undefined}
+            style={
+              state.success
+                ? { animation: "service-toast-fade 3.5s ease forwards" }
+                : undefined
+            }
           >
             {state.message}
           </div>
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
+      <form
+        action={formAction}
+        className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2"
+      >
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-servico-nome" className="text-sm text-zinc-200">
             Nome
@@ -69,14 +86,17 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             id="novo-servico-nome"
             name="nome"
             type="text"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="Ex.: Corte masculino"
             required
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="novo-servico-duracao" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-servico-duracao"
+            className="text-sm text-zinc-200"
+          >
             Duracao (min)
           </label>
           <input
@@ -85,7 +105,7 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             type="number"
             min={1}
             step={1}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="45"
             required
           />
@@ -101,14 +121,19 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
             type="number"
             min={0}
             step="0.01"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="50"
             required
           />
         </div>
 
         <label className="flex items-center gap-2 text-sm text-zinc-200 md:col-span-2">
-          <input name="ativo" type="checkbox" defaultChecked className="h-4 w-4 accent-amber-400" />
+          <input
+            name="ativo"
+            type="checkbox"
+            defaultChecked
+            className="h-4 w-4 accent-brand"
+          />
           Servico ativo
         </label>
 
@@ -136,5 +161,3 @@ export function CreateServiceForm({ onSuccess }: { onSuccess?: () => void }) {
     </>
   );
 }
-
-

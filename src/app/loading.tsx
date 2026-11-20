@@ -6,7 +6,7 @@ export default function Loading() {
       aria-busy="true"
       className="flex min-h-screen flex-col items-center justify-center gap-3 bg-zinc-950"
     >
-      <Spinner className="size-8 text-amber-400" />
+      <Spinner className="size-8 text-brand" />
       <p className="text-sm text-zinc-300">Carregando...</p>
     </main>
   );

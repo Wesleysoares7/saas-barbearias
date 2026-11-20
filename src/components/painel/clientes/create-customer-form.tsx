@@ -21,14 +21,21 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" className="h-11 bg-amber-400 text-zinc-950 hover:bg-amber-300" disabled={pending}>
+    <Button
+      type="submit"
+      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      disabled={pending}
+    >
       {pending ? "Salvando..." : "Adicionar cliente"}
     </Button>
   );
 }
 
 export function CreateCustomerForm() {
-  const [state, formAction] = useActionState<ActionState, FormData>(createCustomerAction, INITIAL_STATE);
+  const [state, formAction] = useActionState<ActionState, FormData>(
+    createCustomerAction,
+    INITIAL_STATE,
+  );
 
   // O modal fecha no sucesso; a action ja revalida a lista
   useCloseOnSuccess(state.success);
@@ -36,21 +43,31 @@ export function CreateCustomerForm() {
   return (
     <>
       {state.message ? (
-        <div className="sticky top-3 z-30 flex justify-center" aria-live="polite">
+        <div
+          className="sticky top-3 z-30 flex justify-center"
+          aria-live="polite"
+        >
           <div
             className={`w-full max-w-2xl rounded-lg border px-4 py-3 text-sm font-medium shadow-lg ${
               state.success
                 ? "border-emerald-500/50 bg-emerald-600/15 text-emerald-200"
                 : "border-amber-500/50 bg-amber-600/15 text-amber-200"
             }`}
-            style={state.success ? { animation: "customer-toast-fade 3.5s ease forwards" } : undefined}
+            style={
+              state.success
+                ? { animation: "customer-toast-fade 3.5s ease forwards" }
+                : undefined
+            }
           >
             {state.message}
           </div>
         </div>
       ) : null}
 
-      <form action={formAction} className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2">
+      <form
+        action={formAction}
+        className="grid gap-3 rounded-xl border border-border bg-surface-2 p-4 md:grid-cols-2"
+      >
         <div className="space-y-1 md:col-span-2">
           <label htmlFor="novo-cliente-nome" className="text-sm text-zinc-200">
             Nome
@@ -59,21 +76,24 @@ export function CreateCustomerForm() {
             id="novo-cliente-nome"
             name="nome"
             type="text"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="Ex.: Joao Silva"
             required
           />
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="novo-cliente-telefone" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-cliente-telefone"
+            className="text-sm text-zinc-200"
+          >
             Telefone
           </label>
           <input
             id="novo-cliente-telefone"
             name="telefone"
             type="text"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="(11) 99999-9999"
           />
         </div>
@@ -86,26 +106,34 @@ export function CreateCustomerForm() {
             id="novo-cliente-email"
             name="email"
             type="email"
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="cliente@email.com"
           />
         </div>
 
         <div className="space-y-1 md:col-span-2">
-          <label htmlFor="novo-cliente-observacoes" className="text-sm text-zinc-200">
+          <label
+            htmlFor="novo-cliente-observacoes"
+            className="text-sm text-zinc-200"
+          >
             Observacoes
           </label>
           <textarea
             id="novo-cliente-observacoes"
             name="observacoes"
             rows={3}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-amber-400"
+            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-zinc-100 outline-none focus:border-brand"
             placeholder="Preferencias, alergias, anotacoes importantes..."
           />
         </div>
 
         <label className="flex items-center gap-2 text-sm text-zinc-200 md:col-span-2">
-          <input name="ativo" type="checkbox" defaultChecked className="h-4 w-4 accent-amber-400" />
+          <input
+            name="ativo"
+            type="checkbox"
+            defaultChecked
+            className="h-4 w-4 accent-brand"
+          />
           Cliente ativo
         </label>
 
