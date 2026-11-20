@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { SESSION_MAX_AGE_SECONDS } from "@/lib/auth/session-policy";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 export async function updateSession(request: NextRequest) {
@@ -39,6 +40,7 @@ export async function updateSession(request: NextRequest) {
         });
       },
     },
+    cookieOptions: { maxAge: SESSION_MAX_AGE_SECONDS },
   });
 
   // Valida sessao atual para aplicar regras de acesso.

@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { SESSION_MAX_AGE_SECONDS } from "@/lib/auth/session-policy";
 import { getSupabaseEnv } from "@/lib/supabase/env";
 
 export async function createSupabaseServerClient() {
@@ -23,5 +24,6 @@ export async function createSupabaseServerClient() {
         }
       },
     },
+    cookieOptions: { maxAge: SESSION_MAX_AGE_SECONDS },
   });
 }
