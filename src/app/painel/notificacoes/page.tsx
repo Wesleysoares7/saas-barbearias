@@ -1,6 +1,7 @@
 import { BellRing } from "lucide-react";
 import { PendingButton } from "@/components/ui/pending-button";
 import { PageHeader } from "@/components/painel/ui/page-header";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -139,9 +140,10 @@ export default async function NotificacoesPage({
                     ? "/painel/notificacoes"
                     : "/painel/notificacoes?unread=1"
                 }
-                className="rounded-lg border border-border px-3 py-2 text-sm text-zinc-100 transition hover:border-brand hover:text-brand"
+                className="relative rounded-lg border border-border px-3 py-2 text-sm text-zinc-100 transition hover:border-brand hover:text-brand"
               >
                 {onlyUnread ? "Mostrar todas" : "Somente nao lidas"}
+                <NavLinkPending />
               </Link>
 
               <form action={markAllNotificationsReadAction}>

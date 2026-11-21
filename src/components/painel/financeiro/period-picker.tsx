@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { Loader2 } from "lucide-react";
 
 type PeriodPickerProps = {
   start: string;
@@ -27,11 +28,13 @@ const CHIP_CLASS =
   "inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm font-medium transition";
 const CHIP_IDLE = `${CHIP_CLASS} border-border bg-surface text-foreground hover:border-brand`;
 const CHIP_ACTIVE = `${CHIP_CLASS} border-brand bg-brand/15 text-brand`;
+const CHIP_PENDING = `${CHIP_CLASS} border-border bg-surface text-foreground opacity-60 cursor-not-allowed`;
 const DATE_INPUT_CLASS =
   "min-h-11 w-full min-w-0 rounded-lg border border-border bg-surface px-3 text-base text-foreground outline-none focus:border-brand";
 
 export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" }: PeriodPickerProps) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [custom, setCustom] = useState(false);
   const [customStart, setCustomStart] = useState(start);
   const [customEnd, setCustomEnd] = useState(end);
@@ -43,7 +46,9 @@ export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" 
       params.set("aba", aba);
     }
 
-    router.push(`${basePath}?${params.toString()}`);
+    startTransition(() => {
+      router.push(`${basePath}?${params.toString()}`);
+    });
   }
 
   function pick(kind: "hoje" | "7dias" | "mes" | "passado") {
@@ -64,25 +69,25 @@ export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" 
   }
 
   return (
-    <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-3">
+    <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-3" aria-busy={pending}>
       <p className="text-xs text-muted-foreground">
-        Periodo: <span className="font-medium text-foreground">{shortDate(start)} - {shortDate(end)}</span>
+        Periodo: {pending && <Loader2 className="inline size-4 animate-spin ml-1" aria-hidden />} <span className="font-medium text-foreground">{shortDate(start)} - {shortDate(end)}</span>
       </p>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <button type="button" className={CHIP_IDLE} onClick={() => pick("hoje")}>
+        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("hoje")} disabled={pending}>
           Hoje
         </button>
-        <button type="button" className={CHIP_IDLE} onClick={() => pick("7dias")}>
+        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("7dias")} disabled={pending}>
           7 dias
         </button>
-        <button type="button" className={CHIP_IDLE} onClick={() => pick("mes")}>
+        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("mes")} disabled={pending}>
           Este mes
         </button>
-        <button type="button" className={CHIP_IDLE} onClick={() => pick("passado")}>
+        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("passado")} disabled={pending}>
           Mes passado
         </button>
-        <button type="button" className={custom ? CHIP_ACTIVE : CHIP_IDLE} onClick={() => setCustom((value) => !value)}>
+        <button type="button" className={custom ? (pending ? CHIP_PENDING : CHIP_ACTIVE) : (pending ? CHIP_PENDING : CHIP_IDLE)} onClick={() => setCustom((value) => !value)} disabled={pending}>
           Personalizado
         </button>
       </div>
@@ -104,6 +109,7 @@ export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" 
             value={customStart}
             onChange={(event) => setCustomStart(event.target.value)}
             className={DATE_INPUT_CLASS}
+            disabled={pending}
             required
           />
           <input
@@ -112,11 +118,13 @@ export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" 
             value={customEnd}
             onChange={(event) => setCustomEnd(event.target.value)}
             className={DATE_INPUT_CLASS}
+            disabled={pending}
             required
           />
           <button
             type="submit"
-            className="col-span-2 min-h-11 rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground sm:col-span-1"
+            disabled={pending}
+            className="col-span-2 min-h-11 rounded-lg bg-brand px-4 text-sm font-medium text-brand-foreground sm:col-span-1 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Aplicar
           </button>

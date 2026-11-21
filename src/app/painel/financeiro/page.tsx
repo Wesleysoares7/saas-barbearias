@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { ListRow } from "@/components/painel/ui/list-row";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import { PeriodPicker } from "@/components/painel/financeiro/period-picker";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { CreatePaymentForm } from "@/components/painel/financeiro/create-payment-form";
@@ -500,9 +501,10 @@ export default async function FinanceiroPage({
           <Link
             key={item.id}
             href={tabHref(item.id)}
-            className={tabClass(tab === item.id)}
+            className={`relative ${tabClass(tab === item.id)}`}
           >
             {item.label}
+            <NavLinkPending />
           </Link>
         ))}
       </nav>
