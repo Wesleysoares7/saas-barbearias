@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { NavigationProgress } from "@/components/ui/navigation-progress";
+import { BRAND_PAGE_TITLE } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SaaS Agenda de Servicos",
-  description: "Sistema SaaS de agendamento para barbearias, saloes e negocios de beleza",
+  title: BRAND_PAGE_TITLE,
+  description: "Agenda, caixa e comissões para barbearias e salões de beleza.",
 };
 
 export default function RootLayout({
