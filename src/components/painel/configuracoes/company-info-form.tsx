@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 
 import { setCompanyInfoAction } from "@/app/painel/configuracoes/actions";
 import { Button } from "@/components/ui/button";
+import { formatDocumento, onlyDigits } from "@/lib/documento";
 
 type ActionState = {
   success: boolean;
@@ -19,6 +20,7 @@ type CompanyInfo = {
   cidade: string | null;
   uf: string | null;
   email_contato: string | null;
+  documento: string | null;
 };
 
 type CompanyInfoFormProps = Readonly<{
@@ -92,6 +94,14 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
   const [endereco, setEndereco] = useState(company.endereco ?? "");
   const [cidade, setCidade] = useState(company.cidade ?? "");
   const [uf, setUf] = useState(company.uf ?? "");
+  const [documentoInput, setDocumentoInput] = useState(
+    company.documento ? formatDocumento(company.documento) : "",
+  );
+
+  const handleDocumentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = onlyDigits(e.target.value);
+    setDocumentoInput(digits ? formatDocumento(digits) : "");
+  };
 
   return (
     <form
@@ -218,6 +228,26 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
               </option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label
+            htmlFor="documento"
+            className="block text-sm font-medium text-foreground mb-1"
+          >
+            CPF ou CNPJ (opcional)
+          </label>
+          <input
+            type="text"
+            id="documento"
+            name="documento"
+            inputMode="numeric"
+            value={documentoInput}
+            onChange={handleDocumentoChange}
+            maxLength={18}
+            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          />
         </div>
       </div>
 

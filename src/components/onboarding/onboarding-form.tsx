@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import {
   completeOnboardingAction,
   type OnboardingActionState,
 } from "@/app/onboarding/actions";
+import { formatDocumento, onlyDigits } from "@/lib/documento";
 
 const ONBOARDING_INITIAL_STATE: OnboardingActionState = {
   success: false,
@@ -33,6 +34,12 @@ export function OnboardingForm() {
     completeOnboardingAction,
     ONBOARDING_INITIAL_STATE,
   );
+  const [documentoInput, setDocumentoInput] = useState("");
+
+  const handleDocumentoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = onlyDigits(e.target.value);
+    setDocumentoInput(digits ? formatDocumento(digits) : "");
+  };
 
   return (
     <form action={formAction} className="space-y-4" noValidate>
@@ -108,6 +115,29 @@ export function OnboardingForm() {
           className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
           placeholder="Rua, numero e bairro"
         />
+      </div>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="documento"
+          className="block text-sm font-medium text-zinc-200"
+        >
+          CPF ou CNPJ (opcional)
+        </label>
+        <input
+          id="documento"
+          name="documento"
+          inputMode="numeric"
+          type="text"
+          value={documentoInput}
+          onChange={handleDocumentoChange}
+          className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+          placeholder="000.000.000-00 ou 00.000.000/0000-00"
+          aria-invalid={Boolean(state.fieldErrors?.documento)}
+        />
+        {state.fieldErrors?.documento ? (
+          <p className="text-sm text-brand">{state.fieldErrors.documento}</p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2">

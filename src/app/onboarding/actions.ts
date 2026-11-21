@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { validateDocumento, onlyDigits } from "@/lib/documento";
 
 export type OnboardingActionState = {
   success: boolean;
@@ -12,6 +13,7 @@ export type OnboardingActionState = {
   fieldErrors?: {
     nomeResponsavel?: string;
     nomeEmpresa?: string;
+    documento?: string;
   };
 };
 
@@ -31,6 +33,7 @@ export async function completeOnboardingAction(
   const nomeEmpresa = sanitizeText(formData.get("nomeEmpresa"));
   const telefone = sanitizeText(formData.get("telefone"));
   const endereco = sanitizeText(formData.get("endereco"));
+  const documentoInput = sanitizeText(formData.get("documento"));
   const unicoAtendente = formData.get("unico_atendente") === "on";
 
   const fieldErrors: OnboardingActionState["fieldErrors"] = {};
@@ -45,7 +48,18 @@ export async function completeOnboardingAction(
       "Informe o nome da empresa com pelo menos 2 caracteres.";
   }
 
-  if (fieldErrors.nomeEmpresa || fieldErrors.nomeResponsavel) {
+  let documento: string | null = null;
+
+  if (documentoInput) {
+    const validation = validateDocumento(documentoInput);
+    if (!validation.ok) {
+      fieldErrors.documento = "CPF ou CNPJ inválido.";
+    } else {
+      documento = validation.digits;
+    }
+  }
+
+  if (fieldErrors.nomeEmpresa || fieldErrors.nomeResponsavel || fieldErrors.documento) {
     return {
       success: false,
       message: "Corrija os campos destacados para continuar.",
@@ -86,6 +100,22 @@ export async function completeOnboardingAction(
       message: friendlyDbError(createError, "Nao foi possivel concluir o cadastro. Tente novamente."),
     };
   }
+
+  if (documento) {
+    const { data: companyId } = await supabase.rpc("current_company_id");
+
+    if (companyId) {
+      const { error: updateError } = await supabase
+        .from("companies")
+        .update({ documento })
+        .eq("id", companyId);
+
+      if (updateError) {
+        console.error("Erro ao salvar documento:", updateError);
+      }
+    }
+  }
+
   revalidatePath("/painel");
   redirect("/painel");
 }
