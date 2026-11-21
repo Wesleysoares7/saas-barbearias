@@ -12,7 +12,8 @@ export function CookieNotice() {
   useEffect(() => {
     setTimeout(() => {
       try {
-        const hasAcknowledged = window.localStorage.getItem(STORAGE_KEY) === "1";
+        const hasAcknowledged =
+          window.localStorage.getItem(STORAGE_KEY) === "1";
         setIsVisible(!hasAcknowledged);
       } catch {
         // localStorage indisponível: mantém oculto
@@ -35,8 +36,7 @@ export function CookieNotice() {
   }
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="Aviso de cookies"
       className="fixed bottom-0 left-0 right-0 z-40 bg-zinc-950 border-t border-zinc-800 px-4 py-4 sm:px-6"
     >
@@ -59,6 +59,6 @@ export function CookieNotice() {
           Entendi
         </Button>
       </div>
-    </div>
+    </section>
   );
 }
