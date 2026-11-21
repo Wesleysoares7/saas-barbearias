@@ -50,7 +50,7 @@ function validateLoginForm(
   if (!values.email.trim()) {
     errors.email = "Informe seu e-mail.";
   } else if (!EMAIL_REGEX.test(values.email)) {
-    errors.email = "Informe um e-mail valido.";
+    errors.email = "Informe um e-mail válido.";
   }
 
   if (!values.password.trim()) {
@@ -141,7 +141,7 @@ export function LoginForm() {
           setErrors({
             form: friendlyAuthError(
               error,
-              "Nao foi possivel entrar. Tente novamente.",
+              "Não foi possível entrar. Tente novamente.",
             ),
           });
           return;
@@ -184,7 +184,7 @@ export function LoginForm() {
           setErrors({
             form: friendlyAuthError(
               error,
-              "Nao foi possivel criar a conta. Tente novamente.",
+              "Não foi possível criar a conta. Tente novamente.",
             ),
           });
           return;
@@ -216,16 +216,16 @@ export function LoginForm() {
         setErrors({
           form: friendlyAuthError(
             error,
-            "Nao foi possivel enviar o e-mail de recuperacao. Tente novamente.",
+            "Não foi possível enviar o e-mail de recuperação. Tente novamente.",
           ),
         });
         return;
       }
 
-      setSuccessMessage("Enviamos um link de recuperacao para o seu e-mail.");
+      setSuccessMessage("Enviamos um link de recuperação para o seu e-mail.");
     } catch {
       setErrors({
-        form: "Nao foi possivel processar sua solicitacao. Tente novamente.",
+        form: "Não foi possível processar sua solicitação. Tente novamente.",
       });
     } finally {
       if (!didRedirect) {
@@ -262,14 +262,14 @@ export function LoginForm() {
       {redirecting ? (
         <div
           role="status"
-          className="absolute -inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-xl bg-zinc-950/70 backdrop-blur-[1px]"
+          className="absolute -inset-2 z-20 flex flex-col items-center justify-center gap-2 rounded-xl bg-background/70 backdrop-blur-[1px]"
         >
           <Spinner className="size-6 text-brand" />
-          <p className="text-sm text-zinc-100">Entrando no sistema...</p>
+          <p className="text-sm text-foreground">Entrando no sistema...</p>
         </div>
       ) : null}
 
-      <div className="grid grid-cols-3 gap-2 rounded-lg bg-zinc-800/70 p-1">
+      <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
         <button
           type="button"
           onClick={() => switchMode("login")}
@@ -277,7 +277,7 @@ export function LoginForm() {
           className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
             mode === "login"
               ? "bg-brand text-brand-foreground"
-              : "text-zinc-200 hover:bg-zinc-700"
+              : "text-muted-foreground hover:bg-muted-foreground/10"
           }`}
         >
           Entrar
@@ -289,29 +289,17 @@ export function LoginForm() {
           className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
             mode === "signup"
               ? "bg-brand text-brand-foreground"
-              : "text-zinc-200 hover:bg-zinc-700"
+              : "text-muted-foreground hover:bg-muted-foreground/10"
           }`}
         >
           Cadastrar
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("recover")}
-          disabled={isBusy}
-          className={`h-9 rounded-md text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
-            mode === "recover"
-              ? "bg-brand text-brand-foreground"
-              : "text-zinc-200 hover:bg-zinc-700"
-          }`}
-        >
-          Recuperar
         </button>
       </div>
 
       <div className="space-y-2">
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-zinc-200"
+          className="block text-sm font-medium text-foreground"
         >
           E-mail
         </label>
@@ -323,13 +311,13 @@ export function LoginForm() {
           value={form.email}
           onChange={(event) => onFieldChange("email", event.target.value)}
           disabled={isBusy}
-          className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 text-sm text-zinc-100 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
-          placeholder="voce@barbearia.com"
+          className="h-11 w-full rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+          placeholder="voce@seunegocio.com"
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "email-error" : undefined}
         />
         {errors.email ? (
-          <p id="email-error" className="text-sm text-brand">
+          <p id="email-error" className="text-sm text-amber-300">
             {errors.email}
           </p>
         ) : null}
@@ -339,7 +327,7 @@ export function LoginForm() {
         <div className="space-y-2">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-zinc-200"
+            className="block text-sm font-medium text-foreground"
           >
             Senha
           </label>
@@ -356,7 +344,7 @@ export function LoginForm() {
                 onFieldChange("password", event.target.value)
               }
               disabled={isBusy}
-              className="h-11 w-full rounded-lg border border-zinc-700/80 bg-zinc-950/80 px-3 pr-24 text-sm text-zinc-100 outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+              className="h-11 w-full rounded-lg border border-border bg-background px-3 pr-24 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
               placeholder="********"
               aria-invalid={Boolean(errors.password)}
               aria-describedby={errors.password ? "password-error" : undefined}
@@ -365,17 +353,43 @@ export function LoginForm() {
               type="button"
               onClick={() => setShowPassword((previous) => !previous)}
               disabled={isBusy}
-              className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-brand hover:text-amber-200"
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-brand hover:text-brand/80"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
               {showPassword ? "Ocultar" : "Mostrar"}
             </button>
           </div>
           {errors.password ? (
-            <p id="password-error" className="text-sm text-brand">
+            <p id="password-error" className="text-sm text-amber-300">
               {errors.password}
             </p>
           ) : null}
+        </div>
+      ) : null}
+
+      {mode === "login" ? (
+        <div className="text-right">
+          <button
+            type="button"
+            onClick={() => switchMode("recover")}
+            disabled={isBusy}
+            className="text-sm text-brand hover:text-brand/80 transition disabled:opacity-60"
+          >
+            Esqueci minha senha
+          </button>
+        </div>
+      ) : null}
+
+      {mode === "recover" ? (
+        <div>
+          <button
+            type="button"
+            onClick={() => switchMode("login")}
+            disabled={isBusy}
+            className="text-sm text-brand hover:text-brand/80 transition disabled:opacity-60"
+          >
+            Voltar para entrar
+          </button>
         </div>
       ) : null}
 
@@ -389,12 +403,12 @@ export function LoginForm() {
             disabled={isBusy}
             className="mt-1 size-4 shrink-0 accent-brand"
           />
-          <label htmlFor="accept-terms" className="text-sm text-zinc-300">
+          <label htmlFor="accept-terms" className="text-sm text-foreground">
             Li e concordo com os{" "}
             <Link
               href="/termos"
               target="_blank"
-              className="text-brand underline hover:text-amber-200"
+              className="text-brand underline hover:text-brand/80"
             >
               Termos de Uso
             </Link>{" "}
@@ -402,7 +416,7 @@ export function LoginForm() {
             <Link
               href="/privacidade"
               target="_blank"
-              className="text-brand underline hover:text-amber-200"
+              className="text-brand underline hover:text-brand/80"
             >
               Política de Privacidade
             </Link>
@@ -430,39 +444,38 @@ export function LoginForm() {
         ) : mode === "signup" ? (
           "Criar conta"
         ) : (
-          "Enviar link de recuperacao"
+          "Enviar link de recuperação"
         )}
       </Button>
 
-      {errors.form ? <p className="text-sm text-brand">{errors.form}</p> : null}
+      {errors.form ? <p className="text-sm text-amber-300">{errors.form}</p> : null}
       {successMessage ? (
         <p className="text-sm text-emerald-300">{successMessage}</p>
       ) : null}
       {!successMessage && isConfirmed ? (
         <p className="text-sm text-emerald-300">
-          Conta confirmada com sucesso. Agora voce pode entrar.
+          Conta confirmada com sucesso. Agora você pode entrar.
         </p>
       ) : null}
       {!errors.form && authFlowError === "confirmacao_falhou" ? (
-        <p className="text-sm text-brand">
-          Nao foi possivel confirmar sua conta. Solicite um novo e-mail de
-          confirmacao.
+        <p className="text-sm text-amber-300">
+          Não foi possível confirmar sua conta. Solicite um novo e-mail de confirmação.
         </p>
       ) : null}
 
-      <p className="text-center text-xs text-zinc-400">
+      <p className="text-center text-xs text-muted-foreground">
         {mode === "login"
           ? "Use seu e-mail e senha para entrar."
           : mode === "signup"
-            ? "Crie sua conta para acessar o sistema."
-            : "Informe o e-mail para receber o link de recuperacao."}
+            ? "Crie sua conta e comece a organizar sua agenda."
+            : "Informe o e-mail para receber o link de recuperação."}
       </p>
 
-      <div className="flex justify-center gap-4 text-xs text-zinc-400">
-        <Link href="/termos" className="hover:text-zinc-200">
+      <div className="flex justify-center gap-4 text-xs text-muted-foreground">
+        <Link href="/termos" className="hover:text-foreground">
           Termos de Uso
         </Link>
-        <Link href="/privacidade" className="hover:text-zinc-200">
+        <Link href="/privacidade" className="hover:text-foreground">
           Política de Privacidade
         </Link>
       </div>
