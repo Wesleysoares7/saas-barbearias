@@ -8,6 +8,7 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
+  CreditCard,
   FileBarChart2,
   LayoutDashboard,
   LogOut,
@@ -41,7 +42,8 @@ export type SidebarNavItem = {
     | "auditoria"
     | "notificacoes"
     | "minha_comissao"
-    | "configuracoes";
+    | "configuracoes"
+    | "plano";
 };
 
 type SidebarNavProps = {
@@ -104,6 +106,7 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
     notificacoes: BellRing,
     minha_comissao: Wallet,
     configuracoes: Settings,
+    plano: CreditCard,
   };
 
   return icons[icon];
