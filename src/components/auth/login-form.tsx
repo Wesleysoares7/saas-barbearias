@@ -15,17 +15,20 @@ type AuthMode = "login" | "signup" | "recover";
 type LoginFormState = {
   email: string;
   password: string;
+  confirmPassword: string;
 };
 
 type LoginFormErrors = {
   email?: string;
   password?: string;
+  confirmPassword?: string;
   form?: string;
 };
 
 const INITIAL_STATE: LoginFormState = {
   email: "",
   password: "",
+  confirmPassword: "",
 };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,6 +62,14 @@ function validateLoginForm(
     errors.password = "A senha deve ter pelo menos 8 caracteres.";
   }
 
+  if (mode === "signup") {
+    if (!values.confirmPassword.trim()) {
+      errors.confirmPassword = "Confirme sua senha.";
+    } else if (values.confirmPassword !== values.password) {
+      errors.confirmPassword = "As senhas não conferem.";
+    }
+  }
+
   return errors;
 }
 
@@ -70,6 +81,7 @@ export function LoginForm() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [form, setForm] = useState<LoginFormState>(INITIAL_STATE);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -78,8 +90,12 @@ export function LoginForm() {
   const isBusy = isSubmitting || redirecting;
 
   const isDisabled = useMemo(
-    () => isBusy || !form.email || (mode !== "recover" && !form.password),
-    [form.email, form.password, isBusy, mode],
+    () =>
+      isBusy ||
+      !form.email ||
+      (mode !== "recover" && !form.password) ||
+      (mode === "signup" && !form.confirmPassword),
+    [form.email, form.password, form.confirmPassword, isBusy, mode],
   );
 
   useEffect(() => {
@@ -101,7 +117,7 @@ export function LoginForm() {
 
     const validationErrors =
       mode === "recover"
-        ? validateLoginForm({ email: form.email, password: "x" }, "recover")
+        ? validateLoginForm({ email: form.email, password: "x", confirmPassword: "" }, "recover")
         : validateLoginForm(form, mode);
 
     if (mode === "recover") {
@@ -239,6 +255,9 @@ export function LoginForm() {
     setErrors((previous) => ({
       ...previous,
       [field]: undefined,
+      confirmPassword: ["password", "confirmPassword"].includes(field)
+        ? undefined
+        : previous.confirmPassword,
       form: undefined,
     }));
     setSuccessMessage(null);
@@ -247,6 +266,11 @@ export function LoginForm() {
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
     setShowPassword(false);
+    setShowConfirmPassword(false);
+    setForm((previous) => ({
+      ...previous,
+      confirmPassword: "",
+    }));
     setAcceptedTerms(false);
     setErrors({});
     setSuccessMessage(null);
@@ -362,6 +386,48 @@ export function LoginForm() {
           {errors.password ? (
             <p id="password-error" className="text-sm text-amber-300">
               {errors.password}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {mode === "signup" ? (
+        <div className="space-y-2">
+          <label
+            htmlFor="confirm-password"
+            className="block text-sm font-medium text-foreground"
+          >
+            Confirmar senha
+          </label>
+          <div className="relative">
+            <input
+              id="confirm-password"
+              name="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              autoComplete="new-password"
+              value={form.confirmPassword}
+              onChange={(event) =>
+                onFieldChange("confirmPassword", event.target.value)
+              }
+              disabled={isBusy}
+              className="h-11 w-full rounded-lg border border-border bg-background px-3 pr-24 text-sm text-foreground outline-none transition focus:border-brand focus:ring-2 focus:ring-brand/20"
+              placeholder="********"
+              aria-invalid={Boolean(errors.confirmPassword)}
+              aria-describedby={errors.confirmPassword ? "confirm-password-error" : undefined}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((previous) => !previous)}
+              disabled={isBusy}
+              className="absolute top-1/2 right-3 -translate-y-1/2 text-xs font-medium text-brand hover:text-brand/80"
+              aria-label={showConfirmPassword ? "Ocultar confirmação de senha" : "Mostrar confirmação de senha"}
+            >
+              {showConfirmPassword ? "Ocultar" : "Mostrar"}
+            </button>
+          </div>
+          {errors.confirmPassword ? (
+            <p id="confirm-password-error" className="text-sm text-amber-300">
+              {errors.confirmPassword}
             </p>
           ) : null}
         </div>
