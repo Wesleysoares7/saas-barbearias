@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 
 export type AppointmentPeriod = "hoje" | "ontem" | "semana" | "todos";
 
@@ -50,7 +53,10 @@ export function AppointmentsFilters({ term, periodo }: AppointmentsFiltersProps)
           </Button>
           {term ? (
             <Button asChild variant="outline" className="min-h-11 flex-1 sm:flex-none">
-              <Link href={`${BASE_PATH}?periodo=${periodo}`}>Limpar</Link>
+              <Link href={`${BASE_PATH}?periodo=${periodo}`} className="relative">
+                Limpar
+                <NavLinkPending />
+              </Link>
             </Button>
           ) : null}
         </div>
@@ -64,8 +70,9 @@ export function AppointmentsFilters({ term, periodo }: AppointmentsFiltersProps)
             variant={option.value === periodo ? "default" : "outline"}
             className="min-h-11 shrink-0"
           >
-            <Link href={periodHref(option.value, term)} aria-current={option.value === periodo ? "true" : undefined}>
+            <Link href={periodHref(option.value, term)} aria-current={option.value === periodo ? "true" : undefined} className="relative">
               {option.label}
+              <NavLinkPending />
             </Link>
           </Button>
         ))}

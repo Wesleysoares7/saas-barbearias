@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import { addDaysToInput, endOfDayIso, formatDateTimeBR, startOfDayIso, todayInputValue } from "@/lib/datetime";
 
 type AuditRow = {
@@ -248,9 +249,10 @@ export default async function AuditoriaPage({
 
             <Link
               href="/painel/auditoria"
-              className="h-10 rounded-lg border border-border px-4 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-zinc-100 inline-flex items-center"
+              className="relative h-10 rounded-lg border border-border px-4 text-sm font-medium text-zinc-200 transition hover:border-zinc-400 hover:text-zinc-100 inline-flex items-center"
             >
               Limpar
+              <NavLinkPending />
             </Link>
 
             <p className="text-xs text-zinc-500">{filteredLogs.length} registro(s) encontrado(s)</p>

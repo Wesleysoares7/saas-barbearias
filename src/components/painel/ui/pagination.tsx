@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
+
 type PaginationProps = {
   page: number;
   pageSize: number;
@@ -55,8 +57,9 @@ export function Pagination({ page, pageSize, total, basePath, params = {} }: Pag
       </p>
       <div className="flex gap-2">
         {page > 1 ? (
-          <Link href={hrefFor(basePath, params, page - 1)} className={BUTTON_CLASS}>
+          <Link href={hrefFor(basePath, params, page - 1)} className={`relative ${BUTTON_CLASS}`}>
             Anterior
+            <NavLinkPending />
           </Link>
         ) : (
           <span className={disabledClass} aria-disabled="true">
@@ -64,8 +67,9 @@ export function Pagination({ page, pageSize, total, basePath, params = {} }: Pag
           </span>
         )}
         {to < total ? (
-          <Link href={hrefFor(basePath, params, page + 1)} className={BUTTON_CLASS}>
+          <Link href={hrefFor(basePath, params, page + 1)} className={`relative ${BUTTON_CLASS}`}>
             Proximo
+            <NavLinkPending />
           </Link>
         ) : (
           <span className={disabledClass} aria-disabled="true">

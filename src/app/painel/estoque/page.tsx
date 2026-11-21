@@ -7,6 +7,7 @@ import { ProductActions } from "@/components/painel/estoque/product-actions";
 import { CollapsibleFilters } from "@/components/painel/ui/collapsible-filters";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
+import { NavLinkPending } from "@/components/painel/ui/nav-link-pending";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { StatusPill } from "@/components/painel/ui/status-pill";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -124,8 +125,9 @@ function Pagination({
       </p>
       <div className="flex gap-2">
         {hasPrevious ? (
-          <Link href={hrefFor(page - 1)} className={linkClass}>
+          <Link href={hrefFor(page - 1)} className={`relative ${linkClass}`}>
             Anterior
+            <NavLinkPending />
           </Link>
         ) : (
           <span className={disabledClass} aria-disabled="true">
@@ -133,8 +135,9 @@ function Pagination({
           </span>
         )}
         {hasNext ? (
-          <Link href={hrefFor(page + 1)} className={linkClass}>
+          <Link href={hrefFor(page + 1)} className={`relative ${linkClass}`}>
             Proximo
+            <NavLinkPending />
           </Link>
         ) : (
           <span className={disabledClass} aria-disabled="true">
@@ -328,11 +331,13 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
       </div>
 
       <nav aria-label="Abas do estoque" className="flex border-b border-border">
-        <Link href={buildHref({ aba: "produtos" })} className={tabClass(tab === "produtos")}>
+        <Link href={buildHref({ aba: "produtos" })} className={`relative ${tabClass(tab === "produtos")}`}>
           Produtos
+          <NavLinkPending />
         </Link>
-        <Link href={buildHref({ aba: "movimentacoes" })} className={tabClass(tab === "movimentacoes")}>
+        <Link href={buildHref({ aba: "movimentacoes" })} className={`relative ${tabClass(tab === "movimentacoes")}`}>
           Movimentacoes
+          <NavLinkPending />
         </Link>
       </nav>
 
@@ -369,14 +374,17 @@ export default async function EstoquePage({ searchParams }: { searchParams?: Pro
           </form>
 
           <div className="flex flex-wrap gap-2 md:mb-0">
-            <Link href={buildHref({ ...productParams, filtro: undefined })} className={chipClass(filtro === "todos")}>
+            <Link href={buildHref({ ...productParams, filtro: undefined })} className={`relative ${chipClass(filtro === "todos")}`}>
               Todos
+              <NavLinkPending />
             </Link>
-            <Link href={buildHref({ ...productParams, filtro: "baixo" })} className={chipClass(filtro === "baixo")}>
+            <Link href={buildHref({ ...productParams, filtro: "baixo" })} className={`relative ${chipClass(filtro === "baixo")}`}>
               Estoque baixo
+              <NavLinkPending />
             </Link>
-            <Link href={buildHref({ ...productParams, filtro: "inativos" })} className={chipClass(filtro === "inativos")}>
+            <Link href={buildHref({ ...productParams, filtro: "inativos" })} className={`relative ${chipClass(filtro === "inativos")}`}>
               Inativos
+              <NavLinkPending />
             </Link>
           </div>
           </CollapsibleFilters>
