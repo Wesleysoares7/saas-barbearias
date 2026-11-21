@@ -3,6 +3,10 @@ import type { BillingState } from "@/lib/billing/state";
 type Tone = "success" | "warning" | "danger" | "brand" | "neutral";
 
 export function billingPill(billing: BillingState): { tone: Tone; label: string } {
+  if (billing.limited) {
+    return { tone: "warning", label: "Teste encerrado" };
+  }
+
   if (billing.blocked) {
     if (billing.blockReason === "canceled") return { tone: "danger", label: "Cancelada" };
     if (billing.blockReason === "suspended") return { tone: "danger", label: "Suspensa" };

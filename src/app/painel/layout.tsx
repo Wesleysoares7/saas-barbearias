@@ -24,7 +24,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
     userId: contextUserId,
     userEmail: contextUserEmail,
     employeeId,
-  } = await getAccessContext();
+  } = await getAccessContext({ allowLimited: true });
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -35,136 +35,153 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
     supportMode ? Promise.resolve(null) : supabase.auth.getUser(),
   ]);
 
-  const navItems = [
-    {
-      href: "/painel",
-      label: "Dashboard",
-      section: "Operacao",
-      icon: "dashboard" as const,
-    },
-    {
-      href: "/painel/agendamentos",
-      label: "Agendamentos",
-      section: "Operacao",
-      icon: "agendamentos" as const,
-    },
-    ...(role === "admin"
-      ? [
-          {
-            href: "/painel/relatorios",
-            label: "Relatorios",
-            section: "Operacao",
-            icon: "relatorios" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "minha_comissao", employeeId)
-      ? [
-          {
-            href: "/painel/minha-comissao",
-            label: "Minha comissao",
-            section: "Operacao",
-            icon: "minha_comissao" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "clientes")
-      ? [
-          {
-            href: "/painel/clientes",
-            label: "Clientes",
-            section: "Gestao",
-            icon: "clientes" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "funcionarios")
-      ? [
-          {
-            href: "/painel/funcionarios",
-            label: "Funcionarios",
-            section: "Gestao",
-            icon: "funcionarios" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "servicos")
-      ? [
-          {
-            href: "/painel/servicos",
-            label: "Servicos",
-            section: "Gestao",
-            icon: "servicos" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "estoque")
-      ? [
-          {
-            href: "/painel/estoque",
-            label: "Estoque",
-            section: "Gestao",
-            icon: "estoque" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "financeiro")
-      ? [
-          {
-            href: "/painel/financeiro",
-            label: "Financeiro",
-            section: "Gestao",
-            icon: "financeiro" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "equipe")
-      ? [
-          {
-            href: "/painel/equipe",
-            label: "Equipe",
-            section: "Administracao",
-            icon: "equipe" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "configuracoes")
-      ? [
-          {
-            href: "/painel/configuracoes",
-            label: "Configuracoes",
-            section: "Administracao",
-            icon: "configuracoes" as const,
-          },
-          {
-            href: "/painel/plano",
-            label: "Plano",
-            section: "Administracao",
-            icon: "plano" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "auditoria")
-      ? [
-          {
-            href: "/painel/auditoria",
-            label: "Auditoria",
-            section: "Seguranca",
-            icon: "auditoria" as const,
-          },
-        ]
-      : []),
-    ...(canAccessModule(role, "notificacoes")
-      ? [
-          {
-            href: "/painel/notificacoes",
-            label: "Notificacoes",
-            section: "Seguranca",
-            icon: "notificacoes" as const,
-          },
-        ]
-      : []),
-  ];
+  const isLimited = !supportMode && billing?.limited;
+
+  const navItems = isLimited
+    ? [
+        {
+          href: "/painel/configuracoes",
+          label: "Configuracoes",
+          section: "Administracao",
+          icon: "configuracoes" as const,
+        },
+        {
+          href: "/painel/plano",
+          label: "Plano",
+          section: "Administracao",
+          icon: "plano" as const,
+        },
+      ]
+    : [
+        {
+          href: "/painel",
+          label: "Dashboard",
+          section: "Operacao",
+          icon: "dashboard" as const,
+        },
+        {
+          href: "/painel/agendamentos",
+          label: "Agendamentos",
+          section: "Operacao",
+          icon: "agendamentos" as const,
+        },
+        ...(role === "admin"
+          ? [
+              {
+                href: "/painel/relatorios",
+                label: "Relatorios",
+                section: "Operacao",
+                icon: "relatorios" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "minha_comissao", employeeId)
+          ? [
+              {
+                href: "/painel/minha-comissao",
+                label: "Minha comissao",
+                section: "Operacao",
+                icon: "minha_comissao" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "clientes")
+          ? [
+              {
+                href: "/painel/clientes",
+                label: "Clientes",
+                section: "Gestao",
+                icon: "clientes" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "funcionarios")
+          ? [
+              {
+                href: "/painel/funcionarios",
+                label: "Funcionarios",
+                section: "Gestao",
+                icon: "funcionarios" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "servicos")
+          ? [
+              {
+                href: "/painel/servicos",
+                label: "Servicos",
+                section: "Gestao",
+                icon: "servicos" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "estoque")
+          ? [
+              {
+                href: "/painel/estoque",
+                label: "Estoque",
+                section: "Gestao",
+                icon: "estoque" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "financeiro")
+          ? [
+              {
+                href: "/painel/financeiro",
+                label: "Financeiro",
+                section: "Gestao",
+                icon: "financeiro" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "equipe")
+          ? [
+              {
+                href: "/painel/equipe",
+                label: "Equipe",
+                section: "Administracao",
+                icon: "equipe" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "configuracoes")
+          ? [
+              {
+                href: "/painel/configuracoes",
+                label: "Configuracoes",
+                section: "Administracao",
+                icon: "configuracoes" as const,
+              },
+              {
+                href: "/painel/plano",
+                label: "Plano",
+                section: "Administracao",
+                icon: "plano" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "auditoria")
+          ? [
+              {
+                href: "/painel/auditoria",
+                label: "Auditoria",
+                section: "Seguranca",
+                icon: "auditoria" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "notificacoes")
+          ? [
+              {
+                href: "/painel/notificacoes",
+                label: "Notificacoes",
+                section: "Seguranca",
+                icon: "notificacoes" as const,
+              },
+            ]
+          : []),
+      ];
 
   const isAdmin = role === "admin";
   const userId = supportMode ? contextUserId : userResponse?.data.user?.id;
@@ -193,20 +210,27 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   const dayLabel = days === 1 ? "1 dia" : `${days} dias`;
   let bannerText: string | null = null;
   let bannerTone = "bg-sky-400/10 text-sky-200";
+  let showBannerLink = false;
 
-  if (!supportMode && isAdmin && billing?.banner) {
-    if (billing.banner === "trial") {
-      bannerText = `Periodo de teste: restam ${dayLabel}.`;
-    } else if (billing.banner === "trial_ending") {
-      bannerText =
-        days === 0
-          ? "Seu teste termina hoje. Fale com o suporte para continuar."
-          : `Seu teste termina em ${dayLabel}. Fale com o suporte para continuar.`;
+  if (!supportMode && isAdmin) {
+    if (isLimited) {
+      bannerText = "Seu período de teste terminou. Assine um plano para voltar a usar o sistema.";
       bannerTone = "bg-amber-400/15 text-amber-200";
-    } else {
-      bannerText =
-        "Pagamento em atraso. Regularize para evitar a suspensao da conta.";
-      bannerTone = "bg-amber-400/15 text-amber-200";
+      showBannerLink = true;
+    } else if (billing?.banner) {
+      if (billing.banner === "trial") {
+        bannerText = `Periodo de teste: restam ${dayLabel}.`;
+      } else if (billing.banner === "trial_ending") {
+        bannerText =
+          days === 0
+            ? "Seu teste termina hoje. Fale com o suporte para continuar."
+            : `Seu teste termina em ${dayLabel}. Fale com o suporte para continuar.`;
+        bannerTone = "bg-amber-400/15 text-amber-200";
+      } else {
+        bannerText =
+          "Pagamento em atraso. Regularize para evitar a suspensao da conta.";
+        bannerTone = "bg-amber-400/15 text-amber-200";
+      }
     }
   }
 
@@ -244,20 +268,22 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
             roleLabel={isAdmin ? "Administrador" : "Equipe"}
             userEmail={userEmail}
             unreadCount={unreadCount}
-            showNotifications={isAdmin}
+            showNotifications={isAdmin && !isLimited}
           />
 
           {bannerText ? (
             <div
-              className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-sm sm:px-6 ${bannerTone}`}
+              className={`sticky top-0 z-30 flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-sm sm:px-6 ${bannerTone}`}
             >
               <span>{bannerText}</span>
-              <a
-                href="/painel/plano"
-                className="inline-flex min-h-11 items-center font-semibold underline sm:min-h-0"
-              >
-                Ver planos
-              </a>
+              {showBannerLink ? (
+                <a
+                  href="/painel/plano"
+                  className="inline-flex min-h-11 items-center font-semibold underline sm:min-h-0"
+                >
+                  Ver planos
+                </a>
+              ) : null}
             </div>
           ) : null}
 

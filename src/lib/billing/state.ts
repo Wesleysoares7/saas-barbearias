@@ -8,6 +8,7 @@ export type BillingState = {
   trialEndsAt: string | null;
   billingExempt: boolean;
   blocked: boolean;
+  limited: boolean;
   blockReason: BlockReason | null;
   trialDaysLeft: number | null;
   banner: "trial" | "trial_ending" | "past_due" | null;
@@ -34,6 +35,7 @@ export function resolveBillingState(row: BillingRow, now: Date = new Date()): Bi
     trialEndsAt: row.trial_ends_at ?? null,
     billingExempt,
     blocked: false,
+    limited: false,
     blockReason: null,
     trialDaysLeft: null,
     banner: null,
@@ -53,7 +55,7 @@ export function resolveBillingState(row: BillingRow, now: Date = new Date()): Bi
 
       if (!Number.isNaN(end)) {
         if (now.getTime() > end) {
-          return { ...base, blocked: true, blockReason: "trial_expired", trialDaysLeft: 0 };
+          return { ...base, limited: true, blockReason: "trial_expired", trialDaysLeft: 0, banner: null };
         }
 
         const daysLeft = Math.max(0, Math.ceil((end - now.getTime()) / DAY_MS));

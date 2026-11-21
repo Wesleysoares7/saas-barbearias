@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { getPlanContactUrl } from "@/lib/billing/contact";
-import { onlyDigits, validateDocumento } from "@/lib/documento";
+import { validateDocumento } from "@/lib/documento";
 
 type ActionState = {
   success: boolean;
@@ -12,7 +12,7 @@ type ActionState = {
 };
 
 export async function aderirPlanoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const scope = await getAccessContext();
+  const scope = await getAccessContext({ allowLimited: true });
 
   if (!scope.companyId) {
     return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };

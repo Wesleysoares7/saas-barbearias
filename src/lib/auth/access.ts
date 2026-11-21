@@ -51,6 +51,7 @@ export type AccessContext = {
     | "/login"
     | "/onboarding"
     | "/painel"
+    | "/painel/plano"
     | "/master/empresas"
     | "/conta-suspensa"
     | null;
@@ -145,7 +146,7 @@ export async function getPlatformAccessContext(): Promise<PlatformAccessContext>
   };
 }
 
-export async function getAccessContext(): Promise<AccessContext> {
+export async function getAccessContext(options?: { allowLimited?: boolean }): Promise<AccessContext> {
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -275,6 +276,24 @@ export async function getAccessContext(): Promise<AccessContext> {
       isPlatformAdmin: false,
       errorMessage: "Sua conta esta suspensa. Entre em contato com o suporte.",
       redirectTo: "/conta-suspensa",
+      billing,
+      supportMode: false,
+      supportCompanyName: null,
+      employeeId: null,
+      employeeCommissionPercent: null,
+      userEmail: user.email ?? null,
+    };
+  }
+
+  if (billing?.limited && !options?.allowLimited && !hasPlatformAdminAccess) {
+    return {
+      supabase,
+      userId: user.id,
+      companyId: null,
+      role: null,
+      isPlatformAdmin: false,
+      errorMessage: "Seu período de teste terminou. Assine um plano para voltar a usar esta função.",
+      redirectTo: "/painel/plano",
       billing,
       supportMode: false,
       supportCompanyName: null,
