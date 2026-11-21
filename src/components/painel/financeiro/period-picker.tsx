@@ -32,6 +32,14 @@ const CHIP_PENDING = `${CHIP_CLASS} border-border bg-surface text-foreground opa
 const DATE_INPUT_CLASS =
   "min-h-11 w-full min-w-0 rounded-lg border border-border bg-surface px-3 text-base text-foreground outline-none focus:border-brand";
 
+function chipClass(pending: boolean, active = false): string {
+  if (pending) {
+    return CHIP_PENDING;
+  }
+
+  return active ? CHIP_ACTIVE : CHIP_IDLE;
+}
+
 export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" }: PeriodPickerProps) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -75,19 +83,24 @@ export function PeriodPicker({ start, end, aba, basePath = "/painel/financeiro" 
       </p>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("hoje")} disabled={pending}>
+        <button type="button" className={chipClass(pending)} onClick={() => pick("hoje")} disabled={pending}>
           Hoje
         </button>
-        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("7dias")} disabled={pending}>
+        <button type="button" className={chipClass(pending)} onClick={() => pick("7dias")} disabled={pending}>
           7 dias
         </button>
-        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("mes")} disabled={pending}>
+        <button type="button" className={chipClass(pending)} onClick={() => pick("mes")} disabled={pending}>
           Este mes
         </button>
-        <button type="button" className={pending ? CHIP_PENDING : CHIP_IDLE} onClick={() => pick("passado")} disabled={pending}>
+        <button type="button" className={chipClass(pending)} onClick={() => pick("passado")} disabled={pending}>
           Mes passado
         </button>
-        <button type="button" className={custom ? (pending ? CHIP_PENDING : CHIP_ACTIVE) : (pending ? CHIP_PENDING : CHIP_IDLE)} onClick={() => setCustom((value) => !value)} disabled={pending}>
+        <button
+          type="button"
+          className={chipClass(pending, custom)}
+          onClick={() => setCustom((value) => !value)}
+          disabled={pending}
+        >
           Personalizado
         </button>
       </div>
