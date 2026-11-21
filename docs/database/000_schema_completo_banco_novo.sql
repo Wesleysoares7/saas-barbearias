@@ -2816,3 +2816,7 @@ for each row execute function public.audit_companies_changes();
 -- Desfazer (se algo do app deixar de funcionar; me avise o erro antes de reverter tudo):
 --    drop trigger if exists trg_companies_audit on public.companies;
 --    drop trigger if exists trg_audit_logs_enforce_actor on public.audit_logs;
+
+
+
+
