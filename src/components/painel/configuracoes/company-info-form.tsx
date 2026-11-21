@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useActionState } from "react";
+import { useState, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
 
@@ -22,12 +21,40 @@ type CompanyInfo = {
   email_contato: string | null;
 };
 
+type CompanyInfoFormProps = Readonly<{
+  company: CompanyInfo;
+}>;
+
 const INITIAL_STATE: ActionState = { success: false, message: "" };
 
 const UFS = [
-  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
-  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
-  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+  "AC",
+  "AL",
+  "AP",
+  "AM",
+  "BA",
+  "CE",
+  "DF",
+  "ES",
+  "GO",
+  "MA",
+  "MT",
+  "MS",
+  "MG",
+  "PA",
+  "PB",
+  "PR",
+  "PE",
+  "PI",
+  "RJ",
+  "RN",
+  "RS",
+  "RO",
+  "RR",
+  "SC",
+  "SP",
+  "SE",
+  "TO",
 ];
 
 function SubmitButton() {
@@ -51,7 +78,7 @@ function SubmitButton() {
   );
 }
 
-export function CompanyInfoForm({ company }: { company: CompanyInfo }) {
+export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     setCompanyInfoAction,
     INITIAL_STATE,
@@ -59,13 +86,19 @@ export function CompanyInfoForm({ company }: { company: CompanyInfo }) {
 
   const [nome, setNome] = useState(company.nome ?? "");
   const [telefone, setTelefone] = useState(company.telefone ?? "");
-  const [email_contato, setEmail_contato] = useState(company.email_contato ?? "");
+  const [email_contato, setEmail_contato] = useState(
+    company.email_contato ?? "",
+  );
   const [endereco, setEndereco] = useState(company.endereco ?? "");
   const [cidade, setCidade] = useState(company.cidade ?? "");
   const [uf, setUf] = useState(company.uf ?? "");
 
   return (
-    <form action={formAction} key={JSON.stringify(company)} className="space-y-4">
+    <form
+      action={formAction}
+      key={JSON.stringify(company)}
+      className="space-y-4"
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <label
@@ -179,9 +212,9 @@ export function CompanyInfoForm({ company }: { company: CompanyInfo }) {
             className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
           >
             <option value="">Selecione</option>
-            {UFS.map((state) => (
-              <option key={state} value={state}>
-                {state}
+            {UFS.map((ufOption) => (
+              <option key={ufOption} value={ufOption}>
+                {ufOption}
               </option>
             ))}
           </select>
