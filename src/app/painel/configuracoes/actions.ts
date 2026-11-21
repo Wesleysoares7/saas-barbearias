@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { isThemeId } from "@/lib/themes";
+import { validateDocumento } from "@/lib/documento";
 
 type ActionState = {
   success: boolean;
@@ -207,12 +208,13 @@ export async function setCompanyInfoAction(_prevState: ActionState, formData: Fo
     return { success: false, message: "Apenas administradores podem alterar os dados da empresa." };
   }
 
-    const nome = readText(formData, "nome");
+  const nome = readText(formData, "nome");
   const telefone = readText(formData, "telefone");
   const endereco = readText(formData, "endereco");
   const cidade = readText(formData, "cidade");
   const uf = readText(formData, "uf").toUpperCase();
   const email_contato = readText(formData, "email_contato");
+  const documentoInput = readText(formData, "documento");
 
   if (nome.length < 2 || nome.length > 120) {
     return { success: false, message: "O nome deve ter entre 2 e 120 caracteres." };
@@ -238,6 +240,16 @@ export async function setCompanyInfoAction(_prevState: ActionState, formData: Fo
     return { success: false, message: "O e-mail de contato deve ser válido." };
   }
 
+  let documento: string | null = null;
+
+  if (documentoInput) {
+    const validation = validateDocumento(documentoInput);
+    if (!validation.ok) {
+      return { success: false, message: "CPF ou CNPJ inválido." };
+    }
+    documento = validation.digits;
+  }
+
   const updateData: Record<string, string | null> = {
     nome,
     telefone: telefone || null,
@@ -245,6 +257,7 @@ export async function setCompanyInfoAction(_prevState: ActionState, formData: Fo
     cidade: cidade || null,
     uf: uf || null,
     email_contato: email_contato || null,
+    documento,
   };
 
   const { data: updated, error } = await scope.supabase

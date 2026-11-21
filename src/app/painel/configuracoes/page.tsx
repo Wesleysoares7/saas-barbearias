@@ -22,7 +22,7 @@ export default async function ConfiguracoesPage() {
 
   const { data: company, error } = await supabase
     .from("companies")
-    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema")
+    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -57,6 +57,7 @@ export default async function ConfiguracoesPage() {
             cidade: company?.cidade ?? null,
             uf: company?.uf ?? null,
             email_contato: company?.email_contato ?? null,
+            documento: company?.documento ?? null,
           }}
         />
       </Panel>
