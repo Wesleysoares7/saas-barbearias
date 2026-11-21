@@ -189,3 +189,76 @@ export async function setThemeAction(_prevState: ActionState, formData: FormData
 
   return { success: true, message: "Tema atualizado com sucesso." };
 }
+
+function readText(formData: FormData, name: string): string {
+  const value = formData.get(name);
+
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export async function setCompanyInfoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const scope = await getAccessContext();
+
+  if (!scope.companyId) {
+    return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(scope.role)) {
+    return { success: false, message: "Apenas administradores podem alterar os dados da empresa." };
+  }
+
+    const nome = readText(formData, "nome");
+  const telefone = readText(formData, "telefone");
+  const endereco = readText(formData, "endereco");
+  const cidade = readText(formData, "cidade");
+  const uf = readText(formData, "uf").toUpperCase();
+  const email_contato = readText(formData, "email_contato");
+
+  if (nome.length < 2 || nome.length > 120) {
+    return { success: false, message: "O nome deve ter entre 2 e 120 caracteres." };
+  }
+
+  if (telefone && telefone.length > 30) {
+    return { success: false, message: "O telefone deve ter no máximo 30 caracteres." };
+  }
+
+  if (endereco && endereco.length > 200) {
+    return { success: false, message: "O endereço deve ter no máximo 200 caracteres." };
+  }
+
+  if (cidade && cidade.length > 60) {
+    return { success: false, message: "A cidade deve ter no máximo 60 caracteres." };
+  }
+
+  if (uf && !/^[A-Z]{2}$/.test(uf)) {
+    return { success: false, message: "A UF deve ter exatamente 2 letras maiúsculas." };
+  }
+
+  if (email_contato && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email_contato)) {
+    return { success: false, message: "O e-mail de contato deve ser válido." };
+  }
+
+  const updateData: Record<string, string | null> = {
+    nome,
+    telefone: telefone || null,
+    endereco: endereco || null,
+    cidade: cidade || null,
+    uf: uf || null,
+    email_contato: email_contato || null,
+  };
+
+  const { data: updated, error } = await scope.supabase
+    .from("companies")
+    .update(updateData)
+    .eq("id", scope.companyId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updated) {
+    return { success: false, message: "Nao foi possivel salvar os dados. Tente novamente." };
+  }
+
+  revalidatePath("/painel", "layout");
+
+  return { success: true, message: "Dados da empresa atualizados com sucesso." };
+}
