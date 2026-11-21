@@ -6,7 +6,6 @@ import { SidebarNav } from "@/components/painel/sidebar-nav";
 import { Topbar } from "@/components/painel/topbar";
 import { PendingButton } from "@/components/ui/pending-button";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
-import { getSupportContact, whatsappLink } from "@/lib/billing/contact";
 import { getThemeCss } from "@/lib/themes";
 
 type PainelLayoutProps = {
@@ -137,6 +136,12 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
             section: "Administracao",
             icon: "configuracoes" as const,
           },
+          {
+            href: "/painel/plano",
+            label: "Plano",
+            section: "Administracao",
+            icon: "plano" as const,
+          },
         ]
       : []),
     ...(canAccessModule(role, "auditoria")
@@ -183,12 +188,6 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   const logoUrl =
     typeof logoPath === "string" && logoPath
       ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data.publicUrl
-      : null;
-  const contact = getSupportContact();
-  const contactHref = contact.whatsapp
-    ? whatsappLink(contact.whatsapp)
-    : contact.email
-      ? `mailto:${contact.email}`
       : null;
   const days = billing?.trialDaysLeft ?? 0;
   const dayLabel = days === 1 ? "1 dia" : `${days} dias`;
@@ -253,16 +252,12 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
               className={`flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-sm sm:px-6 ${bannerTone}`}
             >
               <span>{bannerText}</span>
-              {contactHref ? (
-                <a
-                  href={contactHref}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex min-h-11 items-center font-semibold underline sm:min-h-0"
-                >
-                  Falar com o suporte
-                </a>
-              ) : null}
+              <a
+                href="/painel/plano"
+                className="inline-flex min-h-11 items-center font-semibold underline sm:min-h-0"
+              >
+                Ver planos
+              </a>
             </div>
           ) : null}
 
