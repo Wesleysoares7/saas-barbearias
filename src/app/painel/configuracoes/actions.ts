@@ -40,7 +40,7 @@ type AdminScope =
   | { error?: undefined; supabase: Awaited<ReturnType<typeof getAccessContext>>["supabase"]; companyId: string };
 
 async function getAdminScope(): Promise<AdminScope> {
-  const scope = await getAccessContext();
+  const scope = await getAccessContext({ allowLimited: true });
 
   if (!scope.companyId) {
     return { error: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
@@ -165,7 +165,7 @@ export async function setThemeAction(_prevState: ActionState, formData: FormData
     return { success: false, message: "Escolha um dos temas disponiveis." };
   }
 
-  const scope = await getAccessContext();
+  const scope = await getAccessContext({ allowLimited: true });
 
   if (!scope.companyId) {
     return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
@@ -198,7 +198,7 @@ function readText(formData: FormData, name: string): string {
 }
 
 export async function setCompanyInfoAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
-  const scope = await getAccessContext();
+  const scope = await getAccessContext({ allowLimited: true });
 
   if (!scope.companyId) {
     return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };

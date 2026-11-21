@@ -10,7 +10,7 @@ import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { getTheme } from "@/lib/themes";
 
 export default async function ConfiguracoesPage() {
-  const { supabase, companyId, role, redirectTo } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo } = await getAccessContext({ allowLimited: true });
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");

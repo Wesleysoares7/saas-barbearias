@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Download } from "lucide-react";
 
 import { AdherePlanForm } from "@/components/painel/plano/adhere-plan-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
@@ -9,7 +9,7 @@ import { canAccessModule, getAccessContext } from "@/lib/auth/access";
 import { billingPill } from "@/lib/billing/labels";
 
 export default async function PlanoPage() {
-  const { supabase, companyId, role, redirectTo, billing } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, billing } = await getAccessContext({ allowLimited: true });
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -62,12 +62,32 @@ export default async function PlanoPage() {
       </Panel>
 
       {isAdmin ? (
-        <Panel
-          title="Contratar plano"
-          description="Preencha os dados abaixo para contratar um plano."
-        >
-          <AdherePlanForm documento={company?.documento ?? null} />
-        </Panel>
+        <>
+          <Panel
+            title="Contratar plano"
+            description="Preencha os dados abaixo para contratar um plano."
+          >
+            <AdherePlanForm documento={company?.documento ?? null} />
+          </Panel>
+
+          <Panel
+            title="Exportar dados"
+            description="Faça download de seus dados."
+          >
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Exporte todos os dados da sua empresa para backup ou migração.
+              </p>
+              <a
+                href="/api/account/export"
+                className="inline-flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-medium text-brand-foreground hover:bg-brand/90"
+              >
+                <Download className="size-4" />
+                Exportar meus dados
+              </a>
+            </div>
+          </Panel>
+        </>
       ) : (
         <Panel
           title="Contratação de plano"
