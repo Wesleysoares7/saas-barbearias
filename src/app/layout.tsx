@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { NavigationProgress } from "@/components/ui/navigation-progress";
+import { CookieNotice } from "@/components/legal/cookie-notice";
 import { BRAND_PAGE_TITLE } from "@/lib/brand";
 import "./globals.css";
 
@@ -35,6 +36,7 @@ export default function RootLayout({
           <NavigationProgress />
         </Suspense>
         {children}
+        <CookieNotice />
       </body>
     </html>
   );

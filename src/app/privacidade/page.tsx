@@ -182,11 +182,36 @@ export default function PrivacidadePage() {
 
       <LegalSection n={10} title="Cookies">
         <p>
-          Usamos apenas cookies essenciais para manter você conectado e, no caso
-          do modo de suporte, para identificar a sessão de atendimento.
-          Atualmente não usamos cookies de publicidade nem de análise de
-          audiência. Se isso mudar, atualizaremos esta Política e, quando
-          necessário, pediremos seu consentimento.
+          Utilizamos apenas cookies essenciais e funcionais, necessários para o
+          funcionamento da Plataforma. Atualmente não usamos cookies de
+          publicidade, rastreamento ou análise de audiência.
+        </p>
+        <p>
+          Os cookies utilizados são:
+        </p>
+        <ul>
+          <li>
+            <strong className="text-zinc-100">Cookies de sessão de login</strong>{" "}
+            (Supabase, identificadores iniciados em <code>sb-*</code>, com
+            expiração em 12 horas): mantêm você autenticado na Plataforma.
+          </li>
+          <li>
+            <strong className="text-zinc-100">support_company_id</strong>{" "}
+            (<code>httpOnly</code>, vigência de 2 horas, apenas em modo de
+            suporte): identifica a empresa durante sessões de atendimento pela
+            nossa equipe.
+          </li>
+          <li>
+            <strong className="text-zinc-100">localStorage</strong>: armazena
+            preferências locais do navegador, como a expansão/recolhimento da
+            barra lateral e a aceitação do aviso de cookies.
+          </li>
+        </ul>
+        <p>
+          Todos esses cookies e armazenamento local são essenciais ou funcionais
+          para a operação da Plataforma. Se no futuro utilizarmos cookies com
+          outras finalidades, atualizaremos esta Política e solicitaremos seu
+          consentimento expresso.
         </p>
       </LegalSection>
 
