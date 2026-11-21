@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Settings } from "lucide-react";
 
+import { CompanyInfoForm } from "@/components/painel/configuracoes/company-info-form";
 import { LogoForm } from "@/components/painel/configuracoes/logo-form";
 import { ThemeForm } from "@/components/painel/configuracoes/theme-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
@@ -19,11 +20,15 @@ export default async function ConfiguracoesPage() {
     redirect("/painel");
   }
 
-  const { data: company } = await supabase
+  const { data: company, error } = await supabase
     .from("companies")
-    .select("nome, logo, tema")
+    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema")
     .eq("id", companyId)
     .maybeSingle();
+
+  if (error) {
+    console.error(error.code, error.message);
+  }
 
   const logoPath =
     typeof company?.logo === "string" && company.logo ? company.logo : null;
@@ -39,6 +44,22 @@ export default async function ConfiguracoesPage() {
         title="Configuracoes"
         description="Ajustes da sua empresa."
       />
+
+      <Panel
+        title="Dados da empresa"
+        description="Informações de contato da sua empresa."
+      >
+        <CompanyInfoForm
+          company={{
+            nome: company?.nome ?? null,
+            telefone: company?.telefone ?? null,
+            endereco: company?.endereco ?? null,
+            cidade: company?.cidade ?? null,
+            uf: company?.uf ?? null,
+            email_contato: company?.email_contato ?? null,
+          }}
+        />
+      </Panel>
 
       <Panel
         title="Logo da empresa"
