@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { validateDocumento, onlyDigits } from "@/lib/documento";
+import { validateDocumento } from "@/lib/documento";
 
 export type OnboardingActionState = {
   success: boolean;

@@ -17,7 +17,7 @@ export function isValidCpf(digits: string): boolean {
   }
 
   let remainder = sum % 11;
-  let firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+  const firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
 
   if (parseInt(digits[9], 10) !== firstCheckDigit) {
     return false;
@@ -29,7 +29,7 @@ export function isValidCpf(digits: string): boolean {
   }
 
   remainder = sum % 11;
-  let secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+  const secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
 
   if (parseInt(digits[10], 10) !== secondCheckDigit) {
     return false;
@@ -56,7 +56,7 @@ export function isValidCnpj(digits: string): boolean {
   }
 
   let remainder = sum % 11;
-  let firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+  const firstCheckDigit = remainder < 2 ? 0 : 11 - remainder;
 
   if (parseInt(digits[12], 10) !== firstCheckDigit) {
     return false;
@@ -71,7 +71,7 @@ export function isValidCnpj(digits: string): boolean {
   }
 
   remainder = sum % 11;
-  let secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
+  const secondCheckDigit = remainder < 2 ? 0 : 11 - remainder;
 
   if (parseInt(digits[13], 10) !== secondCheckDigit) {
     return false;

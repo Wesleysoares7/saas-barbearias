@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { isThemeId } from "@/lib/themes";
-import { validateDocumento, onlyDigits } from "@/lib/documento";
+import { validateDocumento } from "@/lib/documento";
 
 type ActionState = {
   success: boolean;
