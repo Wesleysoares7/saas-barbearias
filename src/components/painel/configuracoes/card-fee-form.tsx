@@ -35,10 +35,6 @@ function SubmitButton() {
   );
 }
 
-function convertCommaToPoint(value: string): string {
-  return value.replace(",", ".");
-}
-
 export function CardFeeForm({
   currentDebitFee,
   currentCreditFee,
@@ -74,7 +70,10 @@ export function CardFeeForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
-          <label htmlFor="taxa_cartao_debito" className="text-sm text-foreground">
+          <label
+            htmlFor="taxa_cartao_debito"
+            className="text-sm text-foreground"
+          >
             Taxa do débito (%)
           </label>
           <input

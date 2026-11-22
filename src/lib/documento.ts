@@ -109,3 +109,15 @@ export function formatDocumento(digits: string): string {
 
   return digits;
 }
+
+export function maskDocumento(digits: string): string {
+  if (digits.length === 11) {
+    return `***.${digits.substring(3, 6)}.${digits.substring(6, 9)}-**`;
+  }
+
+  if (digits.length === 14) {
+    return `**.***.${digits.substring(5, 8)}/${digits.substring(8, 12)}-**`;
+  }
+
+  return "***";
+}

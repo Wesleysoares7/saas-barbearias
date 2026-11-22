@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
-import { getPlanContactUrl } from "@/lib/billing/contact";
 import { validateDocumento } from "@/lib/documento";
 
 type ActionState = {
@@ -35,6 +34,19 @@ export async function aderirPlanoAction(_prevState: ActionState, formData: FormD
 
   const documento = validation.digits;
 
+  const { data: company } = await scope.supabase
+    .from("companies")
+    .select("documento")
+    .eq("id", scope.companyId)
+    .maybeSingle();
+
+  if (company?.documento) {
+    if (company.documento === documento) {
+      redirect("/painel/plano/contato");
+    }
+    return { success: false, message: "O documento já foi informado e só pode ser alterado pelo suporte." };
+  }
+
   const { error: updateError } = await scope.supabase
     .from("companies")
     .update({ documento })
@@ -46,11 +58,5 @@ export async function aderirPlanoAction(_prevState: ActionState, formData: FormD
     return { success: false, message: "Nao foi possivel salvar o documento. Tente novamente." };
   }
 
-  const contactUrl = getPlanContactUrl();
-
-  if (!contactUrl) {
-    return { success: true, message: "Documento salvo. Em breve disponibilizaremos o contato para contratacao." };
-  }
-
-  redirect(contactUrl);
+  redirect("/painel/plano/contato");
 }
