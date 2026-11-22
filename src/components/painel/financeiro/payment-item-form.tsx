@@ -31,6 +31,8 @@ type PaymentItem = {
   formaPagamento: string;
   percentualComissao: number;
   valorComissao: number;
+  taxaPercentual: number;
+  valorTaxa: number;
 };
 
 type ActionState = {
@@ -100,15 +102,29 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
     payment.valorComissao
   )} (${payment.percentualComissao.toFixed(2)}%)`;
 
+  const columns: Array<{ label: string; value: string }> = [
+    { label: "Forma de pagamento", value: metodoLabel },
+  ];
+
+  if (payment.formaPagamento === "cartao_credito" && payment.taxaPercentual > 0) {
+    const liquido = payment.valor - payment.valorTaxa;
+    columns.push({
+      label: "Taxa do cartão",
+      value: `${currencyFormatter.format(payment.valorTaxa)} (${payment.taxaPercentual.toFixed(2)}%) · Líquido: ${currencyFormatter.format(liquido)}`,
+    });
+  }
+
+  columns.push({
+    label: "Comissao",
+    value: comissaoLabel,
+  });
+
   return (
     <ListRow
       leading={getInitials(payment.clienteNome)}
       title={payment.clienteNome}
       subtitle={`${formatDateTimeLabel(payment.dataHora)} - ${metodoLabel}`}
-      columns={[
-        { label: "Forma de pagamento", value: metodoLabel },
-        { label: "Comissao", value: comissaoLabel },
-      ]}
+      columns={columns}
       status={
         <span className="text-sm font-semibold whitespace-nowrap text-emerald-300 tabular-nums">
           {currencyFormatter.format(payment.valor)}

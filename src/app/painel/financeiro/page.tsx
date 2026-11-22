@@ -51,6 +51,8 @@ type PaymentRow = {
   forma_pagamento: string;
   percentual_comissao: number;
   valor_comissao: number;
+  taxa_percentual: number;
+  valor_taxa: number;
   appointments:
     | {
         cliente_nome: string;
@@ -180,7 +182,7 @@ export default async function FinanceiroPage({
     supabase
       .from("payments")
       .select(
-        "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, appointments(cliente_nome, data_hora, employee_id)"
+        "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, taxa_percentual, valor_taxa, appointments(cliente_nome, data_hora, employee_id)"
       )
       .eq("company_id", companyId)
       .order("created_at", { ascending: false }),
@@ -416,6 +418,8 @@ export default async function FinanceiroPage({
       formaPagamento: payment.forma_pagamento,
       percentualComissao: Number(payment.percentual_comissao),
       valorComissao: Number(payment.valor_comissao),
+      taxaPercentual: Number(payment.taxa_percentual),
+      valorTaxa: Number(payment.valor_taxa),
     };
   });
 
