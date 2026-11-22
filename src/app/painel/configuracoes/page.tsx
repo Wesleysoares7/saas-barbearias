@@ -23,7 +23,7 @@ export default async function ConfiguracoesPage() {
 
   const { data: company, error } = await supabase
     .from("companies")
-    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento, taxa_cartao_credito")
+    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento, taxa_cartao_credito, taxa_cartao_debito")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -81,10 +81,13 @@ export default async function ConfiguracoesPage() {
       </Panel>
 
       <Panel
-        title="Taxa do cartão de crédito"
-        description="Percentual descontado de cada pagamento no cartão de crédito. Pode ser 0."
+        title="Taxas da maquininha"
+        description="Percentual descontado de cada pagamento no cartão. Pode ser 0."
       >
-        <CardFeeForm currentFee={company?.taxa_cartao_credito ?? null} />
+        <CardFeeForm 
+          currentDebitFee={company?.taxa_cartao_debito ?? null}
+          currentCreditFee={company?.taxa_cartao_credito ?? null} 
+        />
       </Panel>
     </div>
   );

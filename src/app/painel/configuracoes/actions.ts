@@ -276,7 +276,7 @@ export async function setCompanyInfoAction(_prevState: ActionState, formData: Fo
   return { success: true, message: "Dados da empresa atualizados com sucesso." };
 }
 
-export async function setCardFeeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+export async function setCardFeesAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   const scope = await getAccessContext({ allowLimited: true });
 
   if (!scope.companyId) {
@@ -284,37 +284,51 @@ export async function setCardFeeAction(_prevState: ActionState, formData: FormDa
   }
 
   if (!isAdmin(scope.role)) {
-    return { success: false, message: "Apenas administradores podem alterar a taxa do cartão de crédito." };
+    return { success: false, message: "Apenas administradores podem alterar as taxas do cartão." };
   }
 
-  const taxaInput = readText(formData, "taxa_cartao_credito");
+  const taxaDebitoInput = readText(formData, "taxa_cartao_debito");
+  const taxaCreditoInput = readText(formData, "taxa_cartao_credito");
 
-  if (!taxaInput) {
+  if (!taxaDebitoInput) {
+    return { success: false, message: "Informe a taxa do cartão de débito." };
+  }
+
+  if (!taxaCreditoInput) {
     return { success: false, message: "Informe a taxa do cartão de crédito." };
   }
 
-  const taxa = parseFloat(taxaInput.replace(",", "."));
+  const taxaDebito = parseFloat(taxaDebitoInput.replace(",", "."));
+  const taxaCredito = parseFloat(taxaCreditoInput.replace(",", "."));
 
-  if (isNaN(taxa)) {
-    return { success: false, message: "A taxa deve ser um número válido." };
+  if (isNaN(taxaDebito)) {
+    return { success: false, message: "A taxa do débito deve ser um número válido." };
   }
 
-  if (taxa < 0 || taxa > 100) {
-    return { success: false, message: "A taxa deve estar entre 0 e 100." };
+  if (isNaN(taxaCredito)) {
+    return { success: false, message: "A taxa do crédito deve ser um número válido." };
+  }
+
+  if (taxaDebito < 0 || taxaDebito > 100) {
+    return { success: false, message: "A taxa do débito deve estar entre 0 e 100." };
+  }
+
+  if (taxaCredito < 0 || taxaCredito > 100) {
+    return { success: false, message: "A taxa do crédito deve estar entre 0 e 100." };
   }
 
   const { data: updated, error } = await scope.supabase
     .from("companies")
-    .update({ taxa_cartao_credito: taxa })
+    .update({ taxa_cartao_debito: taxaDebito, taxa_cartao_credito: taxaCredito })
     .eq("id", scope.companyId)
     .select("id")
     .maybeSingle();
 
   if (error || !updated) {
-    return { success: false, message: "Nao foi possivel salvar a taxa. Tente novamente." };
+    return { success: false, message: "Nao foi possivel salvar as taxas. Tente novamente." };
   }
 
   revalidatePath("/painel", "layout");
 
-  return { success: true, message: "Taxa do cartão de crédito atualizada com sucesso." };
+  return { success: true, message: "Taxas do cartão atualizadas com sucesso." };
 }
