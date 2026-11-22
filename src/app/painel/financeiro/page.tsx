@@ -133,6 +133,9 @@ function normalizeDateInput(
   return value;
 }
 
+const CARD_METHODS = new Set(["cartao_credito", "cartao_debito"]);
+const MAIN_METHODS = ["pix", "dinheiro", "cartao_credito", "cartao_debito"] as const;
+
 export default async function FinanceiroPage({
   searchParams,
 }: {
@@ -527,11 +530,10 @@ export default async function FinanceiroPage({
     });
   }
 
-  const orderedMethods = ["pix", "dinheiro", "cartao_credito", "cartao_debito"];
   const sortedPaymentMethods: PaymentMethodGroup[] = [];
 
   // Always show the 4 fixed methods, even with 0 payments
-  for (const methodValue of orderedMethods) {
+  for (const methodValue of MAIN_METHODS) {
     const group = paymentMethodGroups.get(methodValue);
     if (group) {
       sortedPaymentMethods.push(group);
@@ -558,7 +560,7 @@ export default async function FinanceiroPage({
     let quantidadePagamentos = 0;
 
     for (const [methodValue, group] of paymentMethodGroups) {
-      if (!orderedMethods.includes(methodValue)) {
+      if (!MAIN_METHODS.includes(methodValue as typeof MAIN_METHODS[number])) {
         totalBruto += group.totalBruto;
         totalTaxa += group.totalTaxa;
         quantidadePagamentos += group.quantidadePagamentos;
@@ -706,8 +708,7 @@ export default async function FinanceiroPage({
                       <p className="text-sm font-semibold break-words tabular-nums text-foreground">
                         {formatCurrency(method.totalBruto)}
                       </p>
-                      {(method.value === "cartao_credito" ||
-                        method.value === "cartao_debito") && (
+                      {CARD_METHODS.has(method.value as "cartao_credito" | "cartao_debito") && (
                         <>
                           <p className="text-xs text-muted-foreground mt-1">
                             Taxa: {formatCurrency(method.totalTaxa)}
