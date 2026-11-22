@@ -65,7 +65,7 @@ function SubmitButton() {
   return (
     <Button
       type="submit"
-      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      className="h-12 w-full bg-brand text-brand-foreground hover:bg-brand/90 sm:h-11 sm:w-auto"
       disabled={pending}
     >
       {pending ? (
@@ -126,11 +126,11 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
             maxLength={120}
             autoComplete="organization"
             required
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
           />
         </div>
 
-        <div>
+        <div className="sm:col-span-2">
           <label
             htmlFor="telefone"
             className="block text-sm font-medium text-foreground mb-1"
@@ -145,11 +145,12 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
             onChange={(e) => setTelefone(e.target.value)}
             maxLength={30}
             autoComplete="tel"
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            inputMode="tel"
+            className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
           />
         </div>
 
-        <div>
+        <div className="sm:col-span-2">
           <label
             htmlFor="email_contato"
             className="block text-sm font-medium text-foreground mb-1"
@@ -164,7 +165,9 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
             onChange={(e) => setEmail_contato(e.target.value)}
             maxLength={120}
             autoComplete="email"
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            inputMode="email"
+            autoCapitalize="none"
+            className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
           />
         </div>
 
@@ -183,51 +186,53 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
             onChange={(e) => setEndereco(e.target.value)}
             maxLength={200}
             autoComplete="street-address"
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
           />
         </div>
 
-        <div>
-          <label
-            htmlFor="cidade"
-            className="block text-sm font-medium text-foreground mb-1"
-          >
-            Cidade
-          </label>
-          <input
-            type="text"
-            id="cidade"
-            name="cidade"
-            value={cidade}
-            onChange={(e) => setCidade(e.target.value)}
-            maxLength={60}
-            autoComplete="address-level2"
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
-          />
-        </div>
+        <div className="grid grid-cols-[1fr_6rem] gap-3 sm:col-span-2">
+          <div>
+            <label
+              htmlFor="cidade"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              Cidade
+            </label>
+            <input
+              type="text"
+              id="cidade"
+              name="cidade"
+              value={cidade}
+              onChange={(e) => setCidade(e.target.value)}
+              maxLength={60}
+              autoComplete="address-level2"
+              className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
+            />
+          </div>
 
-        <div>
-          <label
-            htmlFor="uf"
-            className="block text-sm font-medium text-foreground mb-1"
-          >
-            UF
-          </label>
-          <select
-            id="uf"
-            name="uf"
-            value={uf}
-            onChange={(e) => setUf(e.target.value)}
-            autoComplete="address-level1"
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
-          >
-            <option value="">Selecione</option>
-            {UFS.map((ufOption) => (
-              <option key={ufOption} value={ufOption}>
-                {ufOption}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label
+              htmlFor="uf"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              UF
+            </label>
+            <select
+              id="uf"
+              name="uf"
+              value={uf}
+              onChange={(e) => setUf(e.target.value)}
+              autoComplete="address-level1"
+              className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
+            >
+              <option value="">Selecione</option>
+              {UFS.map((ufOption) => (
+                <option key={ufOption} value={ufOption}>
+                  {ufOption}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>
@@ -245,7 +250,7 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
             value={documentoInput}
             onChange={handleDocumentoChange}
             maxLength={18}
-            className="h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-foreground outline-none focus:border-brand"
+            className="h-12 w-full rounded-lg border border-border bg-surface px-3 text-base sm:h-11 sm:text-sm text-foreground outline-none focus:border-brand"
             placeholder="000.000.000-00 ou 00.000.000/0000-00"
           />
         </div>
@@ -253,6 +258,7 @@ export function CompanyInfoForm({ company }: CompanyInfoFormProps) {
 
       {state.message ? (
         <p
+          role="status"
           aria-live="polite"
           className={`rounded-lg border px-3 py-2 text-sm ${
             state.success

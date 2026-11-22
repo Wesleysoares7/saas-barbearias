@@ -35,8 +35,8 @@ function SubmitButton({
       variant={outline ? "outline" : "default"}
       className={
         outline
-          ? "h-11"
-          : "h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+          ? "h-12 w-full sm:h-11 sm:w-auto"
+          : "h-12 w-full bg-brand text-brand-foreground hover:bg-brand/90 sm:h-11 sm:w-auto"
       }
       disabled={pending}
     >
@@ -59,6 +59,7 @@ function Feedback({ state }: { state: ActionState }) {
 
   return (
     <p
+      role="status"
       aria-live="polite"
       className={`rounded-lg border px-3 py-2 text-sm ${
         state.success
@@ -89,7 +90,7 @@ export function LogoForm({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col items-start sm:flex-row sm:items-center gap-4">
         {logoUrl ? (
           <Image
             src={logoUrl}

@@ -39,7 +39,7 @@ export default async function ConfiguracoesPage() {
     : null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <PageHeader
         icon={Settings}
         title="Configuracoes"
@@ -74,13 +74,6 @@ export default async function ConfiguracoesPage() {
       </Panel>
 
       <Panel
-        title="Tema de cores"
-        description="Escolha a cor de destaque do painel. Vale para todos os usuarios da empresa."
-      >
-        <ThemeForm currentTheme={getTheme(company?.tema).value} />
-      </Panel>
-
-      <Panel
         title="Taxas da maquininha"
         description="Percentual descontado de cada pagamento no cartão. Pode ser 0."
       >
@@ -88,6 +81,13 @@ export default async function ConfiguracoesPage() {
           currentDebitFee={company?.taxa_cartao_debito ?? null}
           currentCreditFee={company?.taxa_cartao_credito ?? null} 
         />
+      </Panel>
+
+      <Panel
+        title="Tema de cores"
+        description="Escolha a cor de destaque do painel. Vale para todos os usuarios da empresa."
+      >
+        <ThemeForm currentTheme={getTheme(company?.tema).value} />
       </Panel>
     </div>
   );
