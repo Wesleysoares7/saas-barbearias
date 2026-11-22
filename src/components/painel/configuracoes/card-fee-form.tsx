@@ -20,7 +20,7 @@ function SubmitButton() {
   return (
     <Button
       type="submit"
-      className="h-11 bg-brand text-brand-foreground hover:bg-brand/90"
+      className="h-12 w-full bg-brand text-brand-foreground hover:bg-brand/90 sm:h-11 sm:w-auto"
       disabled={pending}
     >
       {pending ? (
@@ -51,8 +51,10 @@ export function CardFeeForm({
     INITIAL_STATE,
   );
 
-  const displayDebitValue = currentDebitFee !== null ? currentDebitFee.toString() : "";
-  const displayCreditValue = currentCreditFee !== null ? currentCreditFee.toString() : "";
+  const displayDebitValue =
+    currentDebitFee !== null ? currentDebitFee.toString() : "";
+  const displayCreditValue =
+    currentCreditFee !== null ? currentCreditFee.toString() : "";
   const anyTaxaMissing = currentDebitFee === null || currentCreditFee === null;
 
   return (
@@ -62,72 +64,62 @@ export function CardFeeForm({
           <AlertCircle className="size-5 text-amber-300 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-amber-200">
-              <strong>Taxa não informada:</strong> pagamentos no cartão ficam bloqueados até você informar todas as taxas (use 0 se não houver taxa).
+              <strong>Taxa não informada:</strong> pagamentos no cartão ficam
+              bloqueados até você informar todas as taxas (use 0 se não houver
+              taxa).
             </p>
           </div>
         </div>
       ) : null}
 
-      <div className="space-y-1">
-        <label htmlFor="taxa_cartao_debito" className="text-sm text-foreground">
-          Taxa do débito (%)
-        </label>
-        <input
-          id="taxa_cartao_debito"
-          name="taxa_cartao_debito"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          max="100"
-          step="0.01"
-          key={`taxa_cartao_debito-${currentDebitFee}`}
-          defaultValue={displayDebitValue}
-          placeholder="0,00"
-          className="w-full h-11 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none transition"
-          required
-          onChange={(e) => {
-            e.currentTarget.value = convertCommaToPoint(e.currentTarget.value);
-          }}
-          onBlur={(e) => {
-            e.currentTarget.value = convertCommaToPoint(e.currentTarget.value);
-          }}
-        />
-        <p className="text-xs text-muted-foreground">
-          Decimal com até 2 casas. Ex: 2,50 ou 2.50
-        </p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label htmlFor="taxa_cartao_debito" className="text-sm text-foreground">
+            Taxa do débito (%)
+          </label>
+          <input
+            id="taxa_cartao_debito"
+            name="taxa_cartao_debito"
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]+([.,][0-9]{1,2})?"
+            key={`taxa_cartao_debito-${currentDebitFee}`}
+            defaultValue={displayDebitValue}
+            placeholder="0,00"
+            className="w-full h-12 sm:h-11 rounded-lg border border-border bg-surface px-3 py-2 text-base sm:text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none transition"
+            required
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label
+            htmlFor="taxa_cartao_credito"
+            className="text-sm text-foreground"
+          >
+            Taxa do crédito (%)
+          </label>
+          <input
+            id="taxa_cartao_credito"
+            name="taxa_cartao_credito"
+            type="text"
+            inputMode="decimal"
+            pattern="[0-9]+([.,][0-9]{1,2})?"
+            key={`taxa_cartao_credito-${currentCreditFee}`}
+            defaultValue={displayCreditValue}
+            placeholder="0,00"
+            className="w-full h-12 sm:h-11 rounded-lg border border-border bg-surface px-3 py-2 text-base sm:text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none transition"
+            required
+          />
+        </div>
       </div>
 
-      <div className="space-y-1">
-        <label htmlFor="taxa_cartao_credito" className="text-sm text-foreground">
-          Taxa do crédito (%)
-        </label>
-        <input
-          id="taxa_cartao_credito"
-          name="taxa_cartao_credito"
-          type="number"
-          inputMode="decimal"
-          min="0"
-          max="100"
-          step="0.01"
-          key={`taxa_cartao_credito-${currentCreditFee}`}
-          defaultValue={displayCreditValue}
-          placeholder="0,00"
-          className="w-full h-11 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus:border-brand focus:ring-2 focus:ring-brand/30 focus:outline-none transition"
-          required
-          onChange={(e) => {
-            e.currentTarget.value = convertCommaToPoint(e.currentTarget.value);
-          }}
-          onBlur={(e) => {
-            e.currentTarget.value = convertCommaToPoint(e.currentTarget.value);
-          }}
-        />
-        <p className="text-xs text-muted-foreground">
-          Decimal com até 2 casas. Ex: 2,50 ou 2.50
-        </p>
-      </div>
+      <p className="text-xs text-muted-foreground">
+        Até 2 casas decimais. Ex: 2,50. Use 0 se não houver taxa.
+      </p>
 
       {state.message ? (
         <p
+          role="status"
           aria-live="polite"
           className={`rounded-lg border px-3 py-2 text-sm ${
             state.success
