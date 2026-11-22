@@ -106,11 +106,11 @@ export function PaymentItemForm({ payment }: { payment: PaymentItem }) {
     { label: "Forma de pagamento", value: metodoLabel },
   ];
 
-  if (payment.formaPagamento === "cartao_credito" && payment.taxaPercentual > 0) {
+  if (payment.taxaPercentual > 0 && (payment.formaPagamento === "cartao_credito" || payment.formaPagamento === "cartao_debito")) {
     const liquido = payment.valor - payment.valorTaxa;
     columns.push({
       label: "Taxa do cartão",
-      value: `${currencyFormatter.format(payment.valorTaxa)} (${payment.taxaPercentual.toFixed(2)}%) · Líquido: ${currencyFormatter.format(liquido)}`,
+      value: `${payment.taxaPercentual.toFixed(2)}% (${currencyFormatter.format(payment.valorTaxa)}) · Líquido: ${currencyFormatter.format(liquido)}`,
     });
   }
 
