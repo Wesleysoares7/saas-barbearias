@@ -22,6 +22,7 @@ import { CashEntryDialog } from "@/components/painel/financeiro/caixa/cash-entry
 import { CashEntryItem } from "@/components/painel/financeiro/caixa/cash-entry-item";
 import { OpeningBalanceCard } from "@/components/painel/financeiro/caixa/opening-balance-card";
 import type { CashEntry, FinanceSummary } from "@/types/cash";
+import { PAYMENT_METHODS } from "@/lib/payment-methods";
 
 type AppointmentRow = {
   id: string;
@@ -278,7 +279,7 @@ export default async function FinanceiroPage({
     .sort((left, right) => right.comissaoTotal - left.comissaoTotal);
 
   const totalFaturamento = roundToTwo(
-    payments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0)
+    filteredPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0)
   );
   const totalComissao = roundToTwo(
     filteredPayments.reduce(
@@ -477,6 +478,10 @@ export default async function FinanceiroPage({
           value: formatCurrency(Number(summary.comissoes)),
         },
         {
+          label: "Taxas de cartao (-)",
+          value: formatCurrency(Number(summary.taxas_cartao)),
+        },
+        {
           label: "Compras de estoque (-)",
           value: formatCurrency(Number(summary.compras_estoque)),
         },
@@ -486,6 +491,95 @@ export default async function FinanceiroPage({
         },
       ]
     : [];
+
+  type PaymentMethodGroup = {
+    value: string;
+    label: string;
+    quantidadePagamentos: number;
+    totalBruto: number;
+    totalTaxa: number;
+    totalLiquido: number;
+  };
+
+  const paymentMethodGroups = new Map<string, PaymentMethodGroup>();
+
+  for (const payment of filteredPayments) {
+    const methodValue = payment.forma_pagamento;
+    const existing = paymentMethodGroups.get(methodValue);
+    const quantidadePagamentos = (existing?.quantidadePagamentos ?? 0) + 1;
+    const totalBruto = roundToTwo(
+      (existing?.totalBruto ?? 0) + Number(payment.valor ?? 0)
+    );
+    const totalTaxa = roundToTwo(
+      (existing?.totalTaxa ?? 0) + Number(payment.valor_taxa ?? 0)
+    );
+    const totalLiquido = roundToTwo(totalBruto - totalTaxa);
+
+    paymentMethodGroups.set(methodValue, {
+      value: methodValue,
+      label:
+        PAYMENT_METHODS.find((m) => m.value === methodValue)?.label ??
+        methodValue,
+      quantidadePagamentos,
+      totalBruto,
+      totalTaxa,
+      totalLiquido,
+    });
+  }
+
+  const orderedMethods = ["pix", "dinheiro", "cartao_credito", "cartao_debito"];
+  const sortedPaymentMethods: PaymentMethodGroup[] = [];
+
+  // Always show the 4 fixed methods, even with 0 payments
+  for (const methodValue of orderedMethods) {
+    const group = paymentMethodGroups.get(methodValue);
+    if (group) {
+      sortedPaymentMethods.push(group);
+    } else {
+      // Create a default entry with 0 values for methods without payments
+      const method = PAYMENT_METHODS.find((m) => m.value === methodValue);
+      if (method) {
+        sortedPaymentMethods.push({
+          value: methodValue,
+          label: method.label,
+          quantidadePagamentos: 0,
+          totalBruto: 0,
+          totalTaxa: 0,
+          totalLiquido: 0,
+        });
+      }
+    }
+  }
+
+  // Add "Outros" group for unrecognized payment methods
+  const outrosGroup: PaymentMethodGroup | null = (() => {
+    let totalBruto = 0;
+    let totalTaxa = 0;
+    let quantidadePagamentos = 0;
+
+    for (const [methodValue, group] of paymentMethodGroups) {
+      if (!orderedMethods.includes(methodValue)) {
+        totalBruto += group.totalBruto;
+        totalTaxa += group.totalTaxa;
+        quantidadePagamentos += group.quantidadePagamentos;
+      }
+    }
+
+    return quantidadePagamentos > 0
+      ? {
+          value: "outros",
+          label: "Outros",
+          quantidadePagamentos,
+          totalBruto,
+          totalTaxa,
+          totalLiquido: roundToTwo(totalBruto - totalTaxa),
+        }
+      : null;
+  })();
+
+  if (outrosGroup) {
+    sortedPaymentMethods.push(outrosGroup);
+  }
 
   return (
     <div className="space-y-4 pb-24">
@@ -533,7 +627,7 @@ export default async function FinanceiroPage({
 
           <Panel
             title="Resumo do periodo"
-            description="Saldo anterior + receitas + entradas - comissoes - compras - despesas = saldo final"
+            description="Saldo anterior + receitas + entradas - comissoes - taxas de cartao - compras - despesas = saldo final"
           >
             {summary ? (
               <>
@@ -584,6 +678,57 @@ export default async function FinanceiroPage({
                 Nao foi possivel calcular o resumo. Verifique se o script 016
                 foi executado.
               </p>
+            )}
+          </Panel>
+
+          <Panel
+            title="Recebido por forma de pagamento"
+            description="Agrupado por metodo de pagamento com totais bruto, taxas e liquido."
+          >
+            {filteredPayments.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+                Nenhum pagamento neste periodo.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                  {sortedPaymentMethods.map((method) => (
+                    <div
+                      key={method.value}
+                      className="min-h-14 min-w-0 rounded-xl border border-border bg-surface px-3 py-2"
+                    >
+                      <p className="truncate text-xs text-muted-foreground">
+                        {method.label}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {method.quantidadePagamentos} pagamento(s)
+                      </p>
+                      <p className="text-sm font-semibold break-words tabular-nums text-foreground">
+                        {formatCurrency(method.totalBruto)}
+                      </p>
+                      {(method.value === "cartao_credito" ||
+                        method.value === "cartao_debito") && (
+                        <>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Taxa: {formatCurrency(method.totalTaxa)}
+                          </p>
+                          <p className="text-xs font-medium text-foreground">
+                            Líquido: {formatCurrency(method.totalLiquido)}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                  <div className="min-h-14 min-w-0 rounded-xl border border-border bg-surface-2 px-3 py-2">
+                    <p className="truncate text-xs font-semibold text-foreground">
+                      Total Geral
+                    </p>
+                    <p className="text-sm font-semibold break-words tabular-nums text-foreground">
+                      {formatCurrency(totalFaturamento)}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </Panel>
         </div>
