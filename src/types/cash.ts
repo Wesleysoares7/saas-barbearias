@@ -22,6 +22,7 @@ export type FinanceSummary = {
   saldo_inicial_no_periodo: number;
   receitas: number;
   comissoes: number;
+  taxas_cartao: number;
   compras_estoque: number;
   entradas_avulsas: number;
   despesas: number;
