@@ -22,9 +22,7 @@ import {
   Tab,
   AppointmentOption,
   EmployeeFinancialSummary,
-  PaymentItem,
   PaymentMethodGroup,
-  OpeningEntry,
   Indicator,
   StatementLine,
 } from "./types";
@@ -74,398 +72,192 @@ export async function FinanceiroContent({
 }: FinanceiroContentProps) {
   const startDate = new Date(startOfDayIso(start));
   const endDate = new Date(endOfDayIso(end));
+  const startIso = startDate.toISOString();
+  const endIso = endDate.toISOString();
 
-  const [
-    appointmentsResponse,
-    servicesResponse,
-    employeesResponse,
-    paymentsResponse,
-  ] = await Promise.all([
-    supabase
-      .from("appointments")
-      .select("id, cliente_nome, data_hora, status, service_id, employee_id")
-      .eq("company_id", companyId)
-      .eq("status", "concluido")
-      .order("data_hora", { ascending: false }),
-    supabase.from("services").select("id, valor").eq("company_id", companyId),
-    supabase
-      .from("employees")
-      .select("id, nome, percentual_comissao")
-      .eq("company_id", companyId),
-    supabase
-      .from("payments")
-      .select(
-        "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, taxa_percentual, valor_taxa, appointments(cliente_nome, data_hora, employee_id)"
-      )
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: false }),
-  ]);
-
-  const appointments = (appointmentsResponse.data ?? []) as AppointmentRow[];
-  const services = (servicesResponse.data ?? []) as ServiceRow[];
-  const employees = (employeesResponse.data ?? []) as EmployeeRow[];
-  const payments = (paymentsResponse.data ?? []) as PaymentRow[];
-
-  const serviceValueById = new Map(
-    services.map((service) => [service.id, Number(service.valor)])
-  );
-  const employeeCommissionById = new Map(
-    employees.map((employee) => [
-      employee.id,
-      Number(employee.percentual_comissao ?? 0),
-    ])
-  );
-  const employeeNameById = new Map(
-    employees.map((employee) => [employee.id, employee.nome])
-  );
-  const appointmentEmployeeById = new Map(
-    appointments.map((appointment) => [appointment.id, appointment.employee_id])
-  );
-
-  const paidAppointmentIds = new Set(
-    payments.map((payment) => payment.appointment_id)
-  );
-
-  const filteredPayments = payments.filter((payment) => {
-    const createdAt = new Date(payment.created_at);
-
-    if (Number.isNaN(createdAt.getTime())) {
-      return false;
-    }
-
-    return createdAt >= startDate && createdAt <= endDate;
-  });
-
-  const employeeFinancialMap = new Map<string, EmployeeFinancialSummary>(
-    employees.map((employee) => [
-      employee.id,
-      {
-        id: employee.id,
-        nome: employee.nome,
-        percentualComissao: roundToTwo(
-          Number(employee.percentual_comissao ?? 0)
-        ),
-        quantidadePagamentos: 0,
-        faturamento: 0,
-        comissaoTotal: 0,
-      },
-    ])
-  );
-
-  for (const payment of filteredPayments) {
-    const appointmentEmployeeId = appointmentEmployeeById.get(
-      payment.appointment_id
-    );
-
-    if (!appointmentEmployeeId) {
-      continue;
-    }
-
-    const summary = employeeFinancialMap.get(appointmentEmployeeId);
-
-    if (!summary) {
-      employeeFinancialMap.set(appointmentEmployeeId, {
-        id: appointmentEmployeeId,
-        nome:
-          employeeNameById.get(appointmentEmployeeId) ??
-          "Funcionario nao encontrado",
-        percentualComissao: 0,
-        quantidadePagamentos: 1,
-        faturamento: Number(payment.valor),
-        comissaoTotal: Number(payment.valor_comissao),
-      });
-      continue;
-    }
-
-    summary.quantidadePagamentos += 1;
-    summary.faturamento += Number(payment.valor);
-    summary.comissaoTotal += Number(payment.valor_comissao);
-  }
-
-  const employeeFinancialSummaries = [...employeeFinancialMap.values()]
-    .map((summary) => ({
-      ...summary,
-      faturamento: roundToTwo(summary.faturamento),
-      comissaoTotal: roundToTwo(summary.comissaoTotal),
-    }))
-    .sort((left, right) => right.comissaoTotal - left.comissaoTotal);
-
-  const totalFaturamento = roundToTwo(
-    filteredPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0)
-  );
-  const totalComissao = roundToTwo(
-    filteredPayments.reduce(
-      (sum, payment) => sum + Number(payment.valor_comissao ?? 0),
-      0
-    )
-  );
-
-  const [summaryResponse, entriesResponse, openingResponse] = await Promise.all([
-    supabase.rpc("finance_summary", {
-      p_company_id: companyId,
-      p_start: start,
-      p_end: end,
-    }),
-    supabase
-      .from("cash_entries")
-      .select("id, tipo, valor, categoria, descricao, data_lancamento")
-      .eq("company_id", companyId)
-      .in("tipo", ["entrada", "despesa"])
-      .gte("data_lancamento", start)
-      .lte("data_lancamento", end)
-      .order("data_lancamento", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(50),
-    supabase
-      .from("cash_entries")
-      .select("id, valor, valor_pix, valor_conta, data_lancamento")
-      .eq("company_id", companyId)
-      .eq("tipo", "saldo_inicial")
-      .maybeSingle(),
-  ]);
-
-  const summaryRows = (summaryResponse.data ?? []) as FinanceSummary[];
-  const summary: FinanceSummary | null = summaryResponse.error
-    ? null
-    : summaryRows[0] ?? null;
-  const cashEntries = (entriesResponse.data ?? []) as Pick<
-    CashEntry,
-    "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
-  >[];
-  const openingRow = openingResponse.data as {
-    id: string;
-    valor: number;
-    valor_pix: number;
-    valor_conta: number;
-    data_lancamento: string;
-  } | null;
-  const openingEntry = openingRow
-    ? {
-        id: openingRow.id,
-        valor: Number(openingRow.valor ?? 0),
-        valorPix: Number(openingRow.valor_pix ?? 0),
-        valorConta: Number(openingRow.valor_conta ?? 0),
-        data: openingRow.data_lancamento,
-      }
-    : null;
-  const cashItems = cashEntries.map((entry) => ({
-    id: entry.id,
-    tipo:
-      entry.tipo === "entrada" ? ("entrada" as const) : ("despesa" as const),
-    valor: Number(entry.valor),
-    categoria: entry.categoria,
-    descricao: entry.descricao,
-    data: entry.data_lancamento,
-  }));
-  const openingDate = summary?.saldo_inicial_data ?? openingEntry?.data ?? null;
-  let movimentosAnteriores = 0;
-
-  if (openingDate) {
-    const cutoffIso = `${openingDate}T00:00:00-03:00`;
-    const [paymentsBefore, purchasesBefore, entriesBefore] = await Promise.all([
+  // ============ TAB: RESUMO ============
+  if (tab === "resumo") {
+    const [summaryResponse, paymentsResponse] = await Promise.all([
+      supabase.rpc("finance_summary", {
+        p_company_id: companyId,
+        p_start: start,
+        p_end: end,
+      }),
       supabase
         .from("payments")
-        .select("id", { count: "exact", head: true })
+        .select(
+          "valor, valor_comissao, forma_pagamento, valor_taxa, appointments(employee_id)"
+        )
         .eq("company_id", companyId)
-        .lt("created_at", cutoffIso),
-      supabase
-        .from("stock_movements")
-        .select("id", { count: "exact", head: true })
-        .eq("company_id", companyId)
-        .eq("tipo", "entrada")
-        .eq("motivo", "compra")
-        .lt("data_movimento", cutoffIso),
-      supabase
-        .from("cash_entries")
-        .select("id", { count: "exact", head: true })
-        .eq("company_id", companyId)
-        .in("tipo", ["entrada", "despesa"])
-        .lt("data_lancamento", openingDate),
+        .gte("created_at", startIso)
+        .lte("created_at", endIso),
     ]);
 
-    movimentosAnteriores = [
-      paymentsBefore,
-      purchasesBefore,
-      entriesBefore,
-    ].reduce(
-      (sum, response) => sum + (response.error ? 0 : response.count ?? 0),
-      0
+    const summaryRows = (summaryResponse.data ?? []) as FinanceSummary[];
+    const summary: FinanceSummary | null = summaryResponse.error
+      ? null
+      : summaryRows[0] ?? null;
+    const payments = (paymentsResponse.data ?? []) as PaymentRow[];
+
+    const totalFaturamento = roundToTwo(
+      payments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0)
     );
-  }
-
-  const openingAfterEnd = openingDate !== null && openingDate > end;
-  const saldoInicialNoPeriodo = Number(summary?.saldo_inicial_no_periodo ?? 0);
-  const saldoFinal = Number(summary?.saldo_final ?? 0);
-
-  const availableAppointments: AppointmentOption[] = appointments
-    .filter((appointment) => !paidAppointmentIds.has(appointment.id))
-    .map((appointment) => {
-      const valorSugerido = Number(
-        serviceValueById.get(appointment.service_id) ?? 0
-      );
-      const percentualComissaoSugerido = Number(
-        employeeCommissionById.get(appointment.employee_id) ?? 0
-      );
-
-      return {
-        id: appointment.id,
-        clienteNome: appointment.cliente_nome,
-        dataHora: appointment.data_hora,
-        valorSugerido: roundToTwo(valorSugerido),
-        percentualComissaoSugerido: roundToTwo(percentualComissaoSugerido),
-      };
-    });
-
-  const paymentItems = filteredPayments.map((payment) => {
-    const appointmentData = getPaymentAppointmentData(payment.appointments);
-
-    return {
-      id: payment.id,
-      appointmentId: payment.appointment_id,
-      createdAt: payment.created_at,
-      clienteNome: appointmentData.clienteNome,
-      dataHora: appointmentData.dataHora,
-      valor: Number(payment.valor),
-      formaPagamento: payment.forma_pagamento,
-      percentualComissao: Number(payment.percentual_comissao),
-      valorComissao: Number(payment.valor_comissao),
-      taxaPercentual: Number(payment.taxa_percentual),
-      valorTaxa: Number(payment.valor_taxa),
-    };
-  });
-
-  const sellersCount = employeeFinancialSummaries.filter(
-    (item) => item.quantidadePagamentos > 0
-  ).length;
-  const indicators: Indicator[] = [
-    { label: "Faturamento", value: formatCurrency(totalFaturamento) },
-    { label: "Comissao total", value: formatCurrency(totalComissao) },
-    { label: "Pagamentos", value: String(paymentItems.length) },
-    { label: "Funcionarios com vendas", value: String(sellersCount) },
-  ];
-  const statementLines: StatementLine[] = summary
-    ? [
-        {
-          label: "Saldo anterior",
-          value: formatCurrency(Number(summary.saldo_anterior)),
-        },
-        ...(saldoInicialNoPeriodo !== 0
-          ? [
-              {
-                label: "Saldo inicial",
-                value: formatCurrency(saldoInicialNoPeriodo),
-              },
-            ]
-          : []),
-        {
-          label: "Receitas (+)",
-          value: formatCurrency(Number(summary.receitas)),
-        },
-        {
-          label: "Entradas avulsas (+)",
-          value: formatCurrency(Number(summary.entradas_avulsas)),
-        },
-        {
-          label: "Comissoes (-)",
-          value: formatCurrency(Number(summary.comissoes)),
-        },
-        {
-          label: "Taxas de cartao (-)",
-          value: formatCurrency(Number(summary.taxas_cartao)),
-        },
-        {
-          label: "Compras de estoque (-)",
-          value: formatCurrency(Number(summary.compras_estoque)),
-        },
-        {
-          label: "Despesas (-)",
-          value: formatCurrency(Number(summary.despesas)),
-        },
-      ]
-    : [];
-
-  const paymentMethodGroups = new Map<string, PaymentMethodGroup>();
-
-  for (const payment of filteredPayments) {
-    const methodValue = payment.forma_pagamento;
-    const existing = paymentMethodGroups.get(methodValue);
-    const quantidadePagamentos = (existing?.quantidadePagamentos ?? 0) + 1;
-    const totalBruto = roundToTwo(
-      (existing?.totalBruto ?? 0) + Number(payment.valor ?? 0)
+    const totalComissao = roundToTwo(
+      payments.reduce(
+        (sum, payment) => sum + Number(payment.valor_comissao ?? 0),
+        0
+      )
     );
-    const totalTaxa = roundToTwo(
-      (existing?.totalTaxa ?? 0) + Number(payment.valor_taxa ?? 0)
-    );
-    const totalLiquido = roundToTwo(totalBruto - totalTaxa);
 
-    paymentMethodGroups.set(methodValue, {
-      value: methodValue,
-      label:
-        PAYMENT_METHODS.find((m) => m.value === methodValue)?.label ??
-        methodValue,
-      quantidadePagamentos,
-      totalBruto,
-      totalTaxa,
-      totalLiquido,
-    });
-  }
-
-  const sortedPaymentMethods: PaymentMethodGroup[] = [];
-
-  // Always show the 4 fixed methods, even with 0 payments
-  for (const methodValue of MAIN_METHODS) {
-    const group = paymentMethodGroups.get(methodValue);
-    if (group) {
-      sortedPaymentMethods.push(group);
-    } else {
-      // Create a default entry with 0 values for methods without payments
-      const method = PAYMENT_METHODS.find((m) => m.value === methodValue);
-      if (method) {
-        sortedPaymentMethods.push({
-          value: methodValue,
-          label: method.label,
-          quantidadePagamentos: 0,
-          totalBruto: 0,
-          totalTaxa: 0,
-          totalLiquido: 0,
-        });
-      }
-    }
-  }
-
-  // Add "Outros" group for unrecognized payment methods
-  const outrosGroup: PaymentMethodGroup | null = (() => {
-    let totalBruto = 0;
-    let totalTaxa = 0;
-    let quantidadePagamentos = 0;
-
-    for (const [methodValue, group] of paymentMethodGroups) {
-      if (!MAIN_METHODS.includes(methodValue as typeof MAIN_METHODS[number])) {
-        totalBruto += group.totalBruto;
-        totalTaxa += group.totalTaxa;
-        quantidadePagamentos += group.quantidadePagamentos;
-      }
-    }
-
-    return quantidadePagamentos > 0
-      ? {
-          value: "outros",
-          label: "Outros",
-          quantidadePagamentos,
-          totalBruto,
-          totalTaxa,
-          totalLiquido: roundToTwo(totalBruto - totalTaxa),
+    // Count distinct employee_id from joined appointments
+    const distinctEmployeeIds = new Set<string>();
+    for (const payment of payments) {
+      const appointments = payment.appointments;
+      if (appointments) {
+        const appointment = Array.isArray(appointments)
+          ? appointments[0]
+          : appointments;
+        if (appointment?.employee_id) {
+          distinctEmployeeIds.add(appointment.employee_id);
         }
-      : null;
-  })();
+      }
+    }
+    const sellersCount = distinctEmployeeIds.size;
 
-  if (outrosGroup) {
-    sortedPaymentMethods.push(outrosGroup);
-  }
+    const indicators: Indicator[] = [
+      { label: "Faturamento", value: formatCurrency(totalFaturamento) },
+      { label: "Comissao total", value: formatCurrency(totalComissao) },
+      { label: "Pagamentos", value: String(payments.length) },
+      { label: "Funcionarios com vendas", value: String(sellersCount) },
+    ];
 
-  return (
-    <>
-      {tab === "resumo" ? (
+    const saldoFinal = Number(summary?.saldo_final ?? 0);
+    const openingDate = summary?.saldo_inicial_data ?? null;
+    const openingAfterEnd = openingDate !== null && openingDate > end;
+    const saldoInicialNoPeriodo = Number(summary?.saldo_inicial_no_periodo ?? 0);
+
+    const statementLines: StatementLine[] = summary
+      ? [
+          {
+            label: "Saldo anterior",
+            value: formatCurrency(Number(summary.saldo_anterior)),
+          },
+          ...(saldoInicialNoPeriodo !== 0
+            ? [
+                {
+                  label: "Saldo inicial",
+                  value: formatCurrency(saldoInicialNoPeriodo),
+                },
+              ]
+            : []),
+          {
+            label: "Receitas (+)",
+            value: formatCurrency(Number(summary.receitas)),
+          },
+          {
+            label: "Entradas avulsas (+)",
+            value: formatCurrency(Number(summary.entradas_avulsas)),
+          },
+          {
+            label: "Comissoes (-)",
+            value: formatCurrency(Number(summary.comissoes)),
+          },
+          {
+            label: "Taxas de cartao (-)",
+            value: formatCurrency(Number(summary.taxas_cartao)),
+          },
+          {
+            label: "Compras de estoque (-)",
+            value: formatCurrency(Number(summary.compras_estoque)),
+          },
+          {
+            label: "Despesas (-)",
+            value: formatCurrency(Number(summary.despesas)),
+          },
+        ]
+      : [];
+
+    const paymentMethodGroups = new Map<string, PaymentMethodGroup>();
+
+    for (const payment of payments) {
+      const methodValue = payment.forma_pagamento;
+      const existing = paymentMethodGroups.get(methodValue);
+      const quantidadePagamentos = (existing?.quantidadePagamentos ?? 0) + 1;
+      const totalBruto = roundToTwo(
+        (existing?.totalBruto ?? 0) + Number(payment.valor ?? 0)
+      );
+      const totalTaxa = roundToTwo(
+        (existing?.totalTaxa ?? 0) + Number(payment.valor_taxa ?? 0)
+      );
+      const totalLiquido = roundToTwo(totalBruto - totalTaxa);
+
+      paymentMethodGroups.set(methodValue, {
+        value: methodValue,
+        label:
+          PAYMENT_METHODS.find((m) => m.value === methodValue)?.label ??
+          methodValue,
+        quantidadePagamentos,
+        totalBruto,
+        totalTaxa,
+        totalLiquido,
+      });
+    }
+
+    const sortedPaymentMethods: PaymentMethodGroup[] = [];
+
+    // Always show the 4 fixed methods, even with 0 payments
+    for (const methodValue of MAIN_METHODS) {
+      const group = paymentMethodGroups.get(methodValue);
+      if (group) {
+        sortedPaymentMethods.push(group);
+      } else {
+        // Create a default entry with 0 values for methods without payments
+        const method = PAYMENT_METHODS.find((m) => m.value === methodValue);
+        if (method) {
+          sortedPaymentMethods.push({
+            value: methodValue,
+            label: method.label,
+            quantidadePagamentos: 0,
+            totalBruto: 0,
+            totalTaxa: 0,
+            totalLiquido: 0,
+          });
+        }
+      }
+    }
+
+    // Add "Outros" group for unrecognized payment methods
+    const outrosGroup: PaymentMethodGroup | null = (() => {
+      let totalBruto = 0;
+      let totalTaxa = 0;
+      let quantidadePagamentos = 0;
+
+      for (const [methodValue, group] of paymentMethodGroups) {
+        if (!MAIN_METHODS.includes(methodValue as typeof MAIN_METHODS[number])) {
+          totalBruto += group.totalBruto;
+          totalTaxa += group.totalTaxa;
+          quantidadePagamentos += group.quantidadePagamentos;
+        }
+      }
+
+      return quantidadePagamentos > 0
+        ? {
+            value: "outros",
+            label: "Outros",
+            quantidadePagamentos,
+            totalBruto,
+            totalTaxa,
+            totalLiquido: roundToTwo(totalBruto - totalTaxa),
+          }
+        : null;
+    })();
+
+    if (outrosGroup) {
+      sortedPaymentMethods.push(outrosGroup);
+    }
+
+    return (
+      <>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {indicators.map((item) => (
@@ -543,7 +335,7 @@ export async function FinanceiroContent({
             title="Recebido por forma de pagamento"
             description="Agrupado por metodo de pagamento com totais bruto, taxas e liquido."
           >
-            {filteredPayments.length === 0 ? (
+            {payments.length === 0 ? (
               <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
                 Nenhum pagamento neste periodo.
               </p>
@@ -591,9 +383,101 @@ export async function FinanceiroContent({
             )}
           </Panel>
         </div>
-      ) : null}
+      </>
+    );
+  }
 
-      {tab === "caixa" ? (
+  // ============ TAB: CAIXA ============
+  if (tab === "caixa") {
+    const [entriesResponse, openingResponse] = await Promise.all([
+      supabase
+        .from("cash_entries")
+        .select("id, tipo, valor, categoria, descricao, data_lancamento")
+        .eq("company_id", companyId)
+        .in("tipo", ["entrada", "despesa"])
+        .gte("data_lancamento", start)
+        .lte("data_lancamento", end)
+        .order("data_lancamento", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("cash_entries")
+        .select("id, valor, valor_pix, valor_conta, data_lancamento")
+        .eq("company_id", companyId)
+        .eq("tipo", "saldo_inicial")
+        .maybeSingle(),
+    ]);
+
+    const cashEntries = (entriesResponse.data ?? []) as Pick<
+      CashEntry,
+      "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
+    >[];
+    const openingRow = openingResponse.data as {
+      id: string;
+      valor: number;
+      valor_pix: number;
+      valor_conta: number;
+      data_lancamento: string;
+    } | null;
+
+    const openingEntry = openingRow
+      ? {
+          id: openingRow.id,
+          valor: Number(openingRow.valor ?? 0),
+          valorPix: Number(openingRow.valor_pix ?? 0),
+          valorConta: Number(openingRow.valor_conta ?? 0),
+          data: openingRow.data_lancamento,
+        }
+      : null;
+
+    const cashItems = cashEntries.map((entry) => ({
+      id: entry.id,
+      tipo:
+        entry.tipo === "entrada" ? ("entrada" as const) : ("despesa" as const),
+      valor: Number(entry.valor),
+      categoria: entry.categoria,
+      descricao: entry.descricao,
+      data: entry.data_lancamento,
+    }));
+
+    const openingDate = openingEntry?.data ?? null;
+    let movimentosAnteriores = 0;
+
+    if (openingDate) {
+      const cutoffIso = `${openingDate}T00:00:00-03:00`;
+      const [paymentsBefore, purchasesBefore, entriesBefore] = await Promise.all([
+        supabase
+          .from("payments")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .lt("created_at", cutoffIso),
+        supabase
+          .from("stock_movements")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .eq("tipo", "entrada")
+          .eq("motivo", "compra")
+          .lt("data_movimento", cutoffIso),
+        supabase
+          .from("cash_entries")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .in("tipo", ["entrada", "despesa"])
+          .lt("data_lancamento", openingDate),
+      ]);
+
+      movimentosAnteriores = [
+        paymentsBefore,
+        purchasesBefore,
+        entriesBefore,
+      ].reduce(
+        (sum, response) => sum + (response.error ? 0 : response.count ?? 0),
+        0
+      );
+    }
+
+    return (
+      <>
         <Panel
           title="Caixa"
           description="Saldo inicial e lancamentos avulsos de entrada e despesa no periodo."
@@ -624,9 +508,86 @@ export async function FinanceiroContent({
             )}
           </div>
         </Panel>
-      ) : null}
+      </>
+    );
+  }
 
-      {tab === "funcionarios" ? (
+  // ============ TAB: FUNCIONARIOS ============
+  if (tab === "funcionarios") {
+    const [employeesResponse, paymentsResponse] = await Promise.all([
+      supabase
+        .from("employees")
+        .select("id, nome, percentual_comissao")
+        .eq("company_id", companyId),
+      supabase
+        .from("payments")
+        .select(
+          "valor, valor_comissao, appointments(employee_id)"
+        )
+        .eq("company_id", companyId)
+        .gte("created_at", startIso)
+        .lte("created_at", endIso),
+    ]);
+
+    const employees = (employeesResponse.data ?? []) as EmployeeRow[];
+    const payments = (paymentsResponse.data ?? []) as PaymentRow[];
+
+    const employeeFinancialMap = new Map<string, EmployeeFinancialSummary>(
+      employees.map((employee) => [
+        employee.id,
+        {
+          id: employee.id,
+          nome: employee.nome,
+          percentualComissao: roundToTwo(
+            Number(employee.percentual_comissao ?? 0)
+          ),
+          quantidadePagamentos: 0,
+          faturamento: 0,
+          comissaoTotal: 0,
+        },
+      ])
+    );
+
+    for (const payment of payments) {
+      const appointments = payment.appointments;
+      const appointment = Array.isArray(appointments)
+        ? appointments[0]
+        : appointments;
+      const appointmentEmployeeId = appointment?.employee_id;
+
+      if (!appointmentEmployeeId) {
+        continue;
+      }
+
+      const summary = employeeFinancialMap.get(appointmentEmployeeId);
+
+      if (!summary) {
+        employeeFinancialMap.set(appointmentEmployeeId, {
+          id: appointmentEmployeeId,
+          nome: "Funcionario nao encontrado",
+          percentualComissao: 0,
+          quantidadePagamentos: 1,
+          faturamento: Number(payment.valor),
+          comissaoTotal: Number(payment.valor_comissao),
+        });
+        continue;
+      }
+
+      summary.quantidadePagamentos += 1;
+      summary.faturamento += Number(payment.valor);
+      summary.comissaoTotal += Number(payment.valor_comissao);
+    }
+
+    const employeeFinancialSummaries = [...employeeFinancialMap.values()]
+      .map((summary) => ({
+        ...summary,
+        faturamento: roundToTwo(summary.faturamento),
+        comissaoTotal: roundToTwo(summary.comissaoTotal),
+      }))
+      .sort((left, right) => right.comissaoTotal - left.comissaoTotal);
+
+    return (
+      <>
         <Panel
           title="Faturamento por funcionario"
           description="Valores calculados com base nos pagamentos concluidos."
@@ -668,9 +629,104 @@ export async function FinanceiroContent({
             </div>
           )}
         </Panel>
-      ) : null}
+      </>
+    );
+  }
 
-      {tab === "pagamentos" ? (
+  // ============ TAB: PAGAMENTOS ============
+  if (tab === "pagamentos") {
+    const [
+      appointmentsResponse,
+      servicesResponse,
+      employeesResponse,
+      paymentsResponse,
+      allPaymentIdsResponse,
+    ] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("id, cliente_nome, data_hora, status, service_id, employee_id")
+        .eq("company_id", companyId)
+        .eq("status", "concluido")
+        .order("data_hora", { ascending: false }),
+      supabase.from("services").select("id, valor").eq("company_id", companyId),
+      supabase
+        .from("employees")
+        .select("id, nome, percentual_comissao")
+        .eq("company_id", companyId),
+      supabase
+        .from("payments")
+        .select(
+          "id, appointment_id, created_at, valor, forma_pagamento, percentual_comissao, valor_comissao, taxa_percentual, valor_taxa, appointments(cliente_nome, data_hora, employee_id)"
+        )
+        .eq("company_id", companyId)
+        .gte("created_at", startIso)
+        .lte("created_at", endIso)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("payments")
+        .select("appointment_id")
+        .eq("company_id", companyId),
+    ]);
+
+    const appointments = (appointmentsResponse.data ?? []) as AppointmentRow[];
+    const services = (servicesResponse.data ?? []) as ServiceRow[];
+    const employees = (employeesResponse.data ?? []) as EmployeeRow[];
+    const payments = (paymentsResponse.data ?? []) as PaymentRow[];
+    const allPaymentIds = (allPaymentIdsResponse.data ?? []) as Array<{ appointment_id: string }>;
+
+    const serviceValueById = new Map(
+      services.map((service) => [service.id, Number(service.valor)])
+    );
+    const employeeCommissionById = new Map(
+      employees.map((employee) => [
+        employee.id,
+        Number(employee.percentual_comissao ?? 0),
+      ])
+    );
+
+    const paidAppointmentIds = new Set(
+      allPaymentIds.map((payment) => payment.appointment_id)
+    );
+
+    const availableAppointments: AppointmentOption[] = appointments
+      .filter((appointment) => !paidAppointmentIds.has(appointment.id))
+      .map((appointment) => {
+        const valorSugerido = Number(
+          serviceValueById.get(appointment.service_id) ?? 0
+        );
+        const percentualComissaoSugerido = Number(
+          employeeCommissionById.get(appointment.employee_id) ?? 0
+        );
+
+        return {
+          id: appointment.id,
+          clienteNome: appointment.cliente_nome,
+          dataHora: appointment.data_hora,
+          valorSugerido: roundToTwo(valorSugerido),
+          percentualComissaoSugerido: roundToTwo(percentualComissaoSugerido),
+        };
+      });
+
+    const paymentItems = payments.map((payment) => {
+      const appointmentData = getPaymentAppointmentData(payment.appointments);
+
+      return {
+        id: payment.id,
+        appointmentId: payment.appointment_id,
+        createdAt: payment.created_at,
+        clienteNome: appointmentData.clienteNome,
+        dataHora: appointmentData.dataHora,
+        valor: Number(payment.valor),
+        formaPagamento: payment.forma_pagamento,
+        percentualComissao: Number(payment.percentual_comissao),
+        valorComissao: Number(payment.valor_comissao),
+        taxaPercentual: Number(payment.taxa_percentual),
+        valorTaxa: Number(payment.valor_taxa),
+      };
+    });
+
+    return (
+      <>
         <div className="space-y-4">
           {availableAppointments.length === 0 ? (
             <p className="rounded-xl border border-amber-500/40 bg-amber-600/10 p-4 text-sm text-amber-200">
@@ -698,7 +754,10 @@ export async function FinanceiroContent({
             )}
           </div>
         </div>
-      ) : null}
-    </>
-  );
+      </>
+    );
+  }
+
+  // Fallback: should never reach here if tab is valid
+  return <></>;
 }
