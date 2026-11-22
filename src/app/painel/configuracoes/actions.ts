@@ -275,3 +275,46 @@ export async function setCompanyInfoAction(_prevState: ActionState, formData: Fo
 
   return { success: true, message: "Dados da empresa atualizados com sucesso." };
 }
+
+export async function setCardFeeAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const scope = await getAccessContext({ allowLimited: true });
+
+  if (!scope.companyId) {
+    return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(scope.role)) {
+    return { success: false, message: "Apenas administradores podem alterar a taxa do cartão de crédito." };
+  }
+
+  const taxaInput = readText(formData, "taxa_cartao_credito");
+
+  if (!taxaInput) {
+    return { success: false, message: "Informe a taxa do cartão de crédito." };
+  }
+
+  const taxa = parseFloat(taxaInput.replace(",", "."));
+
+  if (isNaN(taxa)) {
+    return { success: false, message: "A taxa deve ser um número válido." };
+  }
+
+  if (taxa < 0 || taxa > 100) {
+    return { success: false, message: "A taxa deve estar entre 0 e 100." };
+  }
+
+  const { data: updated, error } = await scope.supabase
+    .from("companies")
+    .update({ taxa_cartao_credito: taxa })
+    .eq("id", scope.companyId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !updated) {
+    return { success: false, message: "Nao foi possivel salvar a taxa. Tente novamente." };
+  }
+
+  revalidatePath("/painel", "layout");
+
+  return { success: true, message: "Taxa do cartão de crédito atualizada com sucesso." };
+}

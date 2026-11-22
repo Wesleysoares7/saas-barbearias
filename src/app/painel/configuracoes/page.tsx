@@ -4,6 +4,7 @@ import { Settings } from "lucide-react";
 import { CompanyInfoForm } from "@/components/painel/configuracoes/company-info-form";
 import { LogoForm } from "@/components/painel/configuracoes/logo-form";
 import { ThemeForm } from "@/components/painel/configuracoes/theme-form";
+import { CardFeeForm } from "@/components/painel/configuracoes/card-fee-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -22,7 +23,7 @@ export default async function ConfiguracoesPage() {
 
   const { data: company, error } = await supabase
     .from("companies")
-    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento")
+    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento, taxa_cartao_credito")
     .eq("id", companyId)
     .maybeSingle();
 
@@ -77,6 +78,13 @@ export default async function ConfiguracoesPage() {
         description="Escolha a cor de destaque do painel. Vale para todos os usuarios da empresa."
       >
         <ThemeForm currentTheme={getTheme(company?.tema).value} />
+      </Panel>
+
+      <Panel
+        title="Taxa do cartão de crédito"
+        description="Percentual descontado de cada pagamento no cartão de crédito. Pode ser 0."
+      >
+        <CardFeeForm currentFee={company?.taxa_cartao_credito ?? null} />
       </Panel>
     </div>
   );
