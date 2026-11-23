@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { getAccessContext, isAdmin } from "@/lib/auth/access";
 import { parseMoneyBR } from "@/lib/money";
+import { isPaymentMethod } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -120,12 +121,14 @@ function validateEntryFields(formData: FormData):
       data: string;
       categoria: string | null;
       descricao: string;
+      forma_pagamento: string | null;
     }
   | { ok: false; message: string } {
   const valor = parseMoneyBR(sanitizeText(formData.get("valor")));
   const data = sanitizeText(formData.get("data"));
   const categoria = sanitizeText(formData.get("categoria"));
   const descricao = sanitizeText(formData.get("descricao"));
+  const forma_pagamento = sanitizeText(formData.get("forma_pagamento"));
 
   if (valor === null || valor <= 0) {
     return { ok: false, message: "Informe um valor maior que zero." };
@@ -149,7 +152,11 @@ function validateEntryFields(formData: FormData):
     };
   }
 
-  return { ok: true, valor, data, categoria: categoria || null, descricao };
+  if (!forma_pagamento || !isPaymentMethod(forma_pagamento)) {
+    return { ok: false, message: "Escolha a forma de pagamento." };
+  }
+
+  return { ok: true, valor, data, categoria: categoria || null, descricao, forma_pagamento };
 }
 
 export async function setOpeningBalanceAction(
@@ -294,6 +301,7 @@ export async function createCashEntryAction(
       data_lancamento: fields.data,
       categoria: fields.categoria,
       descricao: fields.descricao,
+      forma_pagamento: fields.forma_pagamento,
     })
     .select("id")
     .single();
@@ -342,7 +350,7 @@ export async function updateCashEntryAction(
 
   const { access } = result;
 
-  // Somente as 4 colunas que o banco permite atualizar.
+  // Somente as 5 colunas que o banco permite atualizar.
   // NAO enviar updated_at, tipo, company_id nem created_by.
   const { data: updated, error } = await access.supabase
     .from("cash_entries")
@@ -351,6 +359,7 @@ export async function updateCashEntryAction(
       data_lancamento: fields.data,
       categoria: fields.categoria,
       descricao: fields.descricao,
+      forma_pagamento: fields.forma_pagamento,
     })
     .eq("id", id)
     .eq("company_id", access.companyId)

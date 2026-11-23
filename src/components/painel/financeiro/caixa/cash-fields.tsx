@@ -1,15 +1,26 @@
 import { CASH_CATEGORY_SUGGESTIONS } from "@/types/cash";
+import { PaymentMethodField } from "@/components/painel/financeiro/caixa/payment-method-field";
+import { isPaymentMethod } from "@/lib/payment-methods";
 
 export const CASH_FIELD_CLASS =
   "h-11 w-full rounded-xl border border-border bg-surface-2 px-3 text-base text-foreground outline-none focus:border-brand";
 
-export function CashMessage({ success, message }: { success: boolean; message: string }) {
+export function CashMessage({
+  success,
+  message,
+}: {
+  success: boolean;
+  message: string;
+}) {
   if (!message || success) {
     return null;
   }
 
   return (
-    <p className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200" aria-live="polite">
+    <p
+      className="rounded-xl border border-amber-500/50 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+      aria-live="polite"
+    >
       {message}
     </p>
   );
@@ -20,15 +31,29 @@ export function CashEntryFields({
   defaults,
 }: {
   idPrefix: string;
-  defaults: { valor: string; data: string; categoria: string; descricao: string };
+  defaults: {
+    valor: string;
+    data: string;
+    categoria: string;
+    descricao: string;
+    forma_pagamento?: string | null;
+  };
 }) {
   const listId = `${idPrefix}-categorias`;
+  // Lancamento antigo sem forma comeca sem opcao marcada: o usuario precisa escolher uma.
+  const defaultForma =
+    defaults.forma_pagamento && isPaymentMethod(defaults.forma_pagamento)
+      ? defaults.forma_pagamento
+      : null;
 
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
-          <label htmlFor={`${idPrefix}-valor`} className="text-sm text-foreground">
+          <label
+            htmlFor={`${idPrefix}-valor`}
+            className="text-sm text-foreground"
+          >
             Valor (R$)
           </label>
           <input
@@ -44,7 +69,10 @@ export function CashEntryFields({
         </div>
 
         <div className="space-y-1">
-          <label htmlFor={`${idPrefix}-data`} className="text-sm text-foreground">
+          <label
+            htmlFor={`${idPrefix}-data`}
+            className="text-sm text-foreground"
+          >
             Data
           </label>
           <input
@@ -58,8 +86,13 @@ export function CashEntryFields({
         </div>
       </div>
 
+      <PaymentMethodField idPrefix={idPrefix} defaultValue={defaultForma} />
+
       <div className="space-y-1">
-        <label htmlFor={`${idPrefix}-categoria`} className="text-sm text-foreground">
+        <label
+          htmlFor={`${idPrefix}-categoria`}
+          className="text-sm text-foreground"
+        >
           Categoria - opcional
         </label>
         <input
@@ -79,7 +112,10 @@ export function CashEntryFields({
       </div>
 
       <div className="space-y-1">
-        <label htmlFor={`${idPrefix}-descricao`} className="text-sm text-foreground">
+        <label
+          htmlFor={`${idPrefix}-descricao`}
+          className="text-sm text-foreground"
+        >
           Descricao
         </label>
         <input

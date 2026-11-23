@@ -107,3 +107,10 @@ export type StatementLine = {
   label: string;
   value: string;
 };
+
+export type FinanceByMethodRow = {
+  forma: string;
+  entradas: number;
+  saidas: number;
+  saldo: number;
+};
