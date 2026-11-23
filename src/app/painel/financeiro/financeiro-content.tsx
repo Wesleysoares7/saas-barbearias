@@ -7,10 +7,10 @@ import { endOfDayIso, formatDateBR, startOfDayIso } from "@/lib/datetime";
 import { CashEntryDialog } from "@/components/painel/financeiro/caixa/cash-entry-dialog";
 import { CashEntryItem } from "@/components/painel/financeiro/caixa/cash-entry-item";
 import { OpeningBalanceCard } from "@/components/painel/financeiro/caixa/opening-balance-card";
-import { PAYMENT_METHODS } from "@/lib/payment-methods";
+import { PAYMENT_METHODS, getPaymentMethodLabel } from "@/lib/payment-methods";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CashEntry, FinanceSummary } from "@/types/cash";
-import {
+import type {
   AppointmentRow,
   ServiceRow,
   EmployeeRow,
@@ -21,6 +21,7 @@ import {
   PaymentMethodGroup,
   Indicator,
   StatementLine,
+  FinanceByMethodRow,
 } from "./types";
 
 function roundToTwo(value: number): number {
@@ -78,27 +79,42 @@ export async function FinanceiroContent({
 
   // ============ TAB: RESUMO ============
   if (tab === "resumo") {
-    const [summaryResponse, paymentsResponse] = await Promise.all([
-      supabase.rpc("finance_summary", {
-        p_company_id: companyId,
-        p_start: start,
-        p_end: end,
-      }),
-      supabase
-        .from("payments")
-        .select(
-          "valor, valor_comissao, forma_pagamento, valor_taxa, appointments(employee_id)",
-        )
-        .eq("company_id", companyId)
-        .gte("created_at", startIso)
-        .lte("created_at", endIso),
-    ]);
+    const [summaryResponse, paymentsResponse, financeByMethodResponse] =
+      await Promise.all([
+        supabase.rpc("finance_summary", {
+          p_company_id: companyId,
+          p_start: start,
+          p_end: end,
+        }),
+        supabase
+          .from("payments")
+          .select(
+            "valor, valor_comissao, forma_pagamento, valor_taxa, appointments(employee_id)",
+          )
+          .eq("company_id", companyId)
+          .gte("created_at", startIso)
+          .lte("created_at", endIso),
+        supabase.rpc("finance_by_method", {
+          p_company_id: companyId,
+          p_start: start,
+          p_end: end,
+        }),
+      ]);
 
     const summaryRows = (summaryResponse.data ?? []) as FinanceSummary[];
     const summary: FinanceSummary | null = summaryResponse.error
       ? null
       : (summaryRows[0] ?? null);
     const payments = (paymentsResponse.data ?? []) as PaymentRow[];
+    const financeByMethodRows = (financeByMethodResponse.data ??
+      []) as FinanceByMethodRow[];
+
+    const financeByMethod = financeByMethodRows.map((row) => ({
+      forma: row.forma,
+      entradas: Number(row.entradas ?? 0),
+      saidas: Number(row.saidas ?? 0),
+      saldo: Number(row.saldo ?? 0),
+    }));
 
     const totalFaturamento = roundToTwo(
       payments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0),
@@ -387,6 +403,86 @@ export async function FinanceiroContent({
               </div>
             )}
           </Panel>
+
+          <Panel
+            title="Por forma de pagamento"
+            description="Entradas, saídas e saldo do período em cada forma."
+          >
+            {financeByMethod.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-muted-foreground">
+                Sem dados de forma de pagamento neste período.
+              </p>
+            ) : (
+              <>
+                <div className="space-y-3">
+                  {financeByMethod.map((item) => {
+                    const isNaoInformado = item.forma === "nao_informado";
+                    const allZero =
+                      item.entradas === 0 &&
+                      item.saidas === 0 &&
+                      item.saldo === 0;
+
+                    if (isNaoInformado && allZero) {
+                      return null;
+                    }
+
+                    const label =
+                      item.forma === "nao_informado"
+                        ? "Não informado"
+                        : getPaymentMethodLabel(item.forma);
+
+                    return (
+                      <div
+                        key={item.forma}
+                        className="rounded-xl border border-border bg-surface p-4"
+                      >
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <div className="md:flex md:items-center md:justify-center">
+                            <div>
+                              <p className="text-sm font-semibold text-foreground mb-3 md:mb-0">
+                                {label}
+                              </p>
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Entradas
+                            </p>
+                            <p className="text-sm font-semibold text-emerald-300">
+                              {formatCurrency(item.entradas)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              Saídas
+                            </p>
+                            <p className="text-sm font-semibold text-rose-300">
+                              {formatCurrency(
+                                item.saidas === 0 ? 0 : -item.saidas,
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">Saldo</p>
+                          <p
+                            className={`text-sm font-semibold ${item.saldo >= 0 ? "text-emerald-300" : "text-rose-300"}`}
+                          >
+                            {formatCurrency(item.saldo)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-4 text-xs text-muted-foreground">
+                  Comissões, compras de estoque e lançamentos antigos sem forma
+                  aparecem em Não informado. A taxa de cartão já está descontada
+                  em Débito e Crédito.
+                </p>
+              </>
+            )}
+          </Panel>
         </div>
       </>
     );
@@ -397,7 +493,9 @@ export async function FinanceiroContent({
     const [entriesResponse, openingResponse] = await Promise.all([
       supabase
         .from("cash_entries")
-        .select("id, tipo, valor, categoria, descricao, data_lancamento")
+        .select(
+          "id, tipo, valor, categoria, descricao, forma_pagamento, data_lancamento",
+        )
         .eq("company_id", companyId)
         .in("tipo", ["entrada", "despesa"])
         .gte("data_lancamento", start)
@@ -415,7 +513,13 @@ export async function FinanceiroContent({
 
     const cashEntries = (entriesResponse.data ?? []) as Pick<
       CashEntry,
-      "id" | "tipo" | "valor" | "categoria" | "descricao" | "data_lancamento"
+      | "id"
+      | "tipo"
+      | "valor"
+      | "categoria"
+      | "descricao"
+      | "forma_pagamento"
+      | "data_lancamento"
     >[];
     const openingRow = openingResponse.data as {
       id: string;
@@ -442,6 +546,7 @@ export async function FinanceiroContent({
       valor: Number(entry.valor),
       categoria: entry.categoria,
       descricao: entry.descricao,
+      forma_pagamento: entry.forma_pagamento,
       data: entry.data_lancamento,
     }));
 

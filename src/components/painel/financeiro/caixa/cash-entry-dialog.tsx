@@ -79,7 +79,7 @@ export function CashEntryDialog() {
 
           <CashEntryFields
             idPrefix="cash-new"
-            defaults={{ valor: "", data: todayInputValue(), categoria: "", descricao: "" }}
+            defaults={{ valor: "", data: todayInputValue(), categoria: "", descricao: "", forma_pagamento: "dinheiro" }}
           />
 
           <SubmitButton />

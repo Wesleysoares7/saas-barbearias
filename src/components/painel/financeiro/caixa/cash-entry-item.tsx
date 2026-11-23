@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatDateBR } from "@/lib/datetime";
+import { getPaymentMethodLabel } from "@/lib/payment-methods";
 
 type ActionState = {
   success: boolean;
@@ -32,6 +33,7 @@ type CashEntryItemProps = {
     valor: number;
     categoria: string | null;
     descricao: string | null;
+    forma_pagamento: string | null;
     data: string;
   };
 };
@@ -88,6 +90,7 @@ function EntryActions({ entry }: { entry: CashEntryItemProps["entry"] }) {
                 data: entry.data,
                 categoria: entry.categoria ?? "",
                 descricao: entry.descricao ?? "",
+                forma_pagamento: entry.forma_pagamento,
               }}
             />
             <SaveButton />
@@ -111,6 +114,9 @@ export function CashEntryItem({ entry }: CashEntryItemProps) {
   const valorClass = isEntrada ? "text-emerald-300" : "text-rose-300";
   const valorText = `${isEntrada ? "+" : "-"} ${formatCurrency(entry.valor)}`;
   const shortDate = formatDateBR(entry.data).slice(0, 5);
+  const formaPagamentoLabel = entry.forma_pagamento 
+    ? getPaymentMethodLabel(entry.forma_pagamento) 
+    : "Forma nao informada";
 
   return (
     <ListRow
@@ -121,6 +127,7 @@ export function CashEntryItem({ entry }: CashEntryItemProps) {
           <span className="truncate">
             {shortDate}
             {entry.categoria ? ` - ${entry.categoria}` : ""}
+            {` - ${formaPagamentoLabel}`}
           </span>
           <StatusPill tone={isEntrada ? "success" : "danger"}>{isEntrada ? "Entrada" : "Despesa"}</StatusPill>
         </span>

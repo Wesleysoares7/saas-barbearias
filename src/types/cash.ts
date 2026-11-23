@@ -9,6 +9,7 @@ export type CashEntry = {
   valor_conta: number;
   categoria: string | null;
   descricao: string | null;
+  forma_pagamento: string | null;
   data_lancamento: string;
   created_by: string | null;
   created_at: string;
