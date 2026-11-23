@@ -31,7 +31,11 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   }
 
   const [companyResponse, userResponse] = await Promise.all([
-    supabase.from("companies").select("nome, logo, tema").eq("id", companyId).maybeSingle(),
+    supabase
+      .from("companies")
+      .select("nome, logo, tema")
+      .eq("id", companyId)
+      .maybeSingle(),
     supportMode ? Promise.resolve(null) : supabase.auth.getUser(),
   ]);
 
@@ -102,6 +106,16 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
                 label: "Funcionarios",
                 section: "Gestao",
                 icon: "funcionarios" as const,
+              },
+            ]
+          : []),
+        ...(canAccessModule(role, "funcionarios")
+          ? [
+              {
+                href: "/painel/horarios",
+                label: "Horarios",
+                section: "Gestao",
+                icon: "agendamentos" as const,
               },
             ]
           : []),
@@ -204,7 +218,8 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
   const logoPath = companyResponse.data?.logo;
   const logoUrl =
     typeof logoPath === "string" && logoPath
-      ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data.publicUrl
+      ? supabase.storage.from("company-logos").getPublicUrl(logoPath).data
+          .publicUrl
       : null;
   const days = billing?.trialDaysLeft ?? 0;
   const dayLabel = days === 1 ? "1 dia" : `${days} dias`;
@@ -214,7 +229,8 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
 
   if (!supportMode && isAdmin) {
     if (isLimited) {
-      bannerText = "Seu período de teste terminou. Assine um plano para voltar a usar o sistema.";
+      bannerText =
+        "Seu período de teste terminou. Assine um plano para voltar a usar o sistema.";
       bannerTone = "bg-amber-400/15 text-amber-200";
       showBannerLink = true;
     } else if (billing?.banner) {
@@ -258,7 +274,11 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
         </div>
       ) : null}
       <div className="flex min-h-0 flex-1">
-        <SidebarNav items={navItems} companyName={companyName} logoUrl={logoUrl} />
+        <SidebarNav
+          items={navItems}
+          companyName={companyName}
+          logoUrl={logoUrl}
+        />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar
