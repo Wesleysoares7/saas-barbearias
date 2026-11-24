@@ -316,5 +316,5 @@ export async function getAvailableTimes(params: {
     }
   }
 
-  return [...times].sort();
+return [...times].sort((a, b) => a.localeCompare(b));
 }
