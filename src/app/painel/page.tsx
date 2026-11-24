@@ -2,13 +2,28 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "@/lib/auth/access";
-import { endOfDayIso, formatDateTimeBR, monthEndInputValue, monthStartInputValue, startOfDayIso, todayInputValue } from "@/lib/datetime";
-import { CalendarClock, CheckCircle2, Clock, LayoutDashboard, Wallet, XCircle } from "lucide-react";
+import {
+  endOfDayIso,
+  formatDateTimeBR,
+  monthEndInputValue,
+  monthStartInputValue,
+  startOfDayIso,
+  todayInputValue,
+} from "@/lib/datetime";
+import {
+  CalendarClock,
+  CheckCircle2,
+  Clock,
+  LayoutDashboard,
+  Wallet,
+  XCircle,
+} from "lucide-react";
 
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { StatCard } from "@/components/painel/ui/stat-card";
 import { StatusPill } from "@/components/painel/ui/status-pill";
+import { AwaitingBanner } from "@/components/painel/agendamentos/awaiting-banner";
 import type { AppointmentStatus } from "@/types";
 
 type AppointmentRow = {
@@ -70,7 +85,8 @@ function getStatusLabel(status: AppointmentStatus): string {
 }
 
 export default async function PainelPage() {
-  const { supabase, companyId, role, redirectTo, employeeId } = await getAccessContext();
+  const { supabase, companyId, role, redirectTo, employeeId } =
+    await getAccessContext();
 
   if (!companyId || !role) {
     redirect(redirectTo ?? "/login");
@@ -126,29 +142,71 @@ export default async function PainelPage() {
     const mine = (apptResponse.data ?? []) as AppointmentRow[];
     const scheduled = mine.filter((item) => item.status === "agendado");
     const concluded = mine.filter((item) => item.status === "concluido").length;
-    const upcoming = scheduled.filter((item) => new Date(item.data_hora).getTime() >= now.getTime());
+    const upcoming = scheduled.filter(
+      (item) => new Date(item.data_hora).getTime() >= now.getTime(),
+    );
 
     return (
       <div className="space-y-5">
         <PageHeader
           icon={LayoutDashboard}
           title="Dashboard"
-          description={employeeId ? "Seus atendimentos de hoje." : "Visao rapida da agenda do dia."}
+          description={
+            employeeId
+              ? "Seus atendimentos de hoje."
+              : "Visao rapida da agenda do dia."
+          }
+        />
+
+        <AwaitingBanner
+          supabase={supabase}
+          companyId={companyId}
+          employeeId={employeeId ?? null}
         />
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatCard label={employeeId ? "Meus atendimentos hoje" : "Agendamentos hoje"} value={mine.length} icon={CalendarClock} />
-          <StatCard label="Agendados" value={scheduled.length} icon={Clock} tone="warning" />
-          <StatCard label="Concluidos" value={concluded} icon={CheckCircle2} tone="success" />
+          <StatCard
+            label={employeeId ? "Meus atendimentos hoje" : "Agendamentos hoje"}
+            value={mine.length}
+            icon={CalendarClock}
+          />
+          <StatCard
+            label="Agendados"
+            value={scheduled.length}
+            icon={Clock}
+            tone="warning"
+          />
+          <StatCard
+            label="Concluidos"
+            value={concluded}
+            icon={CheckCircle2}
+            tone="success"
+          />
           {employeeId ? (
             <>
-              <StatCard label="Minha comissao hoje" value={formatCurrency(commissionToday)} icon={Wallet} tone="success" />
-              <StatCard label="Minha comissao no mes" value={formatCurrency(commissionMonth)} icon={Wallet} tone="success" />
+              <StatCard
+                label="Minha comissao hoje"
+                value={formatCurrency(commissionToday)}
+                icon={Wallet}
+                tone="success"
+              />
+              <StatCard
+                label="Minha comissao no mes"
+                value={formatCurrency(commissionMonth)}
+                icon={Wallet}
+                tone="success"
+              />
             </>
           ) : null}
         </div>
 
-        <Panel title={employeeId ? "Meus proximos atendimentos de hoje" : "Proximos atendimentos de hoje"}>
+        <Panel
+          title={
+            employeeId
+              ? "Meus proximos atendimentos de hoje"
+              : "Proximos atendimentos de hoje"
+          }
+        >
           {upcoming.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted-foreground">
               Nenhum agendamento pendente para hoje.
@@ -160,8 +218,12 @@ export default async function PainelPage() {
                   key={appointment.id}
                   className="flex min-w-0 items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
                 >
-                  <p className="min-w-0 truncate text-sm font-medium text-foreground">{appointment.cliente_nome}</p>
-                  <p className="shrink-0 text-xs text-muted-foreground">{formatDateTime(appointment.data_hora)}</p>
+                  <p className="min-w-0 truncate text-sm font-medium text-foreground">
+                    {appointment.cliente_nome}
+                  </p>
+                  <p className="shrink-0 text-xs text-muted-foreground">
+                    {formatDateTime(appointment.data_hora)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -170,7 +232,12 @@ export default async function PainelPage() {
       </div>
     );
   }
-  const [todayAppointmentsResponse, paymentsTodayResponse, servicesResponse, concludedMonthResponse] = await Promise.all([
+  const [
+    todayAppointmentsResponse,
+    paymentsTodayResponse,
+    servicesResponse,
+    concludedMonthResponse,
+  ] = await Promise.all([
     supabase
       .from("appointments")
       .select("id, cliente_nome, data_hora, status")
@@ -194,21 +261,35 @@ export default async function PainelPage() {
       .lte("data_hora", endOfMonth),
   ]);
 
-  const todayAppointments = (todayAppointmentsResponse.data ?? []) as AppointmentRow[];
+  const todayAppointments = (todayAppointmentsResponse.data ??
+    []) as AppointmentRow[];
   const todayPayments = (paymentsTodayResponse.data ?? []) as PaymentRow[];
   const services = (servicesResponse.data ?? []) as ServiceRow[];
-  const concludedAppointmentsThisMonth = (concludedMonthResponse.data ?? []) as AppointmentRow[];
+  const concludedAppointmentsThisMonth = (concludedMonthResponse.data ??
+    []) as AppointmentRow[];
 
   const totalToday = todayAppointments.length;
-  const totalScheduled = todayAppointments.filter((item) => item.status === "agendado").length;
-  const totalConcluded = todayAppointments.filter((item) => item.status === "concluido").length;
-  const totalCanceled = todayAppointments.filter((item) => item.status === "cancelado").length;
-  const revenueToday = roundToTwo(todayPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0));
+  const totalScheduled = todayAppointments.filter(
+    (item) => item.status === "agendado",
+  ).length;
+  const totalConcluded = todayAppointments.filter(
+    (item) => item.status === "concluido",
+  ).length;
+  const totalCanceled = todayAppointments.filter(
+    (item) => item.status === "cancelado",
+  ).length;
+  const revenueToday = roundToTwo(
+    todayPayments.reduce((sum, payment) => sum + Number(payment.valor ?? 0), 0),
+  );
   const nextAppointments = todayAppointments.filter(
-    (item) => item.status === "agendado" && new Date(item.data_hora).getTime() >= now.getTime(),
+    (item) =>
+      item.status === "agendado" &&
+      new Date(item.data_hora).getTime() >= now.getTime(),
   );
 
-  const serviceNameById = new Map(services.map((service) => [service.id, service.nome]));
+  const serviceNameById = new Map(
+    services.map((service) => [service.id, service.nome]),
+  );
   const serviceCountById = new Map<string, number>();
 
   for (const appointment of concludedAppointmentsThisMonth) {
@@ -233,24 +314,59 @@ export default async function PainelPage() {
   let onboardingSteps: { label: string; href: string; done: boolean }[] = [];
 
   if (role === "admin") {
-    const [servicesCount, employeesCount, appointmentsCount] = await Promise.all([
-      supabase.from("services").select("id", { count: "exact", head: true }).eq("company_id", companyId).eq("ativo", true),
-      supabase.from("employees").select("id", { count: "exact", head: true }).eq("company_id", companyId).eq("ativo", true),
-      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("company_id", companyId),
-    ]);
+    const [servicesCount, employeesCount, appointmentsCount] =
+      await Promise.all([
+        supabase
+          .from("services")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .eq("ativo", true),
+        supabase
+          .from("employees")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId)
+          .eq("ativo", true),
+        supabase
+          .from("appointments")
+          .select("id", { count: "exact", head: true })
+          .eq("company_id", companyId),
+      ]);
 
     onboardingSteps = [
-      { label: "Cadastrar um servico", href: "/painel/servicos", done: (servicesCount.count ?? 0) > 0 },
-      { label: "Ter um funcionario ativo, incluindo voce", href: "/painel/funcionarios", done: (employeesCount.count ?? 0) > 0 },
-      { label: "Criar o primeiro agendamento", href: "/painel/agendamentos", done: (appointmentsCount.count ?? 0) > 0 },
+      {
+        label: "Cadastrar um servico",
+        href: "/painel/servicos",
+        done: (servicesCount.count ?? 0) > 0,
+      },
+      {
+        label: "Ter um funcionario ativo, incluindo voce",
+        href: "/painel/funcionarios",
+        done: (employeesCount.count ?? 0) > 0,
+      },
+      {
+        label: "Criar o primeiro agendamento",
+        href: "/painel/agendamentos",
+        done: (appointmentsCount.count ?? 0) > 0,
+      },
     ];
   }
 
-  const showOnboarding = onboardingSteps.length > 0 && onboardingSteps.some((step) => !step.done);
+  const showOnboarding =
+    onboardingSteps.length > 0 && onboardingSteps.some((step) => !step.done);
 
   return (
     <div className="space-y-5">
-      <PageHeader icon={LayoutDashboard} title="Dashboard" description="Visao rapida da agenda do dia." />
+      <PageHeader
+        icon={LayoutDashboard}
+        title="Dashboard"
+        description="Visao rapida da agenda do dia."
+      />
+
+      <AwaitingBanner
+        supabase={supabase}
+        companyId={companyId}
+        employeeId={null}
+      />
 
       {showOnboarding ? (
         <Panel title="Primeiros passos">
@@ -262,7 +378,9 @@ export default async function PainelPage() {
                   className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-border bg-surface-2 px-3 text-sm text-foreground hover:border-brand"
                 >
                   <span className="min-w-0 truncate">{step.label}</span>
-                  <StatusPill tone={step.done ? "success" : "warning"}>{step.done ? "Feito" : "Pendente"}</StatusPill>
+                  <StatusPill tone={step.done ? "success" : "warning"}>
+                    {step.done ? "Feito" : "Pendente"}
+                  </StatusPill>
                 </Link>
               </li>
             ))}
@@ -271,18 +389,47 @@ export default async function PainelPage() {
       ) : null}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        <StatCard label="Agendamentos hoje" value={totalToday} icon={CalendarClock} />
-        <StatCard className="col-span-2 sm:col-span-1" label="Faturamento hoje" value={formatCurrency(revenueToday)} icon={Wallet} tone="success" />
-        <StatCard label="Agendados" value={totalScheduled} icon={Clock} tone="warning" />
-        <StatCard label="Concluidos" value={totalConcluded} icon={CheckCircle2} tone="success" />
-        <StatCard label="Cancelados" value={totalCanceled} icon={XCircle} tone="danger" />
+        <StatCard
+          label="Agendamentos hoje"
+          value={totalToday}
+          icon={CalendarClock}
+        />
+        <StatCard
+          className="col-span-2 sm:col-span-1"
+          label="Faturamento hoje"
+          value={formatCurrency(revenueToday)}
+          icon={Wallet}
+          tone="success"
+        />
+        <StatCard
+          label="Agendados"
+          value={totalScheduled}
+          icon={Clock}
+          tone="warning"
+        />
+        <StatCard
+          label="Concluidos"
+          value={totalConcluded}
+          icon={CheckCircle2}
+          tone="success"
+        />
+        <StatCard
+          label="Cancelados"
+          value={totalCanceled}
+          icon={XCircle}
+          tone="danger"
+        />
       </div>
 
       <div className="grid gap-3 lg:grid-cols-[1.2fr_1fr]">
         <Panel>
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-foreground">Proximos atendimentos de hoje</h2>
-            <p className="text-xs text-muted-foreground">{nextAppointments.length} pendente(s)</p>
+            <h2 className="text-sm font-semibold text-foreground">
+              Proximos atendimentos de hoje
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              {nextAppointments.length} pendente(s)
+            </p>
           </div>
 
           {nextAppointments.length === 0 ? (
@@ -297,8 +444,12 @@ export default async function PainelPage() {
                   className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface-2 px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm text-foreground">{appointment.cliente_nome}</p>
-                    <p className="text-xs text-muted-foreground">{formatDateTime(appointment.data_hora)}</p>
+                    <p className="text-sm text-foreground">
+                      {appointment.cliente_nome}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatDateTime(appointment.data_hora)}
+                    </p>
                   </div>
                   <span
                     className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] ${getStatusBadge(appointment.status)}`}
@@ -312,7 +463,9 @@ export default async function PainelPage() {
         </Panel>
 
         <Panel>
-          <h2 className="text-sm font-semibold text-foreground">Servicos mais vendidos (mes)</h2>
+          <h2 className="text-sm font-semibold text-foreground">
+            Servicos mais vendidos (mes)
+          </h2>
 
           {topServices.length === 0 ? (
             <p className="mt-3 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm text-muted-foreground">
@@ -335,7 +488,6 @@ export default async function PainelPage() {
               ))}
             </div>
           )}
-
         </Panel>
       </div>
     </div>

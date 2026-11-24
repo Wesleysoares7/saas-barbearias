@@ -15,6 +15,7 @@ import {
 } from "@/lib/auth/access";
 import type { AppointmentStatus } from "@/types";
 import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
+import { AwaitingAppointmentItem } from "@/components/painel/agendamentos/awaiting-appointment-item";
 import { ListRow } from "@/components/painel/ui/list-row";
 import {
   Pagination,
@@ -175,6 +176,10 @@ type AppointmentRow = {
   observacoes: string | null;
 };
 
+type RawAppointmentRow = Omit<AppointmentRow, "status"> & {
+  status: AppointmentStatus | "aguardando";
+};
+
 type AppointmentSlot = {
   id: string;
   employeeId: string;
@@ -258,17 +263,22 @@ export default async function AgendamentosPage({
   const customers: OptionItem[] = (customersResponse.data ??
     []) as OptionItem[];
 
-  const appointments: AppointmentRow[] = (appointmentsResponse.data ??
-    []) as AppointmentRow[];
-  const appointmentSlots: AppointmentSlot[] = appointments.map(
-    (appointment) => ({
-      id: appointment.id,
-      employeeId: appointment.employee_id,
-      startIso: appointment.data_hora,
-      endIso: appointment.data_hora_fim ?? appointment.data_hora,
-      status: appointment.status,
-    }),
+  const allRows: RawAppointmentRow[] = (appointmentsResponse.data ??
+    []) as RawAppointmentRow[];
+  const awaitingAppointments = allRows.filter(
+    (row) => row.status === "aguardando",
   );
+  const appointments: AppointmentRow[] = allRows.filter(
+    (row): row is AppointmentRow => row.status !== "aguardando",
+  );
+  // Pedido aguardando segura o horario: conta como ocupado nos formularios.
+  const appointmentSlots: AppointmentSlot[] = allRows.map((row) => ({
+    id: row.id,
+    employeeId: row.employee_id,
+    startIso: row.data_hora,
+    endIso: row.data_hora_fim ?? row.data_hora,
+    status: row.status === "aguardando" ? "agendado" : row.status,
+  }));
 
   const today = todayInputValue();
   const range = getPeriodRange(periodo, today);
@@ -472,6 +482,35 @@ export default async function AgendamentosPage({
         </p>
       ) : null}
 
+      {awaitingAppointments.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="px-1 text-lg font-medium text-zinc-100">
+            Aguardando confirmacao ({awaitingAppointments.length})
+          </h2>
+          <p className="px-1 text-xs text-muted-foreground">
+            Pedidos feitos pelo cliente. O horario fica reservado ate voce
+            responder.
+          </p>
+          {awaitingAppointments.map((appointment) => (
+            <AwaitingAppointmentItem
+              key={appointment.id}
+              appointment={appointment}
+              servicoNome={
+                services.find(
+                  (service) => service.id === appointment.service_id,
+                )?.nome
+              }
+              funcionarioNome={
+                employees.find(
+                  (employee) => employee.id === appointment.employee_id,
+                )?.nome
+              }
+              canUpdate={canUpdateAppointment}
+            />
+          ))}
+        </section>
+      )}
+
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium text-zinc-100">
@@ -490,7 +529,7 @@ export default async function AgendamentosPage({
           </p>
         ) : null}
 
-        {appointments.length === 0 ? (
+        {appointments.length === 0 && awaitingAppointments.length === 0 ? (
           <p className="rounded-xl border border-border bg-surface-2 p-4 text-sm text-zinc-300">
             Nenhum agendamento cadastrado ainda.
           </p>
