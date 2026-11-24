@@ -117,7 +117,7 @@ async function hasConflictForEmployee(
     .select("id")
     .eq("company_id", params.companyId)
     .eq("employee_id", params.employeeId)
-    .eq("status", "agendado")
+    .in("status", ["agendado", "aguardando"]).eq("status", "agendado")
     .lt("data_hora", params.newEndIso)
     .gt("data_hora_fim", params.newStartIso)
     .limit(1);
@@ -878,6 +878,13 @@ export async function completeAppointmentAndRegisterPaymentAction(
       message: "Nao e possivel concluir um agendamento cancelado.",
     };
   }
+  
+    if (appointment.status === "aguardando") {
+    return {
+      success: false,
+      message: "Confirme o agendamento antes de conclui-lo.",
+    };
+  }
 
   const { data: existingPayment } = await supabase
     .from("payments")
@@ -952,4 +959,102 @@ export async function completeAppointmentAndRegisterPaymentAction(
     success: true,
     message: "Atendimento concluido e pagamento registrado com sucesso!",
   };
+}
+
+
+async function resolveAwaitingAppointment(
+  formData: FormData,
+  nextStatus: "agendado" | "cancelado",
+): Promise<ActionState> {
+  const id = sanitizeText(formData.get("id"));
+
+  if (!id) {
+    return { success: false, message: "Agendamento invalido." };
+  }
+
+  const {
+    supabase,
+    companyId,
+    role,
+    errorMessage,
+    employeeId: ownEmployeeId,
+  } = await getCompanyScope();
+
+  if (!companyId || !role) {
+    return {
+      success: false,
+      message: errorMessage ?? "Nao foi possivel identificar sua empresa.",
+    };
+  }
+
+  if (!canPerformAction(role, "agendamentos", "update")) {
+    return {
+      success: false,
+      message: "Seu perfil nao tem permissao para atualizar agendamentos.",
+    };
+  }
+
+  const { data: current } = await supabase
+    .from("appointments")
+    .select("id, status, employee_id")
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .maybeSingle();
+
+  if (!current) {
+    return { success: false, message: "Agendamento invalido para sua empresa." };
+  }
+
+  if (role === "employee" && ownEmployeeId && current.employee_id !== ownEmployeeId) {
+    return { success: false, message: "Voce so pode gerenciar seus proprios atendimentos." };
+  }
+
+  if (current.status !== "aguardando") {
+    return { success: false, message: "Este pedido ja foi respondido." };
+  }
+
+  const { data: updated, error } = await supabase
+    .from("appointments")
+    .update({ status: nextStatus })
+    .eq("id", id)
+    .eq("company_id", companyId)
+    .eq("status", "aguardando")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    return {
+      success: false,
+      message: friendlyDbError(error, "Nao foi possivel atualizar o pedido. Tente novamente."),
+    };
+  }
+
+  if (!updated) {
+    return { success: false, message: "Este pedido ja foi respondido." };
+  }
+
+  revalidatePath("/painel");
+  revalidatePath("/painel/agendamentos");
+
+  return {
+    success: true,
+    message:
+      nextStatus === "agendado"
+        ? "Agendamento confirmado."
+        : "Pedido recusado. O horario foi liberado.",
+  };
+}
+
+export async function confirmAppointmentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return resolveAwaitingAppointment(formData, "agendado");
+}
+
+export async function rejectAppointmentAction(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  return resolveAwaitingAppointment(formData, "cancelado");
 }
