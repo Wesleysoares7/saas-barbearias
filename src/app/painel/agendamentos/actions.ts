@@ -117,7 +117,7 @@ async function hasConflictForEmployee(
     .select("id")
     .eq("company_id", params.companyId)
     .eq("employee_id", params.employeeId)
-    .in("status", ["agendado", "aguardando"]).eq("status", "agendado")
+    .in("status", ["agendado", "aguardando"])
     .lt("data_hora", params.newEndIso)
     .gt("data_hora_fim", params.newStartIso)
     .limit(1);
@@ -1058,3 +1058,4 @@ export async function rejectAppointmentAction(
 ): Promise<ActionState> {
   return resolveAwaitingAppointment(formData, "cancelado");
 }
+

@@ -5,6 +5,7 @@ import { CompanyInfoForm } from "@/components/painel/configuracoes/company-info-
 import { LogoForm } from "@/components/painel/configuracoes/logo-form";
 import { ThemeForm } from "@/components/painel/configuracoes/theme-form";
 import { CardFeeForm } from "@/components/painel/configuracoes/card-fee-form";
+import { BookingLinkForm } from "@/components/painel/configuracoes/booking-link-form";
 import { PageHeader } from "@/components/painel/ui/page-header";
 import { Panel } from "@/components/painel/ui/panel";
 import { canAccessModule, getAccessContext } from "@/lib/auth/access";
@@ -23,13 +24,21 @@ export default async function ConfiguracoesPage() {
 
   const { data: company, error } = await supabase
     .from("companies")
-    .select("nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento, taxa_cartao_credito, taxa_cartao_debito")
+    .select(
+      "nome, telefone, endereco, cidade, uf, email_contato, logo, tema, documento, taxa_cartao_credito, taxa_cartao_debito, slug, agendamento_online, agendamento_intervalo_min, agendamento_antecedencia_min, agendamento_dias_max",
+    )
     .eq("id", companyId)
     .maybeSingle();
 
   if (error) {
     console.error(error.code, error.message);
   }
+
+  const { count: workHoursCount } = await supabase
+    .from("employee_work_hours")
+    .select("id", { count: "exact", head: true })
+    .eq("company_id", companyId);
+  const hasWorkHours = (workHoursCount ?? 0) > 0;
 
   const logoPath =
     typeof company?.logo === "string" && company.logo ? company.logo : null;
@@ -77,9 +86,26 @@ export default async function ConfiguracoesPage() {
         title="Taxas da maquininha"
         description="Percentual descontado de cada pagamento no cartão. Pode ser 0."
       >
-        <CardFeeForm 
+        <CardFeeForm
           currentDebitFee={company?.taxa_cartao_debito ?? null}
-          currentCreditFee={company?.taxa_cartao_credito ?? null} 
+          currentCreditFee={company?.taxa_cartao_credito ?? null}
+        />
+      </Panel>
+
+      <Panel
+        title="Agendamento online"
+        description="Envie um link para o cliente ver os horários livres e pedir um agendamento. Você confirma cada pedido."
+      >
+        <BookingLinkForm
+          companyName={company?.nome ?? "Minha empresa"}
+          hasWorkHours={hasWorkHours}
+          saved={{
+            slug: company?.slug ?? null,
+            enabled: company?.agendamento_online ?? false,
+            intervalMin: company?.agendamento_intervalo_min ?? 30,
+            leadMin: company?.agendamento_antecedencia_min ?? 60,
+            maxDays: company?.agendamento_dias_max ?? 30,
+          }}
         />
       </Panel>
 

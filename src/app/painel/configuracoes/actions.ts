@@ -332,3 +332,70 @@ export async function setCardFeesAction(_prevState: ActionState, formData: FormD
 
   return { success: true, message: "Taxas do cartão atualizadas com sucesso." };
 }
+
+const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+const BOOKING_INTERVALS = [15, 30, 45, 60];
+const BOOKING_LEADS = [0, 30, 60, 120, 240];
+const BOOKING_MAX_DAYS = [7, 15, 30, 60];
+
+export async function setBookingConfigAction(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  const scope = await getAccessContext({ allowLimited: true });
+
+  if (!scope.companyId) {
+    return { success: false, message: scope.errorMessage ?? "Nao foi possivel identificar sua empresa." };
+  }
+
+  if (!isAdmin(scope.role)) {
+    return { success: false, message: "Apenas administradores podem alterar o agendamento online." };
+  }
+
+  const slug = readText(formData, "slug").toLowerCase();
+  const enabled = formData.get("agendamento_online") === "on";
+  const intervalMin = Number(readText(formData, "agendamento_intervalo_min"));
+  const leadMin = Number(readText(formData, "agendamento_antecedencia_min"));
+  const maxDays = Number(readText(formData, "agendamento_dias_max"));
+
+  if (slug && (slug.length < 3 || slug.length > 40 || !SLUG_PATTERN.test(slug))) {
+    return {
+      success: false,
+      message: "O endereco deve ter de 3 a 40 caracteres, apenas letras minusculas, numeros e hifens (sem hifen no inicio ou no fim).",
+    };
+  }
+
+  if (enabled && !slug) {
+    return { success: false, message: "Informe o endereco do link para receber agendamentos online." };
+  }
+
+  if (
+    !BOOKING_INTERVALS.includes(intervalMin) ||
+    !BOOKING_LEADS.includes(leadMin) ||
+    !BOOKING_MAX_DAYS.includes(maxDays)
+  ) {
+    return { success: false, message: "Escolha valores validos nas opcoes de agendamento." };
+  }
+
+  const { data: updated, error } = await scope.supabase
+    .from("companies")
+    .update({
+      slug: slug || null,
+      agendamento_online: enabled,
+      agendamento_intervalo_min: intervalMin,
+      agendamento_antecedencia_min: leadMin,
+      agendamento_dias_max: maxDays,
+    })
+    .eq("id", scope.companyId)
+    .select("id")
+    .maybeSingle();
+
+  if (error?.code === "23505") {
+    return { success: false, message: "Esse endereco ja esta em uso. Escolha outro." };
+  }
+
+  if (error || !updated) {
+    return { success: false, message: "Nao foi possivel salvar. Tente novamente." };
+  }
+
+  revalidatePath("/painel/configuracoes");
+
+  return { success: true, message: "Agendamento online atualizado." };
+}
