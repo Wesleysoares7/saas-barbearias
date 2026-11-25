@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookingForm } from "./booking-form";
 import type { ReactNode } from "react";
 
 import {
@@ -317,16 +318,22 @@ export async function BookingSteps({
       ) : null}
 
       {timeOk && service && employee ? (
-        <section className="rounded-xl border border-brand/40 bg-brand/10 p-4 text-sm text-foreground">
-          <p className="font-semibold">Seu pedido</p>
-          <p className="mt-1 text-muted-foreground">
-            {service.nome} com {employee.nome}, {formatLongDate(date)} às {time}
-            .
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            O envio do pedido estará disponível em breve.
-          </p>
-        </section>
+        <BookingForm
+          slug={slug}
+          companyName={company.nome}
+          serviceId={service.id}
+          employeeId={employee.id}
+          date={date}
+          time={time}
+          summary={`${service.nome} com ${employee.nome}, ${formatLongDate(date)} às ${time}`}
+          backHref={buildHref(slug, {
+            servico: service.id,
+            profissional: employee.id,
+            data: date,
+          })}
+          newHref={buildHref(slug, {})}
+          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+        />
       ) : null}
     </div>
   );
