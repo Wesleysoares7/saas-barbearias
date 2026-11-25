@@ -1058,3 +1058,4 @@ export async function rejectAppointmentAction(
 ): Promise<ActionState> {
   return resolveAwaitingAppointment(formData, "cancelado");
 }
+
