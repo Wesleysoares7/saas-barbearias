@@ -996,7 +996,7 @@ async function resolveAwaitingAppointment(
 
   const { data: current } = await supabase
     .from("appointments")
-    .select("id, status, employee_id")
+    .select("id, status, employee_id, cliente_nome, cliente_telefone, customer_id")
     .eq("id", id)
     .eq("company_id", companyId)
     .maybeSingle();
@@ -1013,9 +1013,30 @@ async function resolveAwaitingAppointment(
     return { success: false, message: "Este pedido ja foi respondido." };
   }
 
+  const updates: { status: "agendado" | "cancelado"; customer_id?: string } = {
+    status: nextStatus,
+  };
+  let customerLinkFailed = false;
+
+  // So confirma => vira cliente. Pedido recusado nao cria cadastro.
+  if (nextStatus === "agendado" && !current.customer_id) {
+    const customer = await findOrCreateCustomer(supabase, companyId, {
+      nome: String(current.cliente_nome ?? ""),
+      telefone: String(current.cliente_telefone ?? ""),
+      email: "",
+      observacoes: "",
+    });
+
+    if (customer.ok) {
+      updates.customer_id = customer.id;
+    } else {
+      customerLinkFailed = true;
+    }
+  }
+
   const { data: updated, error } = await supabase
     .from("appointments")
-    .update({ status: nextStatus })
+    .update(updates)
     .eq("id", id)
     .eq("company_id", companyId)
     .eq("status", "aguardando")
@@ -1035,13 +1056,17 @@ async function resolveAwaitingAppointment(
 
   revalidatePath("/painel");
   revalidatePath("/painel/agendamentos");
+  revalidatePath("/painel/clientes");
+
+  if (nextStatus === "cancelado") {
+    return { success: true, message: "Pedido recusado. O horario foi liberado." };
+  }
 
   return {
     success: true,
-    message:
-      nextStatus === "agendado"
-        ? "Agendamento confirmado."
-        : "Pedido recusado. O horario foi liberado.",
+    message: customerLinkFailed
+      ? "Agendamento confirmado, mas nao foi possivel vincular ao cadastro de clientes."
+      : "Agendamento confirmado.",
   };
 }
 
