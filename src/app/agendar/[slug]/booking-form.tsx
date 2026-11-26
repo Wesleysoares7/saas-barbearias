@@ -225,7 +225,7 @@ export function BookingForm({
           Concordo em enviar meu nome e telefone para {companyName}, para
           confirmar este agendamento. Saiba mais na{" "}
           <Link
-            href="/privacidade"
+            href="/privacidade#agendamento-online"
             target="_blank"
             className="font-medium text-brand underline"
           >

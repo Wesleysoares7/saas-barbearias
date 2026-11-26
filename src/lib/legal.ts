@@ -12,8 +12,8 @@ export const LEGAL = {
   diasExportacao: "30",
   diasExclusao: "90",
   diasAvisoAlteracao: "30",
-  versao: "2026-11-21",
-  vigencia: "21 de novembro de 2026",
+  versao: "2026-11-25",
+  vigencia: "25 de novembro de 2026",
 } as const;
 
 export function hasLegalPlaceholders(): boolean {

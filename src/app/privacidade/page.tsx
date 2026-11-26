@@ -52,6 +52,14 @@ export default function PrivacidadePage() {
             de caixa. A Plataforma não coleta dados de cartão de pagamento.
           </li>
           <li>
+            <strong className="text-zinc-100">
+              Pedidos de agendamento online:
+            </strong>{" "}
+            nome, telefone, serviço, profissional, data e horário escolhidos,
+            situação do pedido e código de acompanhamento (veja a seção
+            “Agendamento online”).
+          </li>
+          <li>
             <strong className="text-zinc-100">Segurança:</strong> trilha de
             auditoria (quem fez o quê e quando) e notificações de eventos
             sensíveis.
@@ -99,10 +107,18 @@ export default function PrivacidadePage() {
             utilizados (esta lista será atualizada);
           </li>
           <li>
+            Cloudflare: verificação anti-robô (Turnstile) na página pública de
+            agendamento;
+          </li>
+          <li>
             autoridades públicas, quando houver obrigação legal ou ordem
             judicial.
           </li>
         </ul>
+        <p>
+          Os dados de um pedido de agendamento online são entregues à empresa
+          escolhida pelo Cliente Final, que é a controladora desses dados.
+        </p>
       </LegalSection>
 
       <LegalSection n={5} title="Transferência internacional">
@@ -186,18 +202,18 @@ export default function PrivacidadePage() {
           funcionamento da Plataforma. Atualmente não usamos cookies de
           publicidade, rastreamento ou análise de audiência.
         </p>
-        <p>
-          Os cookies utilizados são:
-        </p>
+        <p>Os cookies utilizados são:</p>
         <ul>
           <li>
-            <strong className="text-zinc-100">Cookies de sessão de login</strong>{" "}
+            <strong className="text-zinc-100">
+              Cookies de sessão de login
+            </strong>{" "}
             (Supabase, identificadores iniciados em <code>sb-*</code>, com
             expiração em 12 horas): mantêm você autenticado na Plataforma.
           </li>
           <li>
-            <strong className="text-zinc-100">support_company_id</strong>{" "}
-            (<code>httpOnly</code>, vigência de 2 horas, apenas em modo de
+            <strong className="text-zinc-100">support_company_id</strong> (
+            <code>httpOnly</code>, vigência de 2 horas, apenas em modo de
             suporte): identifica a empresa durante sessões de atendimento pela
             nossa equipe.
           </li>
@@ -213,7 +229,106 @@ export default function PrivacidadePage() {
           outras finalidades, atualizaremos esta Política e solicitaremos seu
           consentimento expresso.
         </p>
+        <p>
+          Na página pública de agendamento não usamos cookies de rastreamento ou
+          publicidade. O recurso de verificação anti-robô é fornecido pela
+          Cloudflare e carregado dos servidores dela; para saber como a
+          Cloudflare trata os dados técnicos do navegador, consulte a política
+          de privacidade dela.
+        </p>
       </LegalSection>
+
+      <div id="agendamento-online">
+        <LegalSection n={11} title="Agendamento online">
+          <p>
+            Algumas barbearias e salões oferecem uma página pública para você
+            pedir um horário. Ao usá-la, a empresa escolhida é a controladora
+            dos seus dados, e a Plataforma atua como operadora, tratando os
+            dados apenas para receber e gerenciar o seu pedido.
+          </p>
+
+          <p>
+            <strong className="text-zinc-100">
+              Quais dados pedimos no formulário:
+            </strong>
+          </p>
+          <ul>
+            <li>
+              nome e telefone, para identificar você e responder ao pedido;
+            </li>
+            <li>serviço, profissional, data e horário que você escolheu;</li>
+            <li>
+              a situação do pedido (aguardando confirmação, confirmado,
+              cancelado ou concluído) e a data e hora em que foi feito;
+            </li>
+            <li>
+              um código exclusivo do pedido, usado no seu link de
+              acompanhamento.
+            </li>
+          </ul>
+
+          <p>
+            <strong className="text-zinc-100">Para que usamos:</strong>
+          </p>
+          <ul>
+            <li>
+              permitir que a empresa receba, confirme ou recuse o pedido e entre
+              em contato pelo telefone informado, inclusive pelo WhatsApp;
+            </li>
+            <li>
+              reservar o horário escolhido enquanto o pedido aguarda resposta;
+            </li>
+            <li>
+              se o pedido for confirmado, a empresa pode incluí-lo no cadastro
+              de clientes e no histórico de atendimentos dela;
+            </li>
+            <li>
+              prevenir abusos, como pedidos falsos feitos por robôs, com
+              verificação anti-robô e limite de pedidos por telefone.
+            </li>
+          </ul>
+
+          <p>
+            <strong className="text-zinc-100">Base legal.</strong> O tratamento
+            se baseia no seu consentimento, dado ao marcar a caixa de aceite
+            antes de enviar o pedido, e na realização de procedimentos
+            preliminares ao atendimento que você solicitou.
+          </p>
+
+          <p>
+            <strong className="text-zinc-100">Link de acompanhamento.</strong>{" "}
+            Depois de enviar o pedido, você recebe um link pessoal para ver a
+            resposta da empresa e cancelar o pedido. Quem tiver esse link vê o
+            serviço, o profissional e o horário do pedido (o telefone não
+            aparece). Por isso, não o compartilhe.
+          </p>
+
+          <p>
+            <strong className="text-zinc-100">Verificação anti-robô.</strong> A
+            página usa o Cloudflare Turnstile para distinguir pessoas de robôs.
+            Para isso, o navegador carrega um recurso dos servidores da
+            Cloudflare, que pode receber dados técnicos do navegador e o
+            endereço IP, usados apenas nessa verificação. Nós não gravamos o
+            endereço IP junto ao pedido, mas ele pode constar nos registros de
+            acesso dos provedores de infraestrutura.
+          </p>
+
+          <p>
+            <strong className="text-zinc-100">Por quanto tempo.</strong> Os
+            dados do pedido ficam nos registros da empresa pelo mesmo prazo do
+            histórico de atendimentos dela. Cancelar o pedido altera a situação
+            dele, mas não apaga o registro.
+          </p>
+
+          <p>
+            <strong className="text-zinc-100">Seus direitos.</strong> Para
+            corrigir ou pedir a exclusão dos seus dados, fale primeiro com a
+            empresa onde fez o pedido; nós a ajudamos a atender. Você também
+            pode escrever para {LEGAL.emailPrivacidade}. Se você tem menos de 18
+            anos, peça a um responsável que faça o pedido.
+          </p>
+        </LegalSection>
+      </div>
 
       <LegalSection n={11} title="Crianças e adolescentes">
         <p>
