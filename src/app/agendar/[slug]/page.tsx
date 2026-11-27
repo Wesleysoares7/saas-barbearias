@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { MyBookings } from "./my-bookings";
 
 import { getPublicCompany } from "@/lib/agendamento-publico/data";
 import { getThemeCss } from "@/lib/themes";
@@ -75,6 +76,8 @@ export default async function AgendarPage({ params, searchParams }: PageProps) {
           <p className="text-sm text-muted-foreground">Agende seu horário</p>
         </div>
       </header>
+
+      <MyBookings slug={company.slug} />
 
       <Suspense key={JSON.stringify(query)} fallback={<StepsSkeleton />}>
         <BookingSteps company={company} query={query} />

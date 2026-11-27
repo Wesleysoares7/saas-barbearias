@@ -15,7 +15,7 @@ import {
 } from "@/lib/auth/access";
 import type { AppointmentStatus } from "@/types";
 import { CompletedAppointmentItem } from "@/components/painel/agendamentos/completed-appointment-item";
-import { AwaitingAppointmentItem } from "@/components/painel/agendamentos/awaiting-appointment-item";
+import { AwaitingList } from "@/components/painel/agendamentos/awaiting-list";
 import { ListRow } from "@/components/painel/ui/list-row";
 import {
   Pagination,
@@ -482,34 +482,21 @@ export default async function AgendamentosPage({
         </p>
       ) : null}
 
-      {awaitingAppointments.length > 0 && (
-        <section className="space-y-2">
-          <h2 className="px-1 text-lg font-medium text-zinc-100">
-            Aguardando confirmacao ({awaitingAppointments.length})
-          </h2>
-          <p className="px-1 text-xs text-muted-foreground">
-            Pedidos feitos pelo cliente. O horario fica reservado ate voce
-            responder.
-          </p>
-          {awaitingAppointments.map((appointment) => (
-            <AwaitingAppointmentItem
-              key={appointment.id}
-              appointment={appointment}
-              servicoNome={
-                services.find(
-                  (service) => service.id === appointment.service_id,
-                )?.nome
-              }
-              funcionarioNome={
-                employees.find(
-                  (employee) => employee.id === appointment.employee_id,
-                )?.nome
-              }
-              canUpdate={canUpdateAppointment}
-            />
-          ))}
-        </section>
-      )}
+      <AwaitingList
+        canUpdate={canUpdateAppointment}
+        items={awaitingAppointments.map((appointment) => ({
+          id: appointment.id,
+          clienteNome: appointment.cliente_nome,
+          clienteTelefone: appointment.cliente_telefone,
+          dataHora: appointment.data_hora,
+          servicoNome: services.find(
+            (service) => service.id === appointment.service_id,
+          )?.nome,
+          funcionarioNome: employees.find(
+            (employee) => employee.id === appointment.employee_id,
+          )?.nome,
+        }))}
+      />
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">

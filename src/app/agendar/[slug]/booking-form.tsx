@@ -4,13 +4,16 @@ import Link from "next/link";
 import Script from "next/script";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Check, CheckCircle2, Copy, Loader2 } from "lucide-react";
+
+import { saveBookingToken } from "@/lib/agendamento-publico/my-bookings-storage";
 
 import { createPublicBookingAction } from "./actions";
 
 type BookingState = {
   status: "idle" | "success" | "error" | "conflict";
   message: string;
+  trackingPath?: string;
 };
 
 declare global {
@@ -127,22 +130,78 @@ export function BookingForm({
     createPublicBookingAction,
     INITIAL_STATE,
   );
+  const [copied, setCopied] = useState(false);
+
+  async function copyTrackingLink() {
+    if (!state.trackingPath) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}${state.trackingPath}`,
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  useEffect(() => {
+    if (state.status === "success" && state.trackingPath) {
+      saveBookingToken(slug, state.trackingPath.split("/").pop() ?? "");
+    }
+  }, [state, slug]);
 
   if (state.status === "success") {
     return (
-      <section className="rounded-xl border border-emerald-500/40 bg-emerald-600/10 p-4 text-sm">
+      <section className="space-y-3 rounded-xl border border-emerald-500/40 bg-emerald-600/10 p-4 text-sm">
         <p className="flex items-center gap-2 font-semibold text-emerald-200">
           <CheckCircle2 className="size-5" />
           Pedido enviado!
         </p>
-        <p className="mt-2 text-muted-foreground">
+        <p className="text-muted-foreground">
           {companyName} vai confirmar o seu horário. Seu pedido só vale depois
-          da confirmação, e a resposta virá pelo telefone informado.
+          da confirmação.
         </p>
-        <p className="mt-2 text-foreground">{summary}.</p>
+        <p className="text-foreground">{summary}.</p>
+
+        {state.trackingPath ? (
+          <div className="space-y-2">
+            <Link
+              href={state.trackingPath}
+              className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-brand px-4 text-sm font-semibold text-brand-foreground hover:bg-brand/90"
+            >
+              Acompanhar meu pedido
+            </Link>
+            <button
+              type="button"
+              onClick={copyTrackingLink}
+              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-foreground"
+            >
+              {copied ? (
+                <>
+                  <Check className="size-4" />
+                  Link copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="size-4" />
+                  Copiar link do pedido
+                </>
+              )}
+            </button>
+            <p className="text-xs text-muted-foreground">
+              Guarde este link: é por ele que você vê a resposta da barbearia ou
+              cancela o pedido.
+            </p>
+          </div>
+        ) : null}
+
         <Link
           href={newHref}
-          className="mt-3 inline-flex min-h-11 items-center text-sm font-medium text-brand"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-brand"
         >
           Fazer outro pedido
         </Link>

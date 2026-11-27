@@ -220,7 +220,10 @@ export default function PrivacidadePage() {
           <li>
             <strong className="text-zinc-100">localStorage</strong>: armazena
             preferências locais do navegador, como a expansão/recolhimento da
-            barra lateral e a aceitação do aviso de cookies.
+            barra lateral e a aceitação do aviso de cookies. Na página pública
+            de agendamento, também guarda os códigos dos pedidos feitos naquele
+            aparelho, para você ver a situação deles ao voltar; você pode
+            apagá-los limpando os dados do navegador.
           </li>
         </ul>
         <p>
@@ -300,7 +303,9 @@ export default function PrivacidadePage() {
             Depois de enviar o pedido, você recebe um link pessoal para ver a
             resposta da empresa e cancelar o pedido. Quem tiver esse link vê o
             serviço, o profissional e o horário do pedido (o telefone não
-            aparece). Por isso, não o compartilhe.
+            aparece). Por isso, não o compartilhe. Neste aparelho, guardamos os
+            códigos dos seus pedidos no armazenamento local do navegador, para
+            você encontrá-los ao voltar à página.
           </p>
 
           <p>
