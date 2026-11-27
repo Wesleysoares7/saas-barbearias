@@ -75,10 +75,6 @@ export function MyBookings({ slug }: { slug: string }) {
     return () => {
       active = false;
     };
-
-    return () => {
-      active = false;
-    };
   }, [slug]);
 
   if (items.length === 0) {
