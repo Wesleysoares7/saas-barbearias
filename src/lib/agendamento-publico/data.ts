@@ -318,3 +318,126 @@ export async function getAvailableTimes(params: {
 
 return [...times].sort((a, b) => a.localeCompare(b));
 }
+
+
+export type PublicBooking = {
+  company: {
+    id: string;
+    slug: string;
+    nome: string;
+    tema: string | null;
+    logoUrl: string | null;
+    telefone: string | null;
+  };
+  appointment: {
+    id: string;
+    status: "aguardando" | "agendado" | "concluido" | "cancelado";
+    dataHora: string;
+    servicoNome: string;
+    profissionalNome: string;
+    codigo: string | null;
+  };
+};
+
+const TRACKABLE_STATUSES = ["aguardando", "agendado", "concluido", "cancelado"];
+
+export async function getPublicBooking(
+  slug: string,
+  token: string,
+): Promise<PublicBooking | null> {
+  if (
+    slug.length < 3 ||
+    slug.length > 40 ||
+    !SLUG_PATTERN.test(slug) ||
+    !UUID_PATTERN.test(token)
+  ) {
+    return null;
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: companyData, error: companyError } = await admin
+    .from("companies")
+    .select("id, slug, nome, tema, logo, telefone")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (companyError || !companyData) {
+    return null;
+  }
+
+  const company = companyData as unknown as {
+    id: string;
+    slug: string;
+    nome: string;
+    tema: string | null;
+    logo: string | null;
+    telefone: string | null;
+  };
+
+  // O pedido precisa pertencer a empresa do endereco.
+  const { data: appointmentData, error: appointmentError } = await admin
+    .from("appointments")
+    .select("id, status, data_hora, service_id, employee_id, codigo_consulta")
+    .eq("public_token", token)
+    .eq("company_id", company.id)
+    .maybeSingle();
+
+  if (appointmentError || !appointmentData) {
+    return null;
+  }
+
+  const appointment = appointmentData as unknown as {
+    id: string;
+    status: string;
+    data_hora: string;
+    service_id: string;
+    employee_id: string;
+    codigo_consulta: string | null;
+  };
+
+  if (!TRACKABLE_STATUSES.includes(appointment.status)) {
+    return null;
+  }
+
+  const [serviceResponse, employeeResponse] = await Promise.all([
+    admin
+      .from("services")
+      .select("nome")
+      .eq("id", appointment.service_id)
+      .eq("company_id", company.id)
+      .maybeSingle(),
+    admin
+      .from("employees")
+      .select("nome")
+      .eq("id", appointment.employee_id)
+      .eq("company_id", company.id)
+      .maybeSingle(),
+  ]);
+
+  const logoUrl = company.logo
+    ? admin.storage.from(LOGO_BUCKET).getPublicUrl(company.logo).data.publicUrl
+    : null;
+
+  return {
+    company: {
+      id: company.id,
+      slug: company.slug,
+      nome: company.nome,
+      tema: company.tema,
+      logoUrl,
+      telefone: company.telefone,
+    },
+    appointment: {
+      id: appointment.id,
+      status: appointment.status as PublicBooking["appointment"]["status"],
+      dataHora: appointment.data_hora,
+      servicoNome:
+        (serviceResponse.data as { nome: string } | null)?.nome ?? "Serviço",
+      profissionalNome:
+        (employeeResponse.data as { nome: string } | null)?.nome ??
+        "Profissional",
+      codigo: appointment.codigo_consulta ?? null,
+    },
+  };
+}
