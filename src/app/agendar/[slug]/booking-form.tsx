@@ -132,20 +132,18 @@ export function BookingForm({
   );
   const [copied, setCopied] = useState(false);
 
-  async function copyTrackingLink() {
-    if (!state.trackingPath) {
+  function copyTrackingLink() {
+    if (!state.trackingPath || !navigator.clipboard) {
       return;
     }
 
-    try {
-      await navigator.clipboard.writeText(
-        `${window.location.origin}${state.trackingPath}`,
-      );
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      setCopied(false);
-    }
+    navigator.clipboard
+      .writeText(`${window.location.origin}${state.trackingPath}`)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(() => setCopied(false));
   }
 
   useEffect(() => {
