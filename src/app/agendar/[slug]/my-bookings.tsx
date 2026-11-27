@@ -55,18 +55,26 @@ export function MyBookings({ slug }: { slug: string }) {
 
     let active = true;
 
-    getMyBookingsAction(slug, tokens).then((result) => {
-      if (!active || result === null) {
-        return;
-      }
+    getMyBookingsAction(slug, tokens)
+      .then((result) => {
+        if (!active || result === null) {
+          return;
+        }
 
-      setItems(result);
-      // Mantem so os pedidos ainda validos (remove os antigos).
-      keepBookingTokens(
-        slug,
-        result.map((item) => item.token),
-      );
-    });
+        setItems(result);
+        // Mantem so os pedidos ainda validos (remove os antigos).
+        keepBookingTokens(
+          slug,
+          result.map((item) => item.token),
+        );
+      })
+      .catch(() => {
+        // Sem rede ou erro do servidor: nao mostra nada e mantem os codigos salvos.
+      });
+
+    return () => {
+      active = false;
+    };
 
     return () => {
       active = false;
