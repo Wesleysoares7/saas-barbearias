@@ -12,6 +12,11 @@ import { isPaymentMethod } from "@/lib/payment-methods";
 type ActionState = {
   success: boolean;
   message: string;
+  notify?: {
+    slug: string | null;
+    token: string | null;
+    companyName: string;
+  };
 };
 
 const CUSTOMER_LINK_FAILED_MESSAGE =
@@ -996,7 +1001,9 @@ async function resolveAwaitingAppointment(
 
   const { data: current } = await supabase
     .from("appointments")
-    .select("id, status, employee_id, cliente_nome, cliente_telefone, customer_id")
+    .select(
+      "id, status, employee_id, cliente_nome, cliente_telefone, customer_id, public_token",
+    )
     .eq("id", id)
     .eq("company_id", companyId)
     .maybeSingle();
@@ -1054,12 +1061,28 @@ async function resolveAwaitingAppointment(
     return { success: false, message: "Este pedido ja foi respondido." };
   }
 
+  const { data: company } = await supabase
+    .from("companies")
+    .select("nome, slug")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  const notify = {
+    slug: (company?.slug as string | null | undefined) ?? null,
+    token: (current.public_token as string | null | undefined) ?? null,
+    companyName: String(company?.nome ?? ""),
+  };
+
   revalidatePath("/painel");
   revalidatePath("/painel/agendamentos");
   revalidatePath("/painel/clientes");
 
   if (nextStatus === "cancelado") {
-    return { success: true, message: "Pedido recusado. O horario foi liberado." };
+    return {
+      success: true,
+      message: "Pedido recusado. O horario foi liberado.",
+      notify,
+    };
   }
 
   return {
@@ -1067,6 +1090,7 @@ async function resolveAwaitingAppointment(
     message: customerLinkFailed
       ? "Agendamento confirmado, mas nao foi possivel vincular ao cadastro de clientes."
       : "Agendamento confirmado.",
+    notify,
   };
 }
 

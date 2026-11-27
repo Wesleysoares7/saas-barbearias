@@ -12,16 +12,27 @@ import { StatusPill } from "@/components/painel/ui/status-pill";
 import { Button } from "@/components/ui/button";
 import { formatDateTimeBR } from "@/lib/datetime";
 
+export type Notify = {
+  slug: string | null;
+  token: string | null;
+  companyName: string;
+};
+
+export type Outcome = "confirmado" | "recusado";
+
+export type AwaitingItem = {
+  id: string;
+  clienteNome: string;
+  clienteTelefone: string | null;
+  dataHora: string;
+  servicoNome?: string;
+  funcionarioNome?: string;
+};
+
 type ActionState = {
   success: boolean;
   message: string;
-};
-
-type AwaitingAppointment = {
-  id: string;
-  cliente_nome: string;
-  cliente_telefone: string | null;
-  data_hora: string;
+  notify?: Notify;
 };
 
 const INITIAL_STATE: ActionState = { success: false, message: "" };
@@ -52,12 +63,8 @@ function ActionButton({
   );
 }
 
-function buildWhatsappHref(
-  phone: string | null,
-  name: string,
-  when: string,
-): string | null {
-  const digits = (phone ?? "").replace(/\D/g, "");
+function buildGreetingHref(item: AwaitingItem, when: string): string | null {
+  const digits = (item.clienteTelefone ?? "").replace(/\D/g, "");
 
   if (digits.length < 10) {
     return null;
@@ -65,37 +72,47 @@ function buildWhatsappHref(
 
   const number =
     digits.startsWith("55") && digits.length >= 12 ? digits : `55${digits}`;
-  const text = `Olá, ${name}! Recebemos seu pedido de agendamento para ${when}.`;
+  const text = `Olá, ${item.clienteNome}! Recebemos seu pedido de agendamento para ${when}.`;
 
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }
 
 export function AwaitingAppointmentItem({
-  appointment,
-  servicoNome,
-  funcionarioNome,
+  item,
   canUpdate,
+  onResolved,
 }: {
-  appointment: AwaitingAppointment;
-  servicoNome?: string;
-  funcionarioNome?: string;
+  item: AwaitingItem;
   canUpdate: boolean;
+  onResolved: (outcome: Outcome, notify?: Notify) => void;
 }) {
   const [confirmState, confirmAction] = useActionState<ActionState, FormData>(
-    confirmAppointmentAction,
+    async (previous, formData) => {
+      const result = await confirmAppointmentAction(previous, formData);
+
+      if (result.success) {
+        onResolved("confirmado", result.notify);
+      }
+
+      return result;
+    },
     INITIAL_STATE,
   );
   const [rejectState, rejectAction] = useActionState<ActionState, FormData>(
-    rejectAppointmentAction,
+    async (previous, formData) => {
+      const result = await rejectAppointmentAction(previous, formData);
+
+      if (result.success) {
+        onResolved("recusado", result.notify);
+      }
+
+      return result;
+    },
     INITIAL_STATE,
   );
 
-  const when = formatDateTimeBR(appointment.data_hora);
-  const whatsappHref = buildWhatsappHref(
-    appointment.cliente_telefone,
-    appointment.cliente_nome,
-    when,
-  );
+  const when = formatDateTimeBR(item.dataHora);
+  const greetingHref = buildGreetingHref(item, when);
   const errorMessage =
     (!confirmState.success && confirmState.message) ||
     (!rejectState.success && rejectState.message) ||
@@ -106,15 +123,16 @@ export function AwaitingAppointmentItem({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground">
-            {appointment.cliente_nome}
+            {item.clienteNome}
           </p>
           <p className="text-xs text-muted-foreground">
-            {servicoNome ?? "Servico"} · {funcionarioNome ?? "Funcionario"}
+            {item.servicoNome ?? "Servico"} ·{" "}
+            {item.funcionarioNome ?? "Funcionario"}
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">{when}</p>
-          {appointment.cliente_telefone ? (
+          {item.clienteTelefone ? (
             <p className="text-xs text-muted-foreground">
-              {appointment.cliente_telefone}
+              {item.clienteTelefone}
             </p>
           ) : null}
         </div>
@@ -124,7 +142,7 @@ export function AwaitingAppointmentItem({
       {canUpdate ? (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <form action={confirmAction} className="w-full sm:w-auto">
-            <input type="hidden" name="id" value={appointment.id} />
+            <input type="hidden" name="id" value={item.id} />
             <ActionButton
               confirm
               label="Confirmar"
@@ -143,13 +161,13 @@ export function AwaitingAppointmentItem({
             }}
             className="w-full sm:w-auto"
           >
-            <input type="hidden" name="id" value={appointment.id} />
+            <input type="hidden" name="id" value={item.id} />
             <ActionButton label="Recusar" icon={<X className="size-4" />} />
           </form>
 
-          {whatsappHref ? (
+          {greetingHref ? (
             <a
-              href={whatsappHref}
+              href={greetingHref}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-brand/45 bg-surface-2 px-3 text-sm font-semibold text-brand hover:border-brand sm:h-11 sm:w-auto"
