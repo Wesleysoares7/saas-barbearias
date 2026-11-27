@@ -13,6 +13,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 type BookingState = {
   status: "idle" | "success" | "error" | "conflict";
   message: string;
+  trackingPath?: string;
+  codigo?: string;
 };
 
 const MAX_OPEN_PER_PHONE = 3;
@@ -235,31 +237,42 @@ export async function createPublicBookingAction(
     return { status: "error", message: GENERIC_ERROR };
   }
 
-  const { error } = await admin.from("appointments").insert({
-    company_id: company.id,
-    cliente_nome: name,
-    cliente_telefone: phone,
-    employee_id: employeeId,
-    service_id: serviceId,
-    data_hora: new Date(startMs).toISOString(),
-    data_hora_fim: new Date(startMs + durationMin * 60000).toISOString(),
-    status: "aguardando",
-    origem: "online",
-  });
+  const { data: created, error } = await admin
+    .from("appointments")
+    .insert({
+      company_id: company.id,
+      cliente_nome: name,
+      cliente_telefone: phone,
+      employee_id: employeeId,
+      service_id: serviceId,
+      data_hora: new Date(startMs).toISOString(),
+      data_hora_fim: new Date(startMs + durationMin * 60000).toISOString(),
+      status: "aguardando",
+      origem: "online",
+    })
+    .select("public_token, codigo_consulta")
+    .single();
 
-  if (error) {
+  if (error || !created) {
     // 23P01 = exclusion_violation: alguem reservou o mesmo horario agora.
-    if (error.code === "23P01") {
+    if (error?.code === "23P01") {
       return { status: "conflict", message: CONFLICT_MESSAGE };
     }
 
-    console.error("agendar: erro ao criar pedido", error.code, error.message);
+    console.error("agendar: erro ao criar pedido", error?.code, error?.message);
 
     return { status: "error", message: GENERIC_ERROR };
   }
 
+  const createdRow = created as {
+    public_token: string;
+    codigo_consulta: string | null;
+  };
+
   return {
     status: "success",
     message: "Pedido enviado! A barbearia vai confirmar o seu horário.",
+    trackingPath: `/agendar/${company.slug}/pedido/${createdRow.public_token}`,
+    codigo: createdRow.codigo_consulta ?? undefined,
   };
 }

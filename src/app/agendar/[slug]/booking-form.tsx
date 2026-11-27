@@ -5,6 +5,7 @@ import Script from "next/script";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Check, CheckCircle2, Copy, Loader2 } from "lucide-react";
+import { formatBookingCode } from "@/lib/agendamento-publico/booking-code";
 
 import { saveBookingToken } from "@/lib/agendamento-publico/my-bookings-storage";
 
@@ -14,6 +15,7 @@ type BookingState = {
   status: "idle" | "success" | "error" | "conflict";
   message: string;
   trackingPath?: string;
+  codigo?: string;
 };
 
 declare global {
@@ -164,6 +166,19 @@ export function BookingForm({
           da confirmação.
         </p>
         <p className="text-foreground">{summary}.</p>
+
+        {state.codigo ? (
+          <div className="rounded-lg border border-border bg-surface p-3 text-center">
+            <p className="text-xs text-muted-foreground">Código de consulta</p>
+            <p className="mt-1 text-2xl font-bold tracking-widest text-foreground">
+              {formatBookingCode(state.codigo)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Guarde este código. Com ele e o seu telefone, você consulta o
+              pedido em qualquer aparelho, pela página da barbearia.
+            </p>
+          </div>
+        ) : null}
 
         {state.trackingPath ? (
           <div className="space-y-2">
