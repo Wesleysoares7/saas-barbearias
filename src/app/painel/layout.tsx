@@ -115,7 +115,7 @@ export default async function PainelLayout({ children }: PainelLayoutProps) {
                 href: "/painel/horarios",
                 label: "Horarios",
                 section: "Gestao",
-                icon: "agendamentos" as const,
+                icon: "horarios" as const,
               },
             ]
           : []),
