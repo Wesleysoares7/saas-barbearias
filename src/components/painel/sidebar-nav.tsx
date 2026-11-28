@@ -8,6 +8,8 @@ import {
   CalendarClock,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  Coins,
   CreditCard,
   FileBarChart2,
   LayoutDashboard,
@@ -16,6 +18,7 @@ import {
   Scissors,
   Settings,
   Shield,
+  UserCog,
   UserRound,
   Users,
   Wallet,
@@ -32,6 +35,7 @@ export type SidebarNavItem = {
   icon:
     | "dashboard"
     | "agendamentos"
+    | "horarios"
     | "relatorios"
     | "clientes"
     | "funcionarios"
@@ -54,11 +58,23 @@ type SidebarNavProps = {
 
 const STORAGE_KEY = "painel-sidebar-expanded";
 
-function CompanyLogoImage({ logoUrl, companyName, className }: { logoUrl: string; companyName: string; className: string }) {
+function CompanyLogoImage({
+  logoUrl,
+  companyName,
+  className,
+}: {
+  logoUrl: string;
+  companyName: string;
+  className: string;
+}) {
   const [failed, setFailed] = useState(false);
 
   if (failed) {
-    return <div className={`${className} bg-brand font-bold text-brand-foreground`}>{companyName.charAt(0).toUpperCase()}</div>;
+    return (
+      <div className={`${className} bg-brand font-bold text-brand-foreground`}>
+        {companyName.charAt(0).toUpperCase()}
+      </div>
+    );
   }
 
   return (
@@ -75,12 +91,31 @@ function CompanyLogoImage({ logoUrl, companyName, className }: { logoUrl: string
 }
 
 // A key com a URL reinicia o estado de falha quando a logo muda.
-export function CompanyLogo({ logoUrl, companyName, className }: { logoUrl?: string | null; companyName: string; className: string }) {
+export function CompanyLogo({
+  logoUrl,
+  companyName,
+  className,
+}: {
+  logoUrl?: string | null;
+  companyName: string;
+  className: string;
+}) {
   if (!logoUrl) {
-    return <div className={`${className} bg-brand font-bold text-brand-foreground`}>{companyName.charAt(0).toUpperCase()}</div>;
+    return (
+      <div className={`${className} bg-brand font-bold text-brand-foreground`}>
+        {companyName.charAt(0).toUpperCase()}
+      </div>
+    );
   }
 
-  return <CompanyLogoImage key={logoUrl} logoUrl={logoUrl} companyName={companyName} className={className} />;
+  return (
+    <CompanyLogoImage
+      key={logoUrl}
+      logoUrl={logoUrl}
+      companyName={companyName}
+      className={className}
+    />
+  );
 }
 
 export function isActivePath(pathname: string, href: string): boolean {
@@ -101,12 +136,13 @@ export function getIcon(icon: SidebarNavItem["icon"]): LucideIcon {
     servicos: Scissors,
     financeiro: Wallet,
     estoque: Package,
-    equipe: Users,
+    equipe: UserCog,
     auditoria: Shield,
     notificacoes: BellRing,
-    minha_comissao: Wallet,
+    minha_comissao: Coins,
     configuracoes: Settings,
     plano: CreditCard,
+    horarios: Clock,
   };
 
   return icons[icon];
@@ -152,11 +188,17 @@ export function SidebarNav({ items, companyName, logoUrl }: SidebarNavProps) {
         aria-label={expanded ? "Recolher menu" : "Expandir menu"}
         className="absolute top-4 -right-3 z-20 flex size-6 items-center justify-center rounded-full border border-border bg-surface-2 text-muted-foreground transition hover:text-brand"
       >
-        {expanded ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+        {expanded ? (
+          <ChevronLeft className="size-3.5" />
+        ) : (
+          <ChevronRight className="size-3.5" />
+        )}
       </button>
 
       <div className="sticky top-0 flex h-screen flex-col py-3">
-        <div className={`flex items-center gap-3 pb-3 ${expanded ? "px-3" : "justify-center"}`}>
+        <div
+          className={`flex items-center gap-3 pb-3 ${expanded ? "px-3" : "justify-center"}`}
+        >
           <div title={companyName} className="shrink-0">
             <CompanyLogo
               logoUrl={logoUrl}
@@ -164,14 +206,23 @@ export function SidebarNav({ items, companyName, logoUrl }: SidebarNavProps) {
               className="flex size-10 items-center justify-center rounded-xl text-base"
             />
           </div>
-          {expanded ? <span className="truncate text-sm font-semibold text-foreground">{companyName}</span> : null}
+          {expanded ? (
+            <span className="truncate text-sm font-semibold text-foreground">
+              {companyName}
+            </span>
+          ) : null}
         </div>
 
-        <nav className="flex-1 space-y-3 overflow-y-auto px-3 py-2" aria-label="Navegacao principal do painel">
+        <nav
+          className="flex-1 space-y-3 overflow-y-auto px-3 py-2"
+          aria-label="Navegacao principal do painel"
+        >
           {sections.map((section) => (
             <div key={section} className="flex flex-col gap-1">
               {expanded ? (
-                <p className="px-2 pb-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">{section}</p>
+                <p className="px-2 pb-1 text-[10px] font-semibold tracking-[0.2em] text-muted-foreground uppercase">
+                  {section}
+                </p>
               ) : null}
 
               {items
@@ -192,7 +243,9 @@ export function SidebarNav({ items, companyName, logoUrl }: SidebarNavProps) {
                       } ${active ? "bg-brand/15 text-brand" : "text-muted-foreground hover:bg-surface-2 hover:text-foreground"}`}
                     >
                       <Icon className="size-5 shrink-0" />
-                      {expanded ? <span className="truncate">{item.label}</span> : null}
+                      {expanded ? (
+                        <span className="truncate">{item.label}</span>
+                      ) : null}
                       <NavLinkPending />
                     </Link>
                   );
